@@ -57,6 +57,7 @@ function App() {
   const [prDescription, setPrDescription] = useState(
     "Update content via Staticms",
   );
+  const [prTitle, setPrTitle] = useState("");
 
   useEffect(() => {
     if (config) {
@@ -79,7 +80,12 @@ function App() {
       const res = await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content, sha, description: prDescription }),
+        body: JSON.stringify({
+          content,
+          sha,
+          description: prDescription,
+          title: prTitle,
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -95,6 +101,8 @@ function App() {
       setIsSaving(false);
     }
   };
+
+  const [view, setView] = useState<"dashboard" | "editor">("dashboard");
 
   if (loading) {
     return (
@@ -156,6 +164,62 @@ function App() {
     );
   }
 
+  if (view === "editor") {
+    return (
+      <div className="app-container editor-screen">
+        <header className="editor-header">
+          <div className="editor-nav">
+            <button
+              type="button"
+              onClick={() => setView("dashboard")}
+              className="btn btn-secondary btn-back"
+            >
+              &larr; Back
+            </button>
+            <span className="file-path-badge">{config.filePath}</span>
+          </div>
+          <div className="pr-controls">
+            <input
+              className="pr-description-input-compact"
+              value={prTitle}
+              onChange={(e) => setPrTitle(e.target.value)}
+              placeholder="PR Title..."
+            />
+            <input
+              className="pr-description-input-compact"
+              value={prDescription}
+              onChange={(e) => setPrDescription(e.target.value)}
+              placeholder="PR Description..."
+            />
+            <button
+              type="button"
+              onClick={handleSaveContent}
+              disabled={isSaving}
+              className="btn btn-primary btn-save"
+            >
+              {isSaving ? "Creating..." : "Create PR"}
+            </button>
+          </div>
+        </header>
+        {prUrl && (
+          <div className="pr-success-banner">
+            <a href={prUrl} target="_blank" rel="noreferrer">
+              Pull Request Created: {prUrl}
+            </a>
+          </div>
+        )}
+        <div className="editor-main">
+          <textarea
+            className="full-screen-editor"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Start editing..."
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app-container dashboard">
       <div className="dashboard-content">
@@ -171,7 +235,16 @@ function App() {
         </header>
 
         <div className="card info-card">
-          <h2>Current Target</h2>
+          <div className="info-header">
+            <h2>Current Target</h2>
+            <button
+              type="button"
+              onClick={() => setView("editor")}
+              className="btn btn-primary btn-edit"
+            >
+              Edit Content
+            </button>
+          </div>
           <div className="info-grid">
             <div className="info-item">
               <span className="label">Owner</span>
@@ -184,52 +257,6 @@ function App() {
             <div className="info-item">
               <span className="label">File Path</span>
               <span className="value">{config.filePath}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="dashboard-widgets">
-          <div className="card widget editor-widget">
-            <div className="widget-header">
-              <h2>Editor</h2>
-              {prUrl && (
-                <a
-                  href={prUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="pr-link"
-                >
-                  View Pull Request &rarr;
-                </a>
-              )}
-            </div>
-            <textarea
-              className="markdown-editor"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder="Loading content..."
-            />
-            <div className="editor-actions-container">
-              <div className="pr-description-group">
-                <label>PR Description</label>
-                <textarea
-                  className="pr-description-input"
-                  value={prDescription}
-                  onChange={(e) => setPrDescription(e.target.value)}
-                  placeholder="Describe your changes..."
-                  rows={2}
-                />
-              </div>
-              <div className="editor-actions">
-                <button
-                  onClick={handleSaveContent}
-                  disabled={isSaving}
-                  className="btn btn-primary"
-                  type="button"
-                >
-                  {isSaving ? "Creating PR..." : "Save & Create PR"}
-                </button>
-              </div>
             </div>
           </div>
         </div>

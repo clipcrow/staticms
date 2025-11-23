@@ -85,7 +85,7 @@ router.post("/api/content", async (ctx) => {
     }
     const { owner, repo, filePath } = config!;
     const body = await ctx.request.body.json();
-    const { content, sha, description } = body;
+    const { content, sha, description, title } = body;
 
     // 1. Get default branch
     const repoData = await githubRequest(
@@ -132,7 +132,7 @@ router.post("/api/content", async (ctx) => {
       {
         method: "POST",
         body: JSON.stringify({
-          title: `Update ${filePath}`,
+          title: title || `Update ${filePath}`,
           body: description || "This PR was created automatically by Staticms.",
           head: branchName,
           base: defaultBranch,

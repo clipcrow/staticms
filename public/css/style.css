@@ -169,112 +169,127 @@ body {
   font-size: 1rem;
 }
 
-.dashboard-widgets {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.editor-widget {
-  height: auto;
+/* Editor Screen Styles */
+.editor-screen {
+  height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   justify-content: flex-start;
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
 }
 
-.widget-header {
+.editor-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
 }
 
-.widget-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.markdown-editor {
-  width: 100%;
-  min-height: 400px;
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem;
-  font-family: "Menlo", "Monaco", "Courier New", monospace;
-  font-size: 0.9rem;
-  line-height: 1.6;
-  resize: vertical;
-  margin-bottom: 1rem;
-  box-sizing: border-box;
-}
-
-.markdown-editor:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-}
-
-.editor-actions-container {
+.editor-nav {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 1rem;
 }
 
-.pr-description-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.pr-description-group label {
-  font-size: 0.875rem;
+.file-path-badge {
+  font-family: monospace;
   color: var(--text-secondary);
-  font-weight: 500;
-}
-
-.pr-description-input {
-  width: 100%;
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 0.75rem;
-  font-family: inherit;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
   font-size: 0.9rem;
-  resize: vertical;
-  box-sizing: border-box;
 }
 
-.pr-description-input:focus {
+.pr-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pr-description-input-compact {
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  width: 300px;
+}
+
+.pr-description-input-compact:focus {
   outline: none;
   border-color: var(--accent-primary);
 }
 
-.editor-actions {
-  display: flex;
-  justify-content: flex-end;
+.btn-save {
+  width: auto;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
-.pr-link {
-  color: var(--accent-primary);
+.pr-success-banner {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.75rem;
+  text-align: center;
+}
+
+.pr-success-banner a {
+  color: #34d399;
   text-decoration: none;
-  font-size: 0.875rem;
   font-weight: 500;
 }
 
-.pr-link:hover {
+.pr-success-banner a:hover {
   text-decoration: underline;
 }
 
-.widget {
-  height: 200px;
+.editor-main {
+  flex: 1;
   display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.full-screen-editor {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  border: none;
+  padding: 2rem;
+  font-family: "Menlo", "Monaco", "Courier New", monospace;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: none;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.info-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.info-header h2 {
+  margin: 0;
+}
+
+.btn-edit {
+  width: auto;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.9rem;
 }
 
 .spinner {
