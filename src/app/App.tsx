@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import jsyaml from "https://esm.sh/js-yaml@4.1.0";
+import jsyaml from "js-yaml";
 
 interface Field {
   name: string;
@@ -126,9 +126,9 @@ function App() {
     setFormData({ ...formData, fields: newFields });
   };
 
-  const [collection, setCollection] = useState(""); // Raw file content
+  const [_collection, setCollection] = useState(""); // Raw file content
   const [body, setBody] = useState(""); // Markdown body
-  const [frontMatter, setFrontMatter] = useState<Record<string, any>>({}); // Parsed FM
+  const [frontMatter, setFrontMatter] = useState<Record<string, unknown>>({}); // Parsed FM
   const [sha, setSha] = useState("");
   const [prUrl, setPrUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -280,7 +280,7 @@ function App() {
     let finalContent = body;
     if (currentContent.fields && currentContent.fields.length > 0) {
       // Only include fields that are defined in the config
-      const fmToSave: Record<string, any> = {};
+      const fmToSave: Record<string, unknown> = {};
       currentContent.fields.forEach((field) => {
         fmToSave[field.name] = frontMatter[field.name] || "";
       });
@@ -489,36 +489,7 @@ function App() {
             </button>
             <span className="file-path-badge">{currentContent.filePath}</span>
           </div>
-          <div className="pr-controls">
-            <input
-              className="pr-description-input-compact"
-              value={prTitle}
-              onChange={(e) => setPrTitle(e.target.value)}
-              placeholder="PR Title..."
-            />
-            <input
-              className="pr-description-input-compact"
-              value={prDescription}
-              onChange={(e) => setPrDescription(e.target.value)}
-              placeholder="PR Description..."
-            />
-            <button
-              type="button"
-              onClick={handleSaveCollection}
-              disabled={isSaving}
-              className="btn btn-primary btn-save"
-            >
-              {isSaving ? "Creating..." : "Create PR"}
-            </button>
-          </div>
         </header>
-        {prUrl && (
-          <div className="pr-success-banner">
-            <a href={prUrl} target="_blank" rel="noreferrer">
-              Pull Request Created: {prUrl}
-            </a>
-          </div>
-        )}
         <div className="editor-main-split">
           {currentContent.fields && currentContent.fields.length > 0 && (
             <div className="editor-sidebar">
@@ -528,7 +499,7 @@ function App() {
                   <label>{field.name}</label>
                   <input
                     type="text"
-                    value={frontMatter[field.name] || ""}
+                    value={(frontMatter[field.name] as string) || ""}
                     onChange={(e) =>
                       setFrontMatter({
                         ...frontMatter,
@@ -546,6 +517,43 @@ function App() {
               onChange={(e) => setBody(e.target.value)}
               placeholder="Start editing markdown body..."
             />
+          </div>
+          <div className="editor-sidebar-right">
+            <h3>Pull Request</h3>
+            {prUrl && (
+              <div className="pr-success-banner">
+                <a href={prUrl} target="_blank" rel="noreferrer">
+                  View Created PR
+                </a>
+              </div>
+            )}
+            <div className="form-group">
+              <label>Title</label>
+              <input
+                className="pr-input"
+                value={prTitle}
+                onChange={(e) => setPrTitle(e.target.value)}
+                placeholder="PR Title..."
+              />
+            </div>
+            <div className="form-group">
+              <label>Description</label>
+              <textarea
+                className="pr-textarea"
+                value={prDescription}
+                onChange={(e) => setPrDescription(e.target.value)}
+                placeholder="PR Description..."
+                rows={4}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleSaveCollection}
+              disabled={isSaving}
+              className="btn btn-primary btn-save"
+            >
+              {isSaving ? "Creating..." : "Create PR"}
+            </button>
           </div>
         </div>
       </div>

@@ -7,6 +7,10 @@ export const staticms = new Application();
 const router = new Router();
 const kv = await Deno.openKv();
 
+export const shutdown = () => {
+  kv.close();
+};
+
 const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");
 
 async function githubRequest(url: string, options: RequestInit = {}) {
