@@ -17,6 +17,14 @@ interface Config {
   contents: Content[];
 }
 
+interface Commit {
+  message: string;
+  author: string;
+  date: string;
+  sha: string;
+  html_url: string;
+}
+
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,10 +136,19 @@ function App() {
 
   const [_collection, setCollection] = useState(""); // Raw file content
   const [body, setBody] = useState(""); // Markdown body
+  const [initialBody, setInitialBody] = useState("");
   const [frontMatter, setFrontMatter] = useState<Record<string, unknown>>({}); // Parsed FM
+  const [initialFrontMatter, setInitialFrontMatter] = useState<
+    Record<string, unknown>
+  >({});
   const [sha, setSha] = useState("");
+  const [commits, setCommits] = useState<Commit[]>([]);
   const [prUrl, setPrUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
+  const [isPrOpen, setIsPrOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [prDescription, setPrDescription] = useState(
     "Update collection via Staticms",
@@ -143,16 +160,40 @@ function App() {
     if (view === "editor" && currentContent && sha) {
       const key =
         `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-      const draft = {
-        body,
-        frontMatter,
-        prTitle,
-        prDescription,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(key, JSON.stringify(draft));
+
+      const isDirty = body !== initialBody ||
+        JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
+        prTitle !== "" ||
+        prDescription !== "Update collection via Staticms";
+
+      if (isDirty) {
+        const draft = {
+          body,
+          frontMatter,
+          prTitle,
+          prDescription,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem(key, JSON.stringify(draft));
+        setHasDraft(true);
+        setDraftTimestamp(draft.timestamp);
+      } else {
+        localStorage.removeItem(key);
+        setHasDraft(false);
+        setDraftTimestamp(null);
+      }
     }
-  }, [body, frontMatter, prTitle, prDescription, view, currentContent, sha]);
+  }, [
+    body,
+    frontMatter,
+    prTitle,
+    prDescription,
+    view,
+    currentContent,
+    sha,
+    initialBody,
+    initialFrontMatter,
+  ]);
 
   const handleReset = () => {
     if (!currentContent) return;
@@ -165,6 +206,8 @@ function App() {
     const key =
       `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
     localStorage.removeItem(key);
+    setHasDraft(false);
+    setDraftTimestamp(null);
 
     // Trigger re-fetch by temporarily clearing currentContent or forcing update
     // Easier: just manually call the fetch logic or reload the view
@@ -209,6 +252,40 @@ function App() {
       .catch(console.error);
   };
 
+  // SSE Subscription
+  useEffect(() => {
+    const eventSource = new EventSource("/api/events");
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "push" && currentContent) {
+          const repoFullName = `${currentContent.owner}/${currentContent.repo}`;
+          if (data.repo === repoFullName) {
+            // Check if file is in commits
+            // deno-lint-ignore no-explicit-any
+            const fileChanged = data.commits.some((commit: any) => {
+              return (
+                commit.added.includes(currentContent.filePath) ||
+                commit.modified.includes(currentContent.filePath) ||
+                commit.removed.includes(currentContent.filePath)
+              );
+            });
+
+            if (fileChanged) {
+              console.log("File changed remotely, refreshing...");
+              setRefreshTrigger((prev) => prev + 1);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Error parsing SSE event", e);
+      }
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [currentContent]);
+
   useEffect(() => {
     if (view === "editor" && currentContent) {
       const params = new URLSearchParams({
@@ -223,6 +300,29 @@ function App() {
             setCollection(data.collection);
             setSha(data.sha);
 
+            // Parse Front Matter from remote content if no draft or draft failed
+            const content = data.collection;
+            // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
+            const fmRegex =
+              /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
+            const match = content.match(fmRegex);
+
+            let parsedBody = content;
+            let parsedFM = {};
+
+            if (match) {
+              try {
+                const fm = jsyaml.load(match[1]);
+                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+                parsedBody = match[2];
+              } catch (e) {
+                console.error("Error parsing front matter", e);
+              }
+            }
+
+            setInitialBody(parsedBody);
+            setInitialFrontMatter(parsedFM);
+
             // Check for local draft
             const key =
               `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
@@ -236,6 +336,8 @@ function App() {
                 setFrontMatter(draft.frontMatter);
                 setPrTitle(draft.prTitle);
                 setPrDescription(draft.prDescription);
+                setHasDraft(true);
+                setDraftTimestamp(draft.timestamp);
                 console.log("Restored draft from local storage");
                 return; // Skip parsing remote content if draft exists
               } catch (e) {
@@ -243,33 +345,24 @@ function App() {
               }
             }
 
-            // Parse Front Matter from remote content if no draft or draft failed
-            const content = data.collection;
-            // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-            const fmRegex =
-              /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
-            const match = content.match(fmRegex);
+            setBody(parsedBody);
+            setFrontMatter(parsedFM);
+            setHasDraft(false);
+          }
+        })
+        .catch(console.error);
 
-            if (match) {
-              try {
-                const fm = jsyaml.load(match[1]);
-                setFrontMatter(typeof fm === "object" && fm !== null ? fm : {});
-                setBody(match[2]);
-              } catch (e) {
-                console.error("Error parsing front matter", e);
-                setFrontMatter({});
-                setBody(content);
-              }
-            } else {
-              // Check if the file is purely YAML (no body, no fences) - optional, but sticking to fenced FM for now
-              setFrontMatter({});
-              setBody(content);
-            }
+      // Fetch commit history
+      fetch(`/api/commits?${params.toString()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.commits) {
+            setCommits(data.commits);
           }
         })
         .catch(console.error);
     }
-  }, [view, currentContent]);
+  }, [view, currentContent, refreshTrigger]);
 
   const handleSaveCollection = async () => {
     if (!currentContent) return;
@@ -331,6 +424,9 @@ function App() {
         const key =
           `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
         localStorage.removeItem(key);
+        setHasDraft(false);
+        setDraftTimestamp(null);
+        setIsPrOpen(false);
       } else {
         console.error("Failed to create PR: " + data.error);
       }
@@ -473,20 +569,16 @@ function App() {
                 setCollection("");
                 setBody("");
                 setFrontMatter({});
+                setBody("");
+                setFrontMatter({});
                 setSha(""); // Reset SHA
+                setCommits([]);
               }}
               className="btn btn-secondary btn-back"
             >
               &larr; Back
             </button>
-            <button
-              type="button"
-              onClick={handleReset}
-              className="btn btn-secondary btn-sm"
-              title="Discard local changes and reset to remote content"
-            >
-              Reset
-            </button>
+
             <span className="file-path-badge">{currentContent.filePath}</span>
           </div>
         </header>
@@ -519,41 +611,92 @@ function App() {
             />
           </div>
           <div className="editor-sidebar-right">
-            <h3>Pull Request</h3>
-            {prUrl && (
-              <div className="pr-success-banner">
-                <a href={prUrl} target="_blank" rel="noreferrer">
-                  View Created PR
-                </a>
-              </div>
-            )}
-            <div className="form-group">
-              <label>Title</label>
-              <input
-                className="pr-input"
-                value={prTitle}
-                onChange={(e) => setPrTitle(e.target.value)}
-                placeholder="PR Title..."
-              />
+            <div className="sidebar-header-row">
+              <h3>History</h3>
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={!hasDraft}
+                className="btn btn-secondary btn-sm"
+                title="Discard local changes and reset to remote content"
+              >
+                Reset
+              </button>
             </div>
-            <div className="form-group">
-              <label>Description</label>
-              <textarea
-                className="pr-textarea"
-                value={prDescription}
-                onChange={(e) => setPrDescription(e.target.value)}
-                placeholder="PR Description..."
-                rows={4}
-              />
+
+            <div className="commits-list">
+              {hasDraft && (
+                <div className="draft-section">
+                  <div
+                    className="draft-header"
+                    onClick={() => setIsPrOpen(!isPrOpen)}
+                  >
+                    <span className="draft-indicator">● Unsaved Changes</span>
+                    <span className="draft-timestamp">
+                      {draftTimestamp
+                        ? new Date(draftTimestamp).toLocaleString()
+                        : ""}
+                    </span>
+                    <span className="draft-toggle">{isPrOpen ? "▼" : "▶"}</span>
+                  </div>
+                  {isPrOpen && (
+                    <div className="draft-content">
+                      {prUrl && (
+                        <div className="pr-success-banner">
+                          <a href={prUrl} target="_blank" rel="noreferrer">
+                            View Created PR
+                          </a>
+                        </div>
+                      )}
+                      <div className="form-group">
+                        <label>Title</label>
+                        <input
+                          className="pr-input"
+                          value={prTitle}
+                          onChange={(e) => setPrTitle(e.target.value)}
+                          placeholder="PR Title..."
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Description</label>
+                        <textarea
+                          className="pr-textarea"
+                          value={prDescription}
+                          onChange={(e) => setPrDescription(e.target.value)}
+                          placeholder="PR Description..."
+                          rows={4}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveCollection}
+                        disabled={isSaving}
+                        className="btn btn-primary btn-save"
+                      >
+                        {isSaving ? "Creating..." : "Create PR"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {commits.map((commit) => (
+                <div key={commit.sha} className="commit-item">
+                  <div className="commit-message">
+                    <a
+                      href={commit.html_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {commit.message}
+                    </a>
+                  </div>
+                  <div className="commit-meta">
+                    {commit.author} •{" "}
+                    {new Date(commit.date).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
             </div>
-            <button
-              type="button"
-              onClick={handleSaveCollection}
-              disabled={isSaving}
-              className="btn btn-primary btn-save"
-            >
-              {isSaving ? "Creating..." : "Create PR"}
-            </button>
           </div>
         </div>
       </div>

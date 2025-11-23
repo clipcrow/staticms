@@ -488,3 +488,106 @@ body {
   outline: none;
   border-color: var(--accent-primary);
 }
+
+.commits-list {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-color);
+  padding-top: 1rem;
+}
+
+.commits-list h3 {
+  display: none; /* Hide original header if present */
+}
+
+.sidebar-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.sidebar-header-row h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+
+.draft-section {
+  background-color: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.draft-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+}
+
+.draft-header:hover {
+  background-color: rgba(234, 179, 8, 0.15);
+}
+
+.draft-indicator {
+  color: #facc15;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.draft-timestamp {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  margin-left: auto;
+  margin-right: 0.5rem;
+}
+
+.draft-toggle {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.draft-content {
+  padding: 1rem;
+  border-top: 1px solid rgba(234, 179, 8, 0.2);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.commit-item {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.commit-item:last-child {
+  border-bottom: none;
+}
+
+.commit-message {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.commit-message a {
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.commit-message a:hover {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
+.commit-meta {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}

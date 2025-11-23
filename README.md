@@ -1,31 +1,60 @@
 # Staticms
 
-StaticmsはGitHubリポジトリに補完されるファイルを読み書きする、ヘッドレスCMSです。
-静的サイトジェネレーターと組み合わせて用いることを想定しています。
+GitHub上のコンテンツを管理するための、モダンなDenoベースのCMSです。
 
-## 設定
+## セットアップ
 
-開発時の設定は、プロジェクトルートフォルダに .env ファイルを作成します。
-実行時には、デプロイ先の環境で定義された環境変数を使用します。
+1. **環境変数**: ルートディレクトリに `.env`
+   ファイルを作成し、以下の内容を記述してください：
 
-## ディレクトリ構成
+   ```env
+   GITHUB_TOKEN=your_github_personal_access_token
+   STATICMS_PORT=3030
+   PUBLIC_URL=https://your-public-url.com
+   ```
 
-プロジェクトはサーバーとフロントエンドの2つの部分構成になっています。
+   - `GITHUB_TOKEN`: `repo` スコープを持つGitHub Personal Access Token。
+   - `STATICMS_PORT`: サーバーのポート番号（デフォルト: 3030）。
+   - `PUBLIC_URL`: サーバーの公開URL（WebHookに必要）。
 
-```
-.
-├── public/
-│   ├── js/
-│   │   ├── bundle.js         # フロントエンドのビルド出力結果
-│   ├── css/
-│   │   ├── style.css         # フロントエンドのスタイル
-│   ├── index.html            # HTMLテンプレート
-├── src/
-│   ├── types.ts              # 型定義
-│   ├── app/
-│   │   ├── App.tsx           # フロントエンドのメインReactコンポーネント
-│   ├── server/
-│   │   ├── staticms.ts       # Staticmsのメインファイル
-├── serve.ts                  # Oakサーバー
-├── deno.json                 # Deno設定
-```
+2. **ローカルでの実行**:
+
+   ```bash
+   deno task serve
+   ```
+
+   `http://localhost:3030` でダッシュボードにアクセスできます。
+
+## Ngrokを使用したWebHookのセットアップ（ローカル開発用）
+
+ローカル開発中にGitHubからのリアルタイム更新を有効にするには、`ngrok`
+を使用してローカルサーバーをインターネットに公開する必要があります。
+
+1. **Ngrokのインストール**: [ngrok.com](https://ngrok.com/)
+   からngrokをダウンロードしてインストールしてください。
+
+2. **Ngrokの起動**:
+   以下のコマンドを実行して、ローカルポート（3030）を公開します：
+
+   ```bash
+   ngrok http 3030
+   ```
+
+3. **.envの更新**: ngrokが表示するHTTPSのURL（例:
+   `https://a1b2-c3d4.ngrok-free.app`）をコピーし、`.env`
+   ファイルを更新してください：
+
+   ```env
+   PUBLIC_URL=https://a1b2-c3d4.ngrok-free.app
+   ```
+
+4. **サーバーの再起動**: Staticmsサーバーを再起動します：
+
+   ```bash
+   deno task serve
+   ```
+
+5. **コンテンツの設定**:
+   Staticmsのダッシュボードに移動し、コンテンツ設定を再度保存してください。これにより、新しいngrokのURLを使用して、GitHubリポジトリにWebHookが自動的に設定されます。
+
+これで、GitHub上のファイルを変更すると、エディタが自動的にリフレッシュされるようになります！
