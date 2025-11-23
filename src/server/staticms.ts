@@ -23,13 +23,9 @@ async function githubRequest(url: string, options: RequestInit = {}) {
   return response.json();
 }
 
-router.get("/ping", (ctx) => {
-  ctx.response.body = "Hello World";
-});
-
 router.get("/api/config", async (ctx) => {
   const result = await kv.get(["config"]);
-  ctx.response.body = result.value || {};
+  ctx.response.body = result.value || { contents: [] };
 });
 
 router.post("/api/config", async (ctx) => {
@@ -45,27 +41,26 @@ router.post("/api/config", async (ctx) => {
   }
 });
 
-router.get("/api/content", async (ctx) => {
+router.get("/api/collection", async (ctx) => {
   try {
-    const config = (await kv.get(["config"])).value as {
-      owner: string;
-      repo: string;
-      filePath: string;
-    } | null;
-    if (!config) {
-      ctx.throw(400, "Configuration not found");
+    const owner = ctx.request.url.searchParams.get("owner");
+    const repo = ctx.request.url.searchParams.get("repo");
+    const filePath = ctx.request.url.searchParams.get("filePath");
+
+    if (!owner || !repo || !filePath) {
+      ctx.throw(400, "Missing owner, repo, or filePath query parameters");
     }
-    const { owner, repo, filePath } = config!;
+
     const url =
       `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
     const data = await githubRequest(url);
 
     // Content is base64 encoded
     const rawContent = atob(data.content.replace(/\n/g, ""));
-    const content = new TextDecoder().decode(
+    const collection = new TextDecoder().decode(
       Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
     );
-    ctx.response.body = { content, sha: data.sha };
+    ctx.response.body = { collection, sha: data.sha };
   } catch (e) {
     console.error(e);
     ctx.response.status = 500;
@@ -73,19 +68,14 @@ router.get("/api/content", async (ctx) => {
   }
 });
 
-router.post("/api/content", async (ctx) => {
+router.post("/api/collection", async (ctx) => {
   try {
-    const config = (await kv.get(["config"])).value as {
-      owner: string;
-      repo: string;
-      filePath: string;
-    } | null;
-    if (!config) {
-      ctx.throw(400, "Configuration not found");
-    }
-    const { owner, repo, filePath } = config!;
     const body = await ctx.request.body.json();
-    const { content, sha, description, title } = body;
+    const { collection, sha, description, title, owner, repo, filePath } = body;
+
+    if (!owner || !repo || !filePath) {
+      ctx.throw(400, "Missing owner, repo, or filePath in body");
+    }
 
     // 1. Get default branch
     const repoData = await githubRequest(
@@ -119,7 +109,7 @@ router.post("/api/content", async (ctx) => {
         method: "PUT",
         body: JSON.stringify({
           message: `Update ${filePath} via Staticms`,
-          content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
+          content: btoa(unescape(encodeURIComponent(collection))), // Handle UTF-8
           branch: branchName,
           sha: sha, // Original file SHA
         }),
