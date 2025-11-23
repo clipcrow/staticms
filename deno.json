@@ -2,12 +2,18 @@
   "lock": false,
   "tasks": {
     "build": "deno bundle src/app/App.tsx --output public/js/bundle.js",
-    "serve": "deno run --allow-net --allow-read --allow-env serve.ts"
+    "serve": "deno run --unstable-kv --allow-net --allow-read --allow-write --allow-env serve.ts"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "lib": ["dom", "dom.iterable", "dom.asynciterable", "deno.ns"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "dom.asynciterable",
+      "deno.ns",
+      "deno.unstable"
+    ],
     "types": ["@types/react", "@types/react-dom"]
   },
   "imports": {
