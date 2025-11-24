@@ -731,3 +731,14 @@ body {
   text-align: center;
   font-weight: 500;
 }
+.locked-banner-header {
+  background-color: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}

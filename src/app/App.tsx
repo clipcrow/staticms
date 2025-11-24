@@ -238,20 +238,23 @@ function App() {
             /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
           const match = content.match(fmRegex);
 
+          let parsedBody = content;
+          let parsedFM = {};
+
           if (match) {
             try {
               const fm = jsyaml.load(match[1]);
-              setFrontMatter(typeof fm === "object" && fm !== null ? fm : {});
-              setBody(match[2]);
+              parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+              parsedBody = match[2];
             } catch (e) {
               console.error("Error parsing front matter", e);
-              setFrontMatter({});
-              setBody(content);
             }
-          } else {
-            setFrontMatter({});
-            setBody(content);
           }
+
+          setFrontMatter(parsedFM);
+          setBody(parsedBody);
+          setInitialBody(parsedBody);
+          setInitialFrontMatter(parsedFM);
         }
       })
       .catch(console.error);
@@ -304,6 +307,7 @@ function App() {
 
   useEffect(() => {
     if (view === "editor" && currentContent) {
+      setEditorLoading(true); // Start loading
       const params = new URLSearchParams({
         owner: currentContent.owner,
         repo: currentContent.repo,
@@ -319,8 +323,7 @@ function App() {
             // Parse Front Matter from remote content if no draft or draft failed
             const content = data.collection;
             // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-            const fmRegex =
-              /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
+            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\S]*$/; // Updated regex to handle optional trailing content
             const match = content.match(fmRegex);
 
             let parsedBody = content;
@@ -330,7 +333,7 @@ function App() {
               try {
                 const fm = jsyaml.load(match[1]);
                 parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = match[2];
+                parsedBody = match[2] || ""; // Ensure body is not undefined
               } catch (e) {
                 console.error("Error parsing front matter", e);
               }
@@ -348,6 +351,8 @@ function App() {
               try {
                 const draft = JSON.parse(savedDraft);
                 if (draft.type === "created") {
+                  // This draft type is for a PR that was created, but not yet merged/closed
+                  // We should not restore content from this draft, but rather the PR URL
                   setPrUrl(draft.prUrl);
                   setHasDraft(true);
                   setDraftTimestamp(draft.timestamp);
@@ -355,7 +360,6 @@ function App() {
                   // Continue to parse remote content since we don't have draft content
                   setBody(parsedBody);
                   setFrontMatter(parsedFM);
-                  return;
                 } else {
                   // Restore from draft
                   setBody(draft.body);
@@ -364,16 +368,27 @@ function App() {
                   setHasDraft(true);
                   setDraftTimestamp(draft.timestamp);
                   console.log("Restored draft from local storage");
-                  return; // Skip parsing remote content if draft exists
                 }
               } catch (e) {
                 console.error("Failed to parse draft", e);
+                // If draft parsing fails, proceed with remote content
+                setBody(parsedBody);
+                setFrontMatter(parsedFM);
+                setHasDraft(false);
               }
+            } else {
+              setBody(parsedBody);
+              setFrontMatter(parsedFM);
+              setHasDraft(false);
             }
 
-            setBody(parsedBody);
-            setFrontMatter(parsedFM);
-            setHasDraft(false);
+            // Check for existing PR URL
+            const prKey =
+              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+            const savedPrUrl = localStorage.getItem(prKey);
+            if (savedPrUrl) {
+              setPrUrl(savedPrUrl);
+            }
           }
         })
         .catch(console.error)
@@ -415,6 +430,9 @@ function App() {
                 const key =
                   `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
                 localStorage.removeItem(key);
+                const prKey =
+                  `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+                localStorage.removeItem(prKey);
               }
 
               resetContent();
@@ -429,12 +447,12 @@ function App() {
       setIsPrLocked(false);
       setPrStatus(null);
     }
-  }, [prUrl]);
+  }, [prUrl, currentContent]);
 
   const handleSaveCollection = async () => {
     if (!currentContent) return;
     setIsSaving(true);
-    setPrUrl(null);
+    setPrUrl(null); // Clear PR URL state temporarily until new PR is created
 
     // Reconstruct content with Front Matter
     let finalContent = body;
@@ -472,39 +490,45 @@ function App() {
 
     try {
       const now = new Date();
-      // Format: YYYYMMDD-HHmm
-      const timestamp = now.toISOString().slice(0, 16).replace(/[-T:]/g, "");
-      const generatedTitle = `STATICMS ${timestamp}`;
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const HH = String(now.getHours()).padStart(2, "0");
+      const MM = String(now.getMinutes()).padStart(2, "0");
+      const generatedTitle = `STATICMS ${yyyy}${mm}${dd}${HH}${MM}`;
 
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          collection: finalContent,
-          sha,
-          description: prDescription,
-          title: generatedTitle,
           owner: currentContent.owner,
           repo: currentContent.repo,
-          filePath: currentContent.filePath,
+          path: currentContent.filePath,
+          content: finalContent,
+          message: prDescription || "Update collection via Staticms",
+          branch: `staticms-update-${Date.now()}`,
+          title: generatedTitle,
+          description: prDescription,
+          sha,
         }),
       });
       const data = await res.json();
       if (data.success) {
+        setPrUrl(data.prUrl);
+
+        // Save PR URL to local storage
+        const prKey =
+          `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+        localStorage.setItem(prKey, data.prUrl);
+
+        // Clear draft on success
         const key =
           `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-        const prInfo = {
-          type: "created",
-          prUrl: data.prUrl,
-          timestamp: Date.now(),
-          description: prDescription,
-        };
-        localStorage.setItem(key, JSON.stringify(prInfo));
-
-        setPrUrl(data.prUrl);
-        setHasDraft(true);
-        setDraftTimestamp(prInfo.timestamp);
-        setIsPrOpen(true);
+        localStorage.removeItem(key);
+        setHasDraft(false);
+        setDraftTimestamp(null);
+        setIsPrOpen(false);
+        setPrDescription("");
 
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);
@@ -670,15 +694,15 @@ function App() {
 
             <span className="file-path-badge">{currentContent.filePath}</span>
           </div>
+          {isPrLocked && (
+            <div className="locked-banner-header">
+              🔒 This file is currently locked because there is an open Pull
+              Request.
+            </div>
+          )}
         </header>
         <div className="editor-main-split">
           <div className="editor-content">
-            {isPrLocked && (
-              <div className="locked-banner">
-                🔒 This file is currently locked because there is an open Pull
-                Request.
-              </div>
-            )}
             <div className="editor-frontmatter-top">
               <h3>Front Matter</h3>
               <div className="frontmatter-grid">
@@ -805,6 +829,26 @@ function App() {
               </button>
             </div>
 
+            {prUrl && (
+              <div className="pr-status-block">
+                <p>
+                  {prStatus === "merged"
+                    ? "✅ Pull Request Merged"
+                    : prStatus === "closed"
+                    ? "❌ Pull Request Closed"
+                    : "⏳ Pull Request Open"}
+                </p>
+                <a
+                  href={prUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="btn btn-secondary btn-sm"
+                >
+                  View PR
+                </a>
+              </div>
+            )}
+
             <div className="commits-list">
               {hasDraft && (
                 <div
@@ -840,53 +884,24 @@ function App() {
                   </div>
                   {isPrOpen && (
                     <div className="draft-content">
-                      {prUrl
-                        ? (
-                          <div className="pr-created-view">
-                            <div className="pr-success-message">
-                              {prStatus === "merged"
-                                ? "Pull Request Merged"
-                                : prStatus === "closed"
-                                ? "Pull Request Closed"
-                                : prDescription}
-                            </div>
-                            <a
-                              href={prUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className={`pr-link-btn ${
-                                prStatus === "merged" || prStatus === "closed"
-                                  ? "btn-secondary"
-                                  : ""
-                              }`}
-                            >
-                              View Pull Request
-                            </a>
-                          </div>
-                        )
-                        : (
-                          <>
-                            <div className="form-group">
-                              <label>Description</label>
-                              <textarea
-                                className="pr-textarea"
-                                value={prDescription}
-                                onChange={(e) =>
-                                  setPrDescription(e.target.value)}
-                                placeholder="PR Description..."
-                                rows={4}
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={handleSaveCollection}
-                              disabled={isSaving || !prDescription.trim()}
-                              className="btn btn-primary btn-save"
-                            >
-                              {isSaving ? "Creating..." : "Create PR"}
-                            </button>
-                          </>
-                        )}
+                      <div className="form-group">
+                        <label>Description</label>
+                        <textarea
+                          className="pr-textarea"
+                          value={prDescription}
+                          onChange={(e) => setPrDescription(e.target.value)}
+                          placeholder="PR Description..."
+                          rows={4}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveCollection}
+                        disabled={isSaving}
+                        className="btn btn-primary btn-save"
+                      >
+                        {isSaving ? "Creating..." : "Create PR"}
+                      </button>
                     </div>
                   )}
                 </div>

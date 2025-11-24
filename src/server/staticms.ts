@@ -155,10 +155,10 @@ router.get("/api/collection", async (ctx) => {
 router.post("/api/collection", async (ctx) => {
   try {
     const body = await ctx.request.body.json();
-    const { collection, sha, description, title, owner, repo, filePath } = body;
+    const { content, sha, description, title, owner, repo, path } = body;
 
-    if (!owner || !repo || !filePath) {
-      ctx.throw(400, "Missing owner, repo, or filePath in body");
+    if (!owner || !repo || !path) {
+      ctx.throw(400, "Missing owner, repo, or path in body");
     }
 
     // 1. Get default branch
@@ -188,12 +188,12 @@ router.post("/api/collection", async (ctx) => {
 
     // 4. Update file in new branch
     await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
       {
         method: "PUT",
         body: JSON.stringify({
-          message: description || `Update ${filePath} via Staticms`,
-          content: btoa(unescape(encodeURIComponent(collection))), // Handle UTF-8
+          message: description || `Update ${path} via Staticms`,
+          content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
           branch: branchName,
           sha: sha, // Original file SHA
         }),
@@ -206,8 +206,8 @@ router.post("/api/collection", async (ctx) => {
       {
         method: "POST",
         body: JSON.stringify({
-          title: title || `Update ${filePath}`,
-          body: description || "This PR was created automatically by Staticms.",
+          title: title || `Update ${path}`,
+          body: description || "Update content via Staticms",
           head: branchName,
           base: defaultBranch,
         }),
