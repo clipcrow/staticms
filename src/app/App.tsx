@@ -1,36 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-
-interface Field {
-  name: string;
-}
-
-interface Content {
-  owner: string;
-  repo: string;
-  filePath: string;
-  fields: Field[];
-}
-
-interface Config {
-  contents: Content[];
-}
-
-interface Commit {
-  message: string;
-  author: string;
-  date: string;
-  sha: string;
-  html_url: string;
-}
+import { Commit, Content } from "./types.ts";
+import { ContentList } from "./components/ContentList.tsx";
+import { ContentSettings } from "./components/ContentSettings.tsx";
+import { ContentEditor } from "./components/ContentEditor.tsx";
+import { Loading } from "./components/Loading.tsx";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentContent, setCurrentContent] = useState<Content | null>(null);
-  const [view, setView] = useState<"dashboard" | "editor" | "new-content">(
-    "dashboard",
+  const [view, setView] = useState<
+    "content-list" | "content-editor" | "content-settings"
+  >(
+    "content-list",
   );
 
   const [formData, setFormData] = useState<Content>({
@@ -79,7 +63,7 @@ function App() {
         setContents(newContents);
         setFormData({ owner: "", repo: "", filePath: "", fields: [] });
         setEditingIndex(null);
-        setView("dashboard");
+        setView("content-list");
       } else {
         console.error("Failed to save configuration");
       }
@@ -113,26 +97,7 @@ function App() {
       fields: contents[index].fields || [],
     });
     setEditingIndex(index);
-    setView("new-content");
-  };
-
-  // Form Design Handlers
-  const handleAddField = () => {
-    setFormData({
-      ...formData,
-      fields: [...formData.fields, { name: "New Field" }],
-    });
-  };
-
-  const handleUpdateFieldName = (index: number, name: string) => {
-    const newFields = [...formData.fields];
-    newFields[index].name = name;
-    setFormData({ ...formData, fields: newFields });
-  };
-
-  const handleDeleteField = (index: number) => {
-    const newFields = formData.fields.filter((_, i) => i !== index);
-    setFormData({ ...formData, fields: newFields });
+    setView("content-settings");
   };
 
   const [_collection, setCollection] = useState(""); // Raw file content
@@ -162,7 +127,7 @@ function App() {
 
   // Draft Saving Logic
   useEffect(() => {
-    if (view === "editor" && currentContent && sha) {
+    if (view === "content-editor" && currentContent && sha) {
       const key =
         `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
 
@@ -294,6 +259,42 @@ function App() {
     resetContent();
   };
 
+  // Check PR Status
+  const checkPrStatus = async () => {
+    if (!prUrl) return;
+    try {
+      const res = await fetch(
+        `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.state === "open") {
+          setIsPrLocked(true);
+          setPrStatus("open");
+        } else {
+          setIsPrLocked(false);
+          // PR is merged or closed -> Clear PR status and Reset content
+          setPrUrl(null);
+          setPrStatus(null);
+
+          // Also clear the "created" draft from localStorage
+          if (currentContent) {
+            const key =
+              `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+            localStorage.removeItem(key);
+            const prKey =
+              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+            localStorage.removeItem(prKey);
+          }
+
+          resetContent();
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check PR status", e);
+    }
+  };
+
   // SSE Subscription
   useEffect(() => {
     const eventSource = new EventSource("/api/events");
@@ -334,7 +335,7 @@ function App() {
   }, [currentContent]);
 
   useEffect(() => {
-    if (view === "editor" && currentContent) {
+    if (view === "content-editor" && currentContent) {
       setEditorLoading(true); // Start loading
       const params = new URLSearchParams({
         owner: currentContent.owner,
@@ -448,42 +449,6 @@ function App() {
     }
   }, [view, currentContent]);
 
-  // Check PR Status
-  const checkPrStatus = async () => {
-    if (!prUrl) return;
-    try {
-      const res = await fetch(
-        `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data.state === "open") {
-          setIsPrLocked(true);
-          setPrStatus("open");
-        } else {
-          setIsPrLocked(false);
-          // PR is merged or closed -> Clear PR status and Reset content
-          setPrUrl(null);
-          setPrStatus(null);
-
-          // Also clear the "created" draft from localStorage
-          if (currentContent) {
-            const key =
-              `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-            localStorage.removeItem(key);
-            const prKey =
-              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-            localStorage.removeItem(prKey);
-          }
-
-          resetContent();
-        }
-      }
-    } catch (e) {
-      console.error("Failed to check PR status", e);
-    }
-  };
-
   useEffect(() => {
     if (prUrl) {
       checkPrStatus();
@@ -588,522 +553,85 @@ function App() {
   };
 
   if (loading) {
+    return <Loading />;
+  }
+
+  if (view === "content-settings") {
     return (
-      <div className="app-container loading">
-        <div className="spinner"></div>
-      </div>
+      <ContentSettings
+        formData={formData}
+        setFormData={setFormData}
+        editingIndex={editingIndex}
+        onSave={handleSaveContentConfig}
+        onCancel={() => {
+          setView("content-list");
+          setEditingIndex(null);
+          setFormData({
+            owner: "",
+            repo: "",
+            filePath: "",
+            fields: [],
+          });
+        }}
+      />
     );
   }
 
-  if (view === "new-content") {
+  if (view === "content-editor" && currentContent) {
     return (
-      <div className="app-container setup-screen">
-        <div className="card setup-card">
-          <h1 className="title gradient-text">
-            {editingIndex !== null ? "Edit Content" : "Add Content"}
-          </h1>
-          <p className="subtitle">
-            {editingIndex !== null
-              ? "Update your GitHub content configuration."
-              : "Configure a new GitHub content."}
-          </p>
-
-          <form onSubmit={handleSaveContentConfig} className="setup-form">
-            <div className="form-group">
-              <label>GitHub Owner</label>
-              <input
-                type="text"
-                placeholder="e.g. facebook"
-                value={formData.owner}
-                onChange={(e) =>
-                  setFormData({ ...formData, owner: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>GitHub Repo</label>
-              <input
-                type="text"
-                placeholder="e.g. react"
-                value={formData.repo}
-                onChange={(e) =>
-                  setFormData({ ...formData, repo: e.target.value })}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>File Path</label>
-              <input
-                type="text"
-                placeholder="e.g. content/blog/post.md"
-                value={formData.filePath}
-                onChange={(e) =>
-                  setFormData({ ...formData, filePath: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Form Fields (Front Matter)</label>
-              <div className="fields-list">
-                {formData.fields.map((field, index) => (
-                  <div key={index} className="field-item">
-                    <input
-                      type="text"
-                      value={field.name}
-                      onChange={(e) =>
-                        handleUpdateFieldName(index, e.target.value)}
-                      placeholder="Field Name"
-                      className="field-input"
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleDeleteField(index)}
-                      className="btn-icon delete-icon"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={handleAddField}
-                className="btn btn-secondary btn-sm"
-                style={{ marginTop: "0.5rem" }}
-              >
-                + Add Field
-              </button>
-            </div>
-
-            <div className="form-actions">
-              <button
-                type="button"
-                onClick={() => {
-                  setView("dashboard");
-                  setEditingIndex(null);
-                  setFormData({
-                    owner: "",
-                    repo: "",
-                    filePath: "",
-                    fields: [],
-                  });
-                }}
-                className="btn btn-secondary"
-                style={{ marginRight: "1rem" }}
-              >
-                Cancel
-              </button>
-              <button type="submit" className="btn btn-primary">
-                {editingIndex !== null ? "Update Content" : "Add Content"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === "editor" && currentContent) {
-    if (editorLoading) {
-      return (
-        <div className="app-container loading">
-          <div className="spinner"></div>
-        </div>
-      );
-    }
-    return (
-      <div className="app-container editor-screen">
-        <header className="editor-header">
-          <div className="editor-nav">
-            <button
-              type="button"
-              onClick={() => {
-                setView("dashboard");
-                setCurrentContent(null);
-                setPrUrl(null);
-                setCollection("");
-                setBody("");
-                setFrontMatter({});
-                setBody("");
-                setFrontMatter({});
-                setSha(""); // Reset SHA
-                setCommits([]);
-              }}
-              className="btn btn-secondary btn-back"
-            >
-              &larr; Back
-            </button>
-
-            <span className="file-path-badge">{currentContent.filePath}</span>
-          </div>
-          {isPrLocked && (
-            <div className="locked-banner-header">
-              🔒 This file is currently locked because there is an open Pull
-              Request.
-            </div>
-          )}
-        </header>
-        <div className="editor-main-split">
-          <div className="editor-content">
-            <div className="editor-frontmatter-top">
-              <h3>Front Matter</h3>
-              <div className="frontmatter-grid">
-                {/* Configured Fields */}
-                {currentContent.fields?.map((field, index) => (
-                  <div key={`configured-${index}`} className="form-group">
-                    <label>{field.name}</label>
-                    <input
-                      type="text"
-                      value={(frontMatter[field.name] as string) || ""}
-                      onChange={(e) =>
-                        setFrontMatter({
-                          ...frontMatter,
-                          [field.name]: e.target.value,
-                        })}
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
-                  </div>
-                ))}
-
-                {/* Custom/Extra Fields */}
-                {customFields.map((field) => (
-                  <div
-                    key={field.id}
-                    className="form-group custom-field-group"
-                  >
-                    <div className="custom-field-header">
-                      <input
-                        type="text"
-                        className="field-key-input"
-                        value={field.key}
-                        onChange={(e) => {
-                          const newKey = e.target.value;
-                          const oldKey = field.key;
-
-                          // Update customFields state
-                          setCustomFields((prev) =>
-                            prev.map((f) =>
-                              f.id === field.id ? { ...f, key: newKey } : f
-                            )
-                          );
-
-                          // Update frontMatter state
-                          if (oldKey !== newKey) {
-                            const { [oldKey]: value, ...rest } = frontMatter;
-                            // Only set new key if it's not empty to avoid losing data,
-                            // but we need to allow typing.
-                            // Actually, we should keep the value associated with the *field*, not just the key.
-                            // But frontMatter is key-value.
-                            // Strategy: Rename the key in frontMatter.
-
-                            const newValue = frontMatter[oldKey];
-                            const newFm = { ...rest };
-                            if (newKey) {
-                              newFm[newKey] = newValue;
-                            }
-                            // Note: This simple rename has issues if newKey collides.
-                            // For a robust solution, we might need to separate "display keys" from "storage keys"
-                            // or just accept that renaming is tricky.
-                            // Better approach for this specific bug:
-                            // Just update frontMatter when blur? Or keep them in sync?
-                            // The issue is that `frontMatter` is the source of truth for the *values*.
-
-                            // Let's try: Update frontMatter immediately.
-                            // If we rename 'a' to 'ab', we remove 'a' and add 'ab' with 'a's value.
-                            setFrontMatter({
-                              ...rest,
-                              [newKey]: value,
-                            });
-                          }
-                        }}
-                        placeholder="Key"
-                        readOnly={isPrLocked}
-                        disabled={isPrLocked}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomFields((prev) =>
-                            prev.filter((f) => f.id !== field.id)
-                          );
-                          const { [field.key]: _, ...rest } = frontMatter;
-                          setFrontMatter(rest);
-                        }}
-                        className="btn-icon delete-icon"
-                        title="Delete Field"
-                        disabled={isPrLocked}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={(frontMatter[field.key] as string) || ""}
-                      onChange={(e) =>
-                        setFrontMatter({
-                          ...frontMatter,
-                          [field.key]: e.target.value,
-                        })}
-                      placeholder="Value"
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
-                  </div>
-                ))}
-
-                {/* Add New Field Button */}
-                <div className="form-group add-field-group">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      let newKey = "new_field";
-                      let counter = 1;
-                      while (frontMatter[newKey]) {
-                        newKey = `new_field_${counter}`;
-                        counter++;
-                      }
-
-                      const newId = crypto.randomUUID();
-                      setCustomFields([...customFields, {
-                        id: newId,
-                        key: newKey,
-                      }]);
-
-                      setFrontMatter({
-                        ...frontMatter,
-                        [newKey]: "",
-                      });
-                    }}
-                    className="btn btn-secondary btn-sm btn-add-field"
-                    disabled={isPrLocked}
-                  >
-                    + Add Item
-                  </button>
-                </div>
-              </div>
-            </div>
-            <textarea
-              className="full-screen-editor"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Start editing markdown body..."
-              readOnly={isPrLocked}
-              disabled={isPrLocked}
-            />
-          </div>
-          <div className="editor-sidebar-right">
-            <div className="sidebar-header-row">
-              <h3>History</h3>
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={!hasDraft || isPrLocked}
-                className="btn btn-secondary btn-sm"
-                title="Discard local changes and reset to remote content"
-              >
-                Reset
-              </button>
-            </div>
-
-            {prUrl && (
-              <div className="pr-status-block">
-                <p>
-                  {prStatus === "merged"
-                    ? "✅ Pull Request Merged"
-                    : prStatus === "closed"
-                    ? "❌ Pull Request Closed"
-                    : "⏳ Pull Request Open"}
-                </p>
-                <a
-                  href={prUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary btn-sm"
-                >
-                  View PR
-                </a>
-              </div>
-            )}
-
-            <div className="commits-list">
-              {hasDraft && (
-                <div
-                  className={`draft-section ${
-                    prStatus === "open"
-                      ? "success"
-                      : prStatus === "merged" || prStatus === "closed"
-                      ? "closed"
-                      : prUrl
-                      ? "success"
-                      : ""
-                  }`}
-                >
-                  <div
-                    className="draft-header"
-                    onClick={() => setIsPrOpen(!isPrOpen)}
-                  >
-                    <span className="draft-indicator">
-                      {prStatus === "merged"
-                        ? "● PR Merged"
-                        : prStatus === "closed"
-                        ? "● PR Closed"
-                        : prUrl
-                        ? "● PR Created"
-                        : "● Local Copy"}
-                    </span>
-                    <span className="draft-timestamp">
-                      {draftTimestamp
-                        ? new Date(draftTimestamp).toLocaleString()
-                        : ""}
-                    </span>
-                    <span className="draft-toggle">{isPrOpen ? "▼" : "▶"}</span>
-                  </div>
-                  {isPrOpen && (
-                    <div className="draft-content">
-                      <div className="form-group">
-                        <label>Description</label>
-                        <textarea
-                          className="pr-textarea"
-                          value={prDescription}
-                          onChange={(e) => setPrDescription(e.target.value)}
-                          placeholder="PR Description..."
-                          rows={4}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleSaveCollection}
-                        disabled={isSaving}
-                        className="btn btn-primary btn-save"
-                      >
-                        {isSaving ? "Creating..." : "Create PR"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-              {commits.map((commit) => (
-                <div key={commit.sha} className="commit-item">
-                  <div className="commit-message">
-                    <a
-                      href={commit.html_url}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      {commit.message}
-                    </a>
-                  </div>
-                  <div className="commit-meta">
-                    {commit.author} •{" "}
-                    {new Date(commit.date).toLocaleDateString()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ContentEditor
+        currentContent={currentContent}
+        body={body}
+        setBody={setBody}
+        frontMatter={frontMatter}
+        setFrontMatter={setFrontMatter}
+        customFields={customFields}
+        setCustomFields={setCustomFields}
+        isPrLocked={isPrLocked}
+        prStatus={prStatus}
+        prUrl={prUrl}
+        hasDraft={hasDraft}
+        draftTimestamp={draftTimestamp}
+        isPrOpen={isPrOpen}
+        setIsPrOpen={setIsPrOpen}
+        prDescription={prDescription}
+        setPrDescription={setPrDescription}
+        isSaving={isSaving}
+        commits={commits}
+        onSaveCollection={handleSaveCollection}
+        onReset={handleReset}
+        onBack={() => {
+          setView("content-list");
+          setCurrentContent(null);
+          setPrUrl(null);
+          setCollection("");
+          setBody("");
+          setFrontMatter({});
+          setSha("");
+          setCommits([]);
+        }}
+        loading={editorLoading}
+      />
     );
   }
 
   return (
-    <div className="app-container dashboard">
-      <div className="dashboard-content">
-        <header className="dashboard-header">
-          <h1 className="title gradient-text">Staticms Dashboard</h1>
-        </header>
-
-        <div className="card info-card">
-          <div className="info-header">
-            <h2>Contents</h2>
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-                setEditingIndex(null);
-                setView("new-content");
-              }}
-              className="btn btn-primary btn-edit"
-            >
-              Add Content
-            </button>
-          </div>
-
-          {contents.length === 0
-            ? (
-              <div className="empty-state">
-                <p>No contents configured yet.</p>
-              </div>
-            )
-            : (
-              <div className="contents-grid">
-                {contents.map((content, index) => (
-                  <div
-                    key={index}
-                    className="content-card clickable-card"
-                    onClick={() => {
-                      setCurrentContent(content);
-                      setEditorLoading(true);
-                      setView("editor");
-                    }}
-                  >
-                    <div className="content-info">
-                      <div className="info-item">
-                        <span className="label">Repo</span>
-                        <span className="value">
-                          {content.owner}/{content.repo}
-                        </span>
-                      </div>
-                      <div className="info-item">
-                        <span className="label">File</span>
-                        <span className="value">{content.filePath}</span>
-                      </div>
-                    </div>
-                    <div className="content-actions">
-                      <div className="content-actions-secondary">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditContentConfig(index);
-                          }}
-                          className="btn-icon"
-                          title="Edit Configuration"
-                        >
-                          ⚙️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteContent(index);
-                          }}
-                          className="btn-icon delete-icon"
-                          title="Delete Content"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-        </div>
-      </div>
-    </div>
+    <ContentList
+      contents={contents}
+      onEditContentConfig={handleEditContentConfig}
+      onDeleteContent={handleDeleteContent}
+      onSelectContent={(content) => {
+        setCurrentContent(content);
+        setView("content-editor");
+      }}
+      onAddNewContent={() => {
+        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
+        setEditingIndex(null);
+        setView("content-settings");
+      }}
+    />
   );
 }
 
-const rootElement = document.getElementById("root");
-if (rootElement) {
-  const root = createRoot(rootElement);
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>,
-  );
-}
+const root = createRoot(document.getElementById("root")!);
+root.render(<App />);
