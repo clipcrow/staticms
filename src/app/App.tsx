@@ -41,6 +41,7 @@ function App() {
   });
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editorLoading, setEditorLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/config")
@@ -150,10 +151,12 @@ function App() {
   const [isPrOpen, setIsPrOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  const [prDescription, setPrDescription] = useState(
-    "Update collection via Staticms",
+  const [prDescription, setPrDescription] = useState("");
+
+  const [isPrLocked, setIsPrLocked] = useState(false);
+  const [prStatus, setPrStatus] = useState<"open" | "merged" | "closed" | null>(
+    null,
   );
-  const [prTitle, setPrTitle] = useState("");
 
   // Draft Saving Logic
   useEffect(() => {
@@ -163,14 +166,12 @@ function App() {
 
       const isDirty = body !== initialBody ||
         JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
-        prTitle !== "" ||
-        prDescription !== "Update collection via Staticms";
+        prDescription !== "";
 
       if (isDirty) {
         const draft = {
           body,
           frontMatter,
-          prTitle,
           prDescription,
           timestamp: Date.now(),
         };
@@ -178,15 +179,28 @@ function App() {
         setHasDraft(true);
         setDraftTimestamp(draft.timestamp);
       } else {
-        localStorage.removeItem(key);
-        setHasDraft(false);
-        setDraftTimestamp(null);
+        // Only remove if it's not a "created" status
+        const saved = localStorage.getItem(key);
+        let isCreatedStatus = false;
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed.type === "created") isCreatedStatus = true;
+          } catch {
+            // ignore
+          }
+        }
+
+        if (!isCreatedStatus) {
+          localStorage.removeItem(key);
+          setHasDraft(false);
+          setDraftTimestamp(null);
+        }
       }
     }
   }, [
     body,
     frontMatter,
-    prTitle,
     prDescription,
     view,
     currentContent,
@@ -195,25 +209,15 @@ function App() {
     initialFrontMatter,
   ]);
 
-  const handleReset = () => {
+  const resetContent = () => {
     if (!currentContent) return;
-    if (
-      !confirm(
-        "Are you sure you want to discard your local changes and reset to the remote content?",
-      )
-    ) return;
 
     const key =
       `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
     localStorage.removeItem(key);
     setHasDraft(false);
     setDraftTimestamp(null);
-
-    // Trigger re-fetch by temporarily clearing currentContent or forcing update
-    // Easier: just manually call the fetch logic or reload the view
-    // Let's just clear state and let useEffect re-run?
-    // No, useEffect depends on [view, currentContent]. They haven't changed.
-    // We can manually fetch here.
+    setPrDescription("");
 
     const params = new URLSearchParams({
       owner: currentContent.owner,
@@ -229,6 +233,7 @@ function App() {
 
           // Parse Front Matter directly (ignoring draft since we just deleted it)
           const content = data.collection;
+          // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
           const fmRegex =
             /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
           const match = content.match(fmRegex);
@@ -250,6 +255,17 @@ function App() {
         }
       })
       .catch(console.error);
+  };
+
+  const handleReset = () => {
+    if (!currentContent) return;
+    if (
+      !confirm(
+        "Are you sure you want to discard your local changes and reset to the remote content?",
+      )
+    ) return;
+
+    resetContent();
   };
 
   // SSE Subscription
@@ -331,15 +347,25 @@ function App() {
             if (savedDraft) {
               try {
                 const draft = JSON.parse(savedDraft);
-                // Restore from draft
-                setBody(draft.body);
-                setFrontMatter(draft.frontMatter);
-                setPrTitle(draft.prTitle);
-                setPrDescription(draft.prDescription);
-                setHasDraft(true);
-                setDraftTimestamp(draft.timestamp);
-                console.log("Restored draft from local storage");
-                return; // Skip parsing remote content if draft exists
+                if (draft.type === "created") {
+                  setPrUrl(draft.prUrl);
+                  setHasDraft(true);
+                  setDraftTimestamp(draft.timestamp);
+                  setPrDescription(draft.description || "");
+                  // Continue to parse remote content since we don't have draft content
+                  setBody(parsedBody);
+                  setFrontMatter(parsedFM);
+                  return;
+                } else {
+                  // Restore from draft
+                  setBody(draft.body);
+                  setFrontMatter(draft.frontMatter);
+                  setPrDescription(draft.prDescription);
+                  setHasDraft(true);
+                  setDraftTimestamp(draft.timestamp);
+                  console.log("Restored draft from local storage");
+                  return; // Skip parsing remote content if draft exists
+                }
               } catch (e) {
                 console.error("Failed to parse draft", e);
               }
@@ -350,7 +376,8 @@ function App() {
             setHasDraft(false);
           }
         })
-        .catch(console.error);
+        .catch(console.error)
+        .finally(() => setEditorLoading(false));
 
       // Fetch commit history
       fetch(`/api/commits?${params.toString()}`)
@@ -363,6 +390,46 @@ function App() {
         .catch(console.error);
     }
   }, [view, currentContent, refreshTrigger]);
+
+  // Check PR Status
+  useEffect(() => {
+    if (prUrl) {
+      const checkPrStatus = async () => {
+        try {
+          const res = await fetch(
+            `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
+          );
+          if (res.ok) {
+            const data = await res.json();
+            if (data.state === "open") {
+              setIsPrLocked(true);
+              setPrStatus("open");
+            } else {
+              setIsPrLocked(false);
+              // PR is merged or closed -> Clear PR status and Reset content
+              setPrUrl(null);
+              setPrStatus(null);
+
+              // Also clear the "created" draft from localStorage
+              if (currentContent) {
+                const key =
+                  `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+                localStorage.removeItem(key);
+              }
+
+              resetContent();
+            }
+          }
+        } catch (e) {
+          console.error("Failed to check PR status", e);
+        }
+      };
+      checkPrStatus();
+    } else {
+      setIsPrLocked(false);
+      setPrStatus(null);
+    }
+  }, [prUrl]);
 
   const handleSaveCollection = async () => {
     if (!currentContent) return;
@@ -404,6 +471,11 @@ function App() {
     }
 
     try {
+      const now = new Date();
+      // Format: YYYYMMDD-HHmm
+      const timestamp = now.toISOString().slice(0, 16).replace(/[-T:]/g, "");
+      const generatedTitle = `STATICMS ${timestamp}`;
+
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -411,7 +483,7 @@ function App() {
           collection: finalContent,
           sha,
           description: prDescription,
-          title: prTitle,
+          title: generatedTitle,
           owner: currentContent.owner,
           repo: currentContent.repo,
           filePath: currentContent.filePath,
@@ -419,14 +491,24 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
-        setPrUrl(data.prUrl);
-        // Clear draft on success
         const key =
           `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-        localStorage.removeItem(key);
-        setHasDraft(false);
-        setDraftTimestamp(null);
-        setIsPrOpen(false);
+        const prInfo = {
+          type: "created",
+          prUrl: data.prUrl,
+          timestamp: Date.now(),
+          description: prDescription,
+        };
+        localStorage.setItem(key, JSON.stringify(prInfo));
+
+        setPrUrl(data.prUrl);
+        setHasDraft(true);
+        setDraftTimestamp(prInfo.timestamp);
+        setIsPrOpen(true);
+
+        // Update initial state to prevent "Unsaved Changes" detection
+        setInitialBody(body);
+        setInitialFrontMatter(frontMatter);
       } else {
         console.error("Failed to create PR: " + data.error);
       }
@@ -556,6 +638,13 @@ function App() {
   }
 
   if (view === "editor" && currentContent) {
+    if (editorLoading) {
+      return (
+        <div className="app-container loading">
+          <div className="spinner"></div>
+        </div>
+      );
+    }
     return (
       <div className="app-container editor-screen">
         <header className="editor-header">
@@ -583,31 +672,123 @@ function App() {
           </div>
         </header>
         <div className="editor-main-split">
-          {currentContent.fields && currentContent.fields.length > 0 && (
-            <div className="editor-sidebar">
+          <div className="editor-content">
+            {isPrLocked && (
+              <div className="locked-banner">
+                🔒 This file is currently locked because there is an open Pull
+                Request.
+              </div>
+            )}
+            <div className="editor-frontmatter-top">
               <h3>Front Matter</h3>
-              {currentContent.fields.map((field, index) => (
-                <div key={index} className="form-group">
-                  <label>{field.name}</label>
-                  <input
-                    type="text"
-                    value={(frontMatter[field.name] as string) || ""}
-                    onChange={(e) =>
+              <div className="frontmatter-grid">
+                {/* Configured Fields */}
+                {currentContent.fields?.map((field, index) => (
+                  <div key={`configured-${index}`} className="form-group">
+                    <label>{field.name}</label>
+                    <input
+                      type="text"
+                      value={(frontMatter[field.name] as string) || ""}
+                      onChange={(e) =>
+                        setFrontMatter({
+                          ...frontMatter,
+                          [field.name]: e.target.value,
+                        })}
+                      readOnly={isPrLocked}
+                      disabled={isPrLocked}
+                    />
+                  </div>
+                ))}
+
+                {/* Custom/Extra Fields */}
+                {Object.keys(frontMatter)
+                  .filter(
+                    (key) =>
+                      !currentContent.fields?.some((f) => f.name === key),
+                  )
+                  .map((key) => (
+                    <div
+                      key={`custom-${key}`}
+                      className="form-group custom-field-group"
+                    >
+                      <div className="custom-field-header">
+                        <input
+                          type="text"
+                          className="field-key-input"
+                          value={key}
+                          onChange={(e) => {
+                            const newKey = e.target.value;
+                            if (newKey && !frontMatter[newKey]) {
+                              const { [key]: value, ...rest } = frontMatter;
+                              setFrontMatter({
+                                ...rest,
+                                [newKey]: value,
+                              });
+                            }
+                          }}
+                          placeholder="Key"
+                          readOnly={isPrLocked}
+                          disabled={isPrLocked}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const { [key]: _, ...rest } = frontMatter;
+                            setFrontMatter(rest);
+                          }}
+                          className="btn-icon delete-icon"
+                          title="Delete Field"
+                          disabled={isPrLocked}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        value={(frontMatter[key] as string) || ""}
+                        onChange={(e) =>
+                          setFrontMatter({
+                            ...frontMatter,
+                            [key]: e.target.value,
+                          })}
+                        placeholder="Value"
+                        readOnly={isPrLocked}
+                        disabled={isPrLocked}
+                      />
+                    </div>
+                  ))}
+
+                {/* Add New Field Button */}
+                <div className="form-group add-field-group">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let newKey = "new_field";
+                      let counter = 1;
+                      while (frontMatter[newKey]) {
+                        newKey = `new_field_${counter}`;
+                        counter++;
+                      }
                       setFrontMatter({
                         ...frontMatter,
-                        [field.name]: e.target.value,
-                      })}
-                  />
+                        [newKey]: "",
+                      });
+                    }}
+                    className="btn btn-secondary btn-sm btn-add-field"
+                    disabled={isPrLocked}
+                  >
+                    + Add Item
+                  </button>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-          <div className="editor-content">
             <textarea
               className="full-screen-editor"
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Start editing markdown body..."
+              readOnly={isPrLocked}
+              disabled={isPrLocked}
             />
           </div>
           <div className="editor-sidebar-right">
@@ -616,7 +797,7 @@ function App() {
               <button
                 type="button"
                 onClick={handleReset}
-                disabled={!hasDraft}
+                disabled={!hasDraft || isPrLocked}
                 className="btn btn-secondary btn-sm"
                 title="Discard local changes and reset to remote content"
               >
@@ -626,12 +807,30 @@ function App() {
 
             <div className="commits-list">
               {hasDraft && (
-                <div className="draft-section">
+                <div
+                  className={`draft-section ${
+                    prStatus === "open"
+                      ? "success"
+                      : prStatus === "merged" || prStatus === "closed"
+                      ? "closed"
+                      : prUrl
+                      ? "success"
+                      : ""
+                  }`}
+                >
                   <div
                     className="draft-header"
                     onClick={() => setIsPrOpen(!isPrOpen)}
                   >
-                    <span className="draft-indicator">● Unsaved Changes</span>
+                    <span className="draft-indicator">
+                      {prStatus === "merged"
+                        ? "● PR Merged"
+                        : prStatus === "closed"
+                        ? "● PR Closed"
+                        : prUrl
+                        ? "● PR Created"
+                        : "● Local Copy"}
+                    </span>
                     <span className="draft-timestamp">
                       {draftTimestamp
                         ? new Date(draftTimestamp).toLocaleString()
@@ -641,40 +840,53 @@ function App() {
                   </div>
                   {isPrOpen && (
                     <div className="draft-content">
-                      {prUrl && (
-                        <div className="pr-success-banner">
-                          <a href={prUrl} target="_blank" rel="noreferrer">
-                            View Created PR
-                          </a>
-                        </div>
-                      )}
-                      <div className="form-group">
-                        <label>Title</label>
-                        <input
-                          className="pr-input"
-                          value={prTitle}
-                          onChange={(e) => setPrTitle(e.target.value)}
-                          placeholder="PR Title..."
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Description</label>
-                        <textarea
-                          className="pr-textarea"
-                          value={prDescription}
-                          onChange={(e) => setPrDescription(e.target.value)}
-                          placeholder="PR Description..."
-                          rows={4}
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleSaveCollection}
-                        disabled={isSaving}
-                        className="btn btn-primary btn-save"
-                      >
-                        {isSaving ? "Creating..." : "Create PR"}
-                      </button>
+                      {prUrl
+                        ? (
+                          <div className="pr-created-view">
+                            <div className="pr-success-message">
+                              {prStatus === "merged"
+                                ? "Pull Request Merged"
+                                : prStatus === "closed"
+                                ? "Pull Request Closed"
+                                : prDescription}
+                            </div>
+                            <a
+                              href={prUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className={`pr-link-btn ${
+                                prStatus === "merged" || prStatus === "closed"
+                                  ? "btn-secondary"
+                                  : ""
+                              }`}
+                            >
+                              View Pull Request
+                            </a>
+                          </div>
+                        )
+                        : (
+                          <>
+                            <div className="form-group">
+                              <label>Description</label>
+                              <textarea
+                                className="pr-textarea"
+                                value={prDescription}
+                                onChange={(e) =>
+                                  setPrDescription(e.target.value)}
+                                placeholder="PR Description..."
+                                rows={4}
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleSaveCollection}
+                              disabled={isSaving || !prDescription.trim()}
+                              className="btn btn-primary btn-save"
+                            >
+                              {isSaving ? "Creating..." : "Create PR"}
+                            </button>
+                          </>
+                        )}
                     </div>
                   )}
                 </div>
@@ -740,6 +952,7 @@ function App() {
                     className="content-card clickable-card"
                     onClick={() => {
                       setCurrentContent(content);
+                      setEditorLoading(true);
                       setView("editor");
                     }}
                   >

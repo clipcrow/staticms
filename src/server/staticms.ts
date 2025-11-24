@@ -192,7 +192,7 @@ router.post("/api/collection", async (ctx) => {
       {
         method: "PUT",
         body: JSON.stringify({
-          message: `Update ${filePath} via Staticms`,
+          message: description || `Update ${filePath} via Staticms`,
           content: btoa(unescape(encodeURIComponent(collection))), // Handle UTF-8
           branch: branchName,
           sha: sha, // Original file SHA
@@ -233,6 +233,40 @@ interface GitHubCommit {
     };
   };
 }
+
+router.get("/api/pr-status", async (ctx) => {
+  try {
+    const prUrl = ctx.request.url.searchParams.get("prUrl");
+    if (!prUrl) {
+      ctx.throw(400, "Missing prUrl query parameter");
+      return;
+    }
+
+    // Extract owner, repo, number from prUrl
+    // Format: https://github.com/owner/repo/pull/number
+    const regex = /github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/;
+    const match = prUrl.match(regex);
+
+    if (!match) {
+      ctx.throw(400, "Invalid PR URL format");
+      return;
+    }
+
+    const [_, owner, repo, number] = match;
+    const apiUrl =
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`;
+    const data = await githubRequest(apiUrl);
+
+    ctx.response.body = {
+      state: data.state, // "open" or "closed"
+      merged: data.merged, // boolean
+    };
+  } catch (e) {
+    console.error(e);
+    ctx.response.status = 500;
+    ctx.response.body = { error: (e as Error).message };
+  }
+});
 
 router.get("/api/commits", async (ctx) => {
   try {
