@@ -237,8 +237,8 @@ function App() {
           // Parse Front Matter directly (ignoring draft since we just deleted it)
           const content = data.collection;
           // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-          const fmRegex =
-            /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\n]+([\s\S]*)$/;
+          // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
+          const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
           const match = content.match(fmRegex);
 
           let parsedBody = content;
@@ -248,7 +248,7 @@ function App() {
             try {
               const fm = jsyaml.load(match[1]);
               parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-              parsedBody = match[2];
+              parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
             } catch (e) {
               console.error("Error parsing front matter", e);
             }
@@ -337,7 +337,8 @@ function App() {
             // Parse Front Matter from remote content if no draft or draft failed
             const content = data.collection;
             // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*[\r\S]*$/; // Updated regex to handle optional trailing content
+            // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
+            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
             const match = content.match(fmRegex);
 
             let parsedBody = content;
@@ -347,7 +348,7 @@ function App() {
               try {
                 const fm = jsyaml.load(match[1]);
                 parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = match[2] || ""; // Ensure body is not undefined
+                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
               } catch (e) {
                 console.error("Error parsing front matter", e);
               }
@@ -381,6 +382,21 @@ function App() {
                   setPrDescription(draft.prDescription);
                   setHasDraft(true);
                   setDraftTimestamp(draft.timestamp);
+
+                  // Initialize custom fields from draft
+                  const configuredKeys = currentContent.fields?.map((f) =>
+                    f.name
+                  ) || [];
+                  const customKeys = Object.keys(draft.frontMatter).filter((
+                    k,
+                  ) => !configuredKeys.includes(k));
+                  setCustomFields(
+                    customKeys.map((k) => ({
+                      id: crypto.randomUUID(),
+                      key: k,
+                    })),
+                  );
+
                   console.log("Restored draft from local storage");
                 }
               } catch (e) {
