@@ -152,7 +152,6 @@ function App() {
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
   const [isPrOpen, setIsPrOpen] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const [prDescription, setPrDescription] = useState("");
 
@@ -220,12 +219,12 @@ function App() {
     localStorage.removeItem(key);
     setHasDraft(false);
     setDraftTimestamp(null);
-    setPrDescription("");
 
     const params = new URLSearchParams({
       owner: currentContent.owner,
       repo: currentContent.repo,
       filePath: currentContent.filePath,
+      t: Date.now().toString(), // Prevent caching
     });
     fetch(`/api/collection?${params.toString()}`)
       .then((res) => res.json())
@@ -236,7 +235,6 @@ function App() {
 
           // Parse Front Matter directly (ignoring draft since we just deleted it)
           const content = data.collection;
-          // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
           // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
           const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
           const match = content.match(fmRegex);
@@ -269,6 +267,17 @@ function App() {
           setBody(parsedBody);
           setInitialBody(parsedBody);
           setInitialFrontMatter(parsedFM);
+          setPrDescription("");
+        }
+      })
+      .catch(console.error);
+
+    // Fetch commit history
+    fetch(`/api/commits?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.commits) {
+          setCommits(data.commits);
         }
       })
       .catch(console.error);
@@ -297,16 +306,21 @@ function App() {
             // Check if file is in commits
             // deno-lint-ignore no-explicit-any
             const fileChanged = data.commits.some((commit: any) => {
+              const normalize = (p: string) => p.replace(/^\//, "");
+              const path = normalize(currentContent.filePath);
               return (
-                commit.added.includes(currentContent.filePath) ||
-                commit.modified.includes(currentContent.filePath) ||
-                commit.removed.includes(currentContent.filePath)
+                commit.added.some((f: string) => normalize(f) === path) ||
+                commit.modified.some((f: string) => normalize(f) === path) ||
+                commit.removed.some((f: string) => normalize(f) === path)
               );
             });
 
             if (fileChanged) {
-              console.log("File changed remotely, refreshing...");
-              setRefreshTrigger((prev) => prev + 1);
+              console.log("File changed remotely, resetting content...");
+              resetContent();
+              if (prUrl) {
+                checkPrStatus();
+              }
             }
           }
         }
@@ -326,6 +340,7 @@ function App() {
         owner: currentContent.owner,
         repo: currentContent.repo,
         filePath: currentContent.filePath,
+        t: Date.now().toString(), // Prevent caching
       });
       fetch(`/api/collection?${params.toString()}`)
         .then((res) => res.json())
@@ -334,10 +349,7 @@ function App() {
             setCollection(data.collection);
             setSha(data.sha);
 
-            // Parse Front Matter from remote content if no draft or draft failed
             const content = data.collection;
-            // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-            // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
             const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
             const match = content.match(fmRegex);
 
@@ -434,44 +446,46 @@ function App() {
         })
         .catch(console.error);
     }
-  }, [view, currentContent, refreshTrigger]);
+  }, [view, currentContent]);
 
   // Check PR Status
+  const checkPrStatus = async () => {
+    if (!prUrl) return;
+    try {
+      const res = await fetch(
+        `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.state === "open") {
+          setIsPrLocked(true);
+          setPrStatus("open");
+        } else {
+          setIsPrLocked(false);
+          // PR is merged or closed -> Clear PR status and Reset content
+          setPrUrl(null);
+          setPrStatus(null);
+
+          // Also clear the "created" draft from localStorage
+          if (currentContent) {
+            const key =
+              `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+            localStorage.removeItem(key);
+            const prKey =
+              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+            localStorage.removeItem(prKey);
+          }
+
+          resetContent();
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check PR status", e);
+    }
+  };
+
   useEffect(() => {
     if (prUrl) {
-      const checkPrStatus = async () => {
-        try {
-          const res = await fetch(
-            `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
-          );
-          if (res.ok) {
-            const data = await res.json();
-            if (data.state === "open") {
-              setIsPrLocked(true);
-              setPrStatus("open");
-            } else {
-              setIsPrLocked(false);
-              // PR is merged or closed -> Clear PR status and Reset content
-              setPrUrl(null);
-              setPrStatus(null);
-
-              // Also clear the "created" draft from localStorage
-              if (currentContent) {
-                const key =
-                  `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-                localStorage.removeItem(key);
-                const prKey =
-                  `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-                localStorage.removeItem(prKey);
-              }
-
-              resetContent();
-            }
-          }
-        } catch (e) {
-          console.error("Failed to check PR status", e);
-        }
-      };
       checkPrStatus();
     } else {
       setIsPrLocked(false);
