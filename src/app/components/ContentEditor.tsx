@@ -1,4 +1,5 @@
 import React from "react";
+import ReactMarkdown from "react-markdown";
 import { Commit, Content } from "../types.ts";
 import { Loading } from "./Loading.tsx";
 
@@ -54,6 +55,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   loading,
 }) => {
   const [newFieldName, setNewFieldName] = React.useState("");
+  const [activeTab, setActiveTab] = React.useState<"write" | "preview">(
+    "write",
+  );
 
   if (loading) {
     return <Loading />;
@@ -205,31 +209,67 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             </div>
           </div>
 
+          {/* Tab Menu */}
           <div
-            className="ui segment"
+            className="ui top attached tabular menu"
+            style={{ marginTop: "1em" }}
+          >
+            <a
+              className={`item ${activeTab === "write" ? "active" : ""}`}
+              onClick={() => setActiveTab("write")}
+              style={{ cursor: "pointer" }}
+            >
+              Write
+            </a>
+            <a
+              className={`item ${activeTab === "preview" ? "active" : ""}`}
+              onClick={() => setActiveTab("preview")}
+              style={{ cursor: "pointer" }}
+            >
+              Preview
+            </a>
+          </div>
+
+          <div
+            className="ui bottom attached segment"
             style={{
               flex: 1,
               display: "flex",
               flexDirection: "column",
               marginTop: 0,
+              padding: 0,
+              overflow: "hidden",
             }}
           >
-            <div className="ui form" style={{ height: "100%" }}>
-              <div className="field" style={{ height: "100%" }}>
-                <textarea
-                  style={{
-                    height: "100%",
-                    resize: "none",
-                    fontFamily: "monospace",
-                  }}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="Start editing markdown body..."
-                  readOnly={isPrLocked}
-                  disabled={isPrLocked}
-                />
-              </div>
-            </div>
+            {activeTab === "write"
+              ? (
+                <div className="ui form" style={{ height: "100%" }}>
+                  <div className="field" style={{ height: "100%" }}>
+                    <textarea
+                      style={{
+                        height: "100%",
+                        resize: "none",
+                        fontFamily: "monospace",
+                        border: "none",
+                        borderRadius: 0,
+                        padding: "1em",
+                      }}
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder="Start editing markdown body..."
+                      readOnly={isPrLocked}
+                      disabled={isPrLocked}
+                    />
+                  </div>
+                </div>
+              )
+              : (
+                <div
+                  style={{ overflowY: "auto", height: "100%", padding: "1em" }}
+                >
+                  <ReactMarkdown>{body}</ReactMarkdown>
+                </div>
+              )}
           </div>
         </div>
 
