@@ -60,242 +60,305 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   }
 
   return (
-    <div className="app-container editor-screen">
-      <header className="editor-header">
-        <div className="editor-nav">
+    <div
+      className="ui fluid container"
+      style={{
+        padding: "1em",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div className="ui secondary menu">
+        <div className="item">
           <button
             type="button"
             onClick={onBack}
-            className="btn btn-secondary btn-back"
+            className="ui labeled icon button"
           >
-            &larr; Back
+            <i className="left arrow icon"></i>
+            Back
           </button>
-
-          <span className="file-path-badge">{currentContent.filePath}</span>
+        </div>
+        <div className="item">
+          <div className="ui label large">
+            <i className="file icon"></i>
+            {currentContent.filePath}
+          </div>
         </div>
         {isPrLocked && (
-          <div className="locked-banner-header">
-            🔒 This file is currently locked because there is an open Pull
-            Request.
+          <div className="item">
+            <div className="ui orange label">
+              <i className="lock icon"></i>
+              Locked (PR Open)
+            </div>
           </div>
         )}
-      </header>
-      <div className="editor-main-split">
-        <div className="editor-content">
-          <div className="editor-frontmatter-top">
-            <h3>Front Matter</h3>
-            <div className="frontmatter-grid">
-              {/* Configured Fields */}
-              {currentContent.fields?.map((field, index) => (
-                <div key={`configured-${index}`} className="form-group">
-                  <label>{field.name}</label>
-                  <input
-                    type="text"
-                    value={(frontMatter[field.name] as string) || ""}
-                    onChange={(e) =>
-                      setFrontMatter({
-                        ...frontMatter,
-                        [field.name]: e.target.value,
-                      })}
-                    readOnly={isPrLocked}
-                    disabled={isPrLocked}
-                  />
-                </div>
-              ))}
+      </div>
 
-              {/* Custom/Extra Fields */}
-              {customFields.map((field) => (
-                <div key={field.id} className="form-group custom-field-group">
+      <div className="ui grid" style={{ flex: 1, overflow: "hidden" }}>
+        <div
+          className="twelve wide column"
+          style={{ display: "flex", flexDirection: "column", height: "100%" }}
+        >
+          <div
+            className="ui segment"
+            style={{ overflowY: "auto", flexShrink: 0, maxHeight: "40%" }}
+          >
+            <h4 className="ui dividing header">Front Matter</h4>
+            <div className="ui form">
+              <div className="ui grid">
+                {/* Configured Fields */}
+                {currentContent.fields?.map((field, index) => (
                   <div
-                    className="custom-field-header"
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "0.5rem",
-                    }}
+                    key={`configured-${index}`}
+                    className="eight wide column field"
                   >
-                    <label style={{ marginBottom: 0 }}>{field.key}</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCustomFields((prev) =>
-                          prev.filter((f) =>
-                            f.id !== field.id
-                          )
-                        );
-                        const { [field.key]: _, ...rest } = frontMatter;
-                        setFrontMatter(rest);
-                      }}
-                      className="btn-icon delete-icon"
-                      title="Delete Field"
+                    <label>{field.name}</label>
+                    <input
+                      type="text"
+                      value={(frontMatter[field.name] as string) || ""}
+                      onChange={(e) =>
+                        setFrontMatter({
+                          ...frontMatter,
+                          [field.name]: e.target.value,
+                        })}
+                      readOnly={isPrLocked}
                       disabled={isPrLocked}
-                    >
-                      🗑️
-                    </button>
+                    />
                   </div>
+                ))}
+
+                {/* Custom/Extra Fields */}
+                {customFields.map((field) => (
+                  <div key={field.id} className="eight wide column field">
+                    <label>
+                      {field.key}
+                      <i
+                        className="trash icon link"
+                        style={{ marginLeft: "0.5em", color: "#db2828" }}
+                        onClick={() => {
+                          if (isPrLocked) {
+                            return;
+                          }
+                          setCustomFields((prev) =>
+                            prev.filter((f) =>
+                              f.id !== field.id
+                            )
+                          );
+                          const { [field.key]: _, ...rest } = frontMatter;
+                          setFrontMatter(rest);
+                        }}
+                      >
+                      </i>
+                    </label>
+                    <input
+                      type="text"
+                      value={(frontMatter[field.key] as string) || ""}
+                      onChange={(e) =>
+                        setFrontMatter({
+                          ...frontMatter,
+                          [field.key]: e.target.value,
+                        })}
+                      readOnly={isPrLocked}
+                      disabled={isPrLocked}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Add New Field */}
+              <div className="field" style={{ marginTop: "1em" }}>
+                <div className="ui action input">
                   <input
                     type="text"
-                    value={(frontMatter[field.key] as string) || ""}
-                    onChange={(e) =>
-                      setFrontMatter({
-                        ...frontMatter,
-                        [field.key]: e.target.value,
-                      })}
-                    placeholder="Value"
-                    readOnly={isPrLocked}
+                    value={newFieldName}
+                    onChange={(e) => setNewFieldName(e.target.value)}
+                    placeholder="New Field Name"
                     disabled={isPrLocked}
                   />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newId = crypto.randomUUID();
+                      setCustomFields([
+                        ...customFields,
+                        { id: newId, key: newFieldName },
+                      ]);
+
+                      setFrontMatter({
+                        ...frontMatter,
+                        [newFieldName]: "",
+                      });
+                      setNewFieldName("");
+                    }}
+                    className="ui button"
+                    disabled={isPrLocked ||
+                      !newFieldName.trim() ||
+                      Object.keys(frontMatter).includes(newFieldName)}
+                  >
+                    <i className="plus icon"></i>
+                    Add Item
+                  </button>
                 </div>
-              ))}
-
-              {/* Add New Field Button */}
-              <div className="form-group add-field-group">
-                <input
-                  type="text"
-                  value={newFieldName}
-                  onChange={(e) => setNewFieldName(e.target.value)}
-                  placeholder="New Field Name"
-                  className="new-field-input"
-                  disabled={isPrLocked}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newId = crypto.randomUUID();
-                    setCustomFields([
-                      ...customFields,
-                      { id: newId, key: newFieldName },
-                    ]);
-
-                    setFrontMatter({
-                      ...frontMatter,
-                      [newFieldName]: "",
-                    });
-                    setNewFieldName("");
-                  }}
-                  className="btn btn-secondary btn-sm btn-add-field"
-                  disabled={isPrLocked ||
-                    !newFieldName.trim() ||
-                    Object.keys(frontMatter).includes(newFieldName)}
-                >
-                  + Add Item
-                </button>
               </div>
             </div>
           </div>
-          <textarea
-            className="full-screen-editor"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            placeholder="Start editing markdown body..."
-            readOnly={isPrLocked}
-            disabled={isPrLocked}
-          />
-        </div>
-        <div className="editor-sidebar-right">
-          <div className="sidebar-header-row">
-            <h3>History</h3>
-            <button
-              type="button"
-              onClick={onReset}
-              disabled={!hasDraft || isPrLocked}
-              className="btn btn-secondary btn-sm"
-              title="Discard local changes and reset to remote content"
-            >
-              Reset
-            </button>
-          </div>
 
-          {prUrl && (
-            <div className="pr-status-block">
-              <p>
-                {prStatus === "merged"
-                  ? "✅ Pull Request Merged"
-                  : prStatus === "closed"
-                  ? "❌ Pull Request Closed"
-                  : "⏳ Pull Request Open"}
-              </p>
-              <a
-                href={prUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-secondary btn-sm"
-              >
-                View PR
-              </a>
+          <div
+            className="ui segment"
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              marginTop: 0,
+            }}
+          >
+            <div className="ui form" style={{ height: "100%" }}>
+              <div className="field" style={{ height: "100%" }}>
+                <textarea
+                  style={{
+                    height: "100%",
+                    resize: "none",
+                    fontFamily: "monospace",
+                  }}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="Start editing markdown body..."
+                  readOnly={isPrLocked}
+                  disabled={isPrLocked}
+                />
+              </div>
             </div>
-          )}
+          </div>
+        </div>
 
-          <div className="commits-list">
-            {hasDraft && (
+        <div
+          className="four wide column"
+          style={{ height: "100%", overflowY: "auto" }}
+        >
+          <div className="ui segment">
+            <h3 className="ui header">
+              History
+              <button
+                type="button"
+                className="ui mini right floated button basic"
+                onClick={onReset}
+                disabled={!hasDraft || isPrLocked}
+                title="Discard local changes"
+              >
+                Reset
+              </button>
+            </h3>
+
+            {prUrl && (
               <div
-                className={`draft-section ${
-                  prStatus === "open"
-                    ? "success"
-                    : prStatus === "merged" || prStatus === "closed"
-                    ? "closed"
-                    : prUrl
-                    ? "success"
-                    : ""
+                className={`ui message ${
+                  prStatus === "merged"
+                    ? "positive"
+                    : prStatus === "closed"
+                    ? "negative"
+                    : "info"
                 }`}
               >
-                <div
-                  className="draft-header"
-                  onClick={() => setIsPrOpen(!isPrOpen)}
+                <div className="header">
+                  {prStatus === "merged"
+                    ? "PR Merged"
+                    : prStatus === "closed"
+                    ? "PR Closed"
+                    : "PR Open"}
+                </div>
+                <a
+                  href={prUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: "block", marginTop: "0.5em" }}
                 >
-                  <span className="draft-indicator">
-                    {prStatus === "merged"
-                      ? "● PR Merged"
-                      : prStatus === "closed"
-                      ? "● PR Closed"
-                      : prUrl
-                      ? "● PR Created"
-                      : "● Local Copy"}
-                  </span>
-                  <span className="draft-timestamp">
+                  View Pull Request
+                </a>
+              </div>
+            )}
+
+            {hasDraft && (
+              <div className="ui card fluid">
+                <div className="content">
+                  <div
+                    className="header"
+                    onClick={() => setIsPrOpen(!isPrOpen)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <i
+                      className={`circle icon ${
+                        prStatus === "open" || prUrl ? "green" : "grey"
+                      }`}
+                    >
+                    </i>
+                    Draft / PR
+                    <i
+                      className={`right floated icon ${
+                        isPrOpen ? "chevron down" : "chevron right"
+                      }`}
+                    >
+                    </i>
+                  </div>
+                  <div className="meta">
                     {draftTimestamp
                       ? new Date(draftTimestamp).toLocaleString()
                       : ""}
-                  </span>
-                  <span className="draft-toggle">{isPrOpen ? "▼" : "▶"}</span>
-                </div>
-                {isPrOpen && (
-                  <div className="draft-content">
-                    <div className="form-group">
-                      <label>Description</label>
-                      <textarea
-                        className="pr-textarea"
-                        value={prDescription}
-                        onChange={(e) => setPrDescription(e.target.value)}
-                        placeholder="PR Description..."
-                        rows={4}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={onSaveCollection}
-                      disabled={isSaving}
-                      className="btn btn-primary btn-save"
-                    >
-                      {isSaving ? "Creating..." : "Create PR"}
-                    </button>
                   </div>
-                )}
+                  {isPrOpen && (
+                    <div className="description" style={{ marginTop: "1em" }}>
+                      <div className="ui form">
+                        <div className="field">
+                          <label>Description</label>
+                          <textarea
+                            rows={3}
+                            value={prDescription}
+                            onChange={(e) =>
+                              setPrDescription(e.target.value)}
+                            placeholder="PR Description..."
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className={`ui primary button fluid ${
+                            isSaving ? "loading" : ""
+                          }`}
+                          onClick={onSaveCollection}
+                          disabled={isSaving}
+                        >
+                          Create PR
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-            {commits.map((commit) => (
-              <div key={commit.sha} className="commit-item">
-                <div className="commit-message">
-                  <a href={commit.html_url} target="_blank" rel="noreferrer">
-                    {commit.message}
-                  </a>
+
+            <div className="ui feed">
+              {commits.map((commit) => (
+                <div key={commit.sha} className="event">
+                  <div className="content">
+                    <div className="summary">
+                      <a
+                        href={commit.html_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {commit.message}
+                      </a>
+                      <div className="date">
+                        {new Date(commit.date).toLocaleDateString()}
+                      </div>
+                    </div>
+                    <div className="meta">
+                      by {commit.author}
+                    </div>
+                  </div>
                 </div>
-                <div className="commit-meta">
-                  {commit.author} • {new Date(commit.date).toLocaleDateString()}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>

@@ -35,19 +35,19 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   };
 
   return (
-    <div className="app-container setup-screen">
-      <div className="card setup-card">
-        <h1 className="title gradient-text">
+    <div className="ui container" style={{ marginTop: "2em" }}>
+      <div className="ui segment">
+        <h2 className="ui header">
           {editingIndex !== null ? "Edit Content" : "Add Content"}
-        </h1>
-        <p className="subtitle">
-          {editingIndex !== null
-            ? "Update your GitHub content configuration."
-            : "Configure a new GitHub content."}
-        </p>
+          <div className="sub header">
+            {editingIndex !== null
+              ? "Update your GitHub content configuration."
+              : "Configure a new GitHub content."}
+          </div>
+        </h2>
 
-        <form onSubmit={onSave} className="setup-form">
-          <div className="form-group">
+        <form onSubmit={onSave} className="ui form">
+          <div className="field">
             <label>GitHub Owner</label>
             <input
               type="text"
@@ -58,7 +58,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               required
             />
           </div>
-          <div className="form-group">
+          <div className="field">
             <label>GitHub Repo</label>
             <input
               type="text"
@@ -69,7 +69,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               required
             />
           </div>
-          <div className="form-group">
+          <div className="field">
             <label>File Path</label>
             <input
               type="text"
@@ -81,50 +81,51 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             />
           </div>
 
-          <div className="form-group">
-            <label>Form Fields (Front Matter)</label>
-            <div className="fields-list">
-              {formData.fields.map((field, index) => (
-                <div key={index} className="field-item">
-                  <input
-                    type="text"
-                    value={field.name}
-                    onChange={(e) =>
-                      handleUpdateFieldName(index, e.target.value)}
-                    placeholder="Field Name"
-                    className="field-input"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeleteField(index)}
-                    className="btn-icon delete-icon"
-                  >
-                    🗑️
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={handleAddField}
-              className="btn btn-secondary btn-sm"
-              style={{ marginTop: "0.5rem" }}
-            >
-              + Add Field
-            </button>
-          </div>
+          <h4 className="ui dividing header">Form Fields (Front Matter)</h4>
 
-          <div className="form-actions">
+          {formData.fields.map((field, index) => (
+            <div key={index} className="field">
+              <div className="ui action input">
+                <input
+                  type="text"
+                  value={field.name}
+                  onChange={(e) =>
+                    handleUpdateFieldName(index, e.target.value)}
+                  placeholder="Field Name"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleDeleteField(index)}
+                  className="ui icon button negative"
+                >
+                  <i className="trash icon"></i>
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={handleAddField}
+            className="ui button basic"
+            style={{ marginBottom: "1em" }}
+          >
+            <i className="plus icon"></i>
+            Add Field
+          </button>
+
+          <div className="ui divider"></div>
+
+          <div className="actions">
             <button
               type="button"
               onClick={onCancel}
-              className="btn btn-secondary"
-              style={{ marginRight: "1rem" }}
+              className="ui button"
             >
               Cancel
             </button>
-            <button type="submit" className="btn btn-primary">
+            <button type="submit" className="ui primary button">
               {editingIndex !== null ? "Update Content" : "Add Content"}
             </button>
           </div>

@@ -17,72 +17,92 @@ export const ContentList: React.FC<ContentListProps> = ({
   onAddNewContent,
 }) => {
   return (
-    <div className="app-container dashboard">
-      <div className="dashboard-content">
-        <header className="dashboard-header">
-          <h1 className="title gradient-text">Staticms Dashboard</h1>
-        </header>
-
-        <div className="card info-card">
-          <div className="info-header">
-            <h2>Contents</h2>
-            <button
-              type="button"
-              onClick={onAddNewContent}
-              className="btn btn-primary btn-sm"
-            >
-              + Add Content
-            </button>
-          </div>
-          {contents.length === 0
-            ? (
-              <div className="empty-state">
-                No content configured. Click "Add Content" to get started.
-              </div>
-            )
-            : (
-              <ul className="content-list">
-                {contents.map((content, index) => (
-                  <li key={index} className="content-item">
-                    <div
-                      className="content-info"
-                      onClick={() =>
-                        onSelectContent(content)}
-                    >
-                      <span className="repo-name">
-                        {content.owner}/{content.repo}
-                      </span>
-                      <span className="file-path">{content.filePath}</span>
-                    </div>
-                    <div className="content-actions">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditContentConfig(index);
-                        }}
-                        className="btn-icon edit-icon"
-                        title="Edit Configuration"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDeleteContent(index);
-                        }}
-                        className="btn-icon delete-icon"
-                        title="Delete Configuration"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+    <div className="ui container" style={{ marginTop: "2em" }}>
+      <h1 className="ui header">
+        <i className="cube icon"></i>
+        <div className="content">
+          Staticms Dashboard
+          <div className="sub header">Manage your content configurations</div>
         </div>
+      </h1>
+
+      <div className="ui segment">
+        <div className="ui grid">
+          <div className="two column row">
+            <div className="column">
+              <h2 className="ui header">Contents</h2>
+            </div>
+            <div className="column right aligned">
+              <button
+                type="button"
+                onClick={onAddNewContent}
+                className="ui primary button"
+              >
+                <i className="plus icon"></i>
+                Add Content
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {contents.length === 0
+          ? (
+            <div className="ui placeholder segment">
+              <div className="ui icon header">
+                <i className="file outline icon"></i>
+                No content configured
+              </div>
+              <div className="inline">
+                <div className="ui primary button" onClick={onAddNewContent}>
+                  Add Content
+                </div>
+              </div>
+            </div>
+          )
+          : (
+            <div className="ui relaxed divided list">
+              {contents.map((content, index) => (
+                <div key={index} className="item" style={{ padding: "1em" }}>
+                  <div className="right floated content">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditContentConfig(index);
+                      }}
+                      className="ui icon button"
+                      title="Edit Configuration"
+                    >
+                      <i className="edit icon"></i>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteContent(index);
+                      }}
+                      className="ui icon button negative"
+                      title="Delete Configuration"
+                    >
+                      <i className="trash icon"></i>
+                    </button>
+                  </div>
+                  <i className="large file middle aligned icon"></i>
+                  <div
+                    className="content"
+                    onClick={() =>
+                      onSelectContent(content)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <a className="header">
+                      {content.owner}/{content.repo}
+                    </a>
+                    <div className="description">{content.filePath}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );
