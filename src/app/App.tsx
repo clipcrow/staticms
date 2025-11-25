@@ -388,6 +388,20 @@ function App() {
                   // Continue to parse remote content since we don't have draft content
                   setBody(parsedBody);
                   setFrontMatter(parsedFM);
+
+                  // Initialize custom fields from remote content
+                  const configuredKeys = currentContent.fields?.map((f) =>
+                    f.name
+                  ) || [];
+                  const customKeys = Object.keys(parsedFM).filter((k) =>
+                    !configuredKeys.includes(k)
+                  );
+                  setCustomFields(
+                    customKeys.map((k) => ({
+                      id: crypto.randomUUID(),
+                      key: k,
+                    })),
+                  );
                 } else {
                   // Restore from draft
                   setBody(draft.body);
@@ -423,6 +437,20 @@ function App() {
               setBody(parsedBody);
               setFrontMatter(parsedFM);
               setHasDraft(false);
+
+              // Initialize custom fields from remote content
+              const configuredKeys = currentContent.fields?.map((f) =>
+                f.name
+              ) || [];
+              const customKeys = Object.keys(parsedFM).filter((k) =>
+                !configuredKeys.includes(k)
+              );
+              setCustomFields(
+                customKeys.map((k) => ({
+                  id: crypto.randomUUID(),
+                  key: k,
+                })),
+              );
             }
 
             // Check for existing PR URL
