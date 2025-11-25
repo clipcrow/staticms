@@ -100,7 +100,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         )}
       </div>
 
-      <div className="ui grid" style={{ flex: 1, overflow: "hidden" }}>
+      <div
+        className="ui grid"
+        style={{ flex: 1, overflow: "hidden", height: "100%" }}
+      >
         <div
           className="twelve wide column"
           style={{ display: "flex", flexDirection: "column", height: "100%" }}
@@ -243,24 +246,32 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           >
             {activeTab === "write"
               ? (
-                <div className="ui form" style={{ height: "100%" }}>
-                  <div className="field" style={{ height: "100%" }}>
-                    <textarea
-                      style={{
-                        height: "100%",
-                        resize: "none",
-                        fontFamily: "monospace",
-                        border: "none",
-                        borderRadius: 0,
-                        padding: "1em",
-                      }}
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder="Start editing markdown body..."
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
-                  </div>
+                <div
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                  }}
+                >
+                  <textarea
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      height: "100%",
+                      resize: "none",
+                      fontFamily: "monospace",
+                      border: "none",
+                      outline: "none",
+                      borderRadius: 0,
+                      padding: "1em",
+                    }}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="Start editing markdown body..."
+                    readOnly={isPrLocked}
+                    disabled={isPrLocked}
+                  />
                 </div>
               )
               : (
