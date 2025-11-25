@@ -53,7 +53,7 @@ async function setupWebhook(owner: string, repo: string) {
           body: JSON.stringify({
             name: "web",
             active: true,
-            events: ["push"],
+            events: ["push", "pull_request"],
             config: {
               url: hookUrl,
               content_type: "json",
@@ -62,6 +62,24 @@ async function setupWebhook(owner: string, repo: string) {
         },
       );
       console.log(`Webhook created for ${owner}/${repo}`);
+    } else {
+      // Check if events need update
+      const currentEvents = exists.events || [];
+      if (
+        !currentEvents.includes("push") ||
+        !currentEvents.includes("pull_request")
+      ) {
+        await githubRequest(
+          `https://api.github.com/repos/${owner}/${repo}/hooks/${exists.id}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({
+              events: ["push", "pull_request"],
+            }),
+          },
+        );
+        console.log(`Webhook updated for ${owner}/${repo}`);
+      }
     }
   } catch (e) {
     console.error(`Failed to setup webhook for ${owner}/${repo}:`, e);
@@ -105,6 +123,17 @@ router.post("/api/webhook", async (ctx) => {
         type: "push",
         repo: payload.repository.full_name,
         commits: payload.commits,
+      });
+      for (const client of clients) {
+        client.dispatchMessage(message);
+      }
+    } else if (event === "pull_request") {
+      const payload = await ctx.request.body.json();
+      const message = JSON.stringify({
+        type: "pull_request",
+        action: payload.action,
+        repo: payload.repository.full_name,
+        prUrl: payload.pull_request.html_url,
       });
       for (const client of clients) {
         client.dispatchMessage(message);

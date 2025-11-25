@@ -19,10 +19,10 @@ export const ContentList: React.FC<ContentListProps> = ({
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
       <h1 className="ui header">
-        <i className="cube icon"></i>
+        <i className="edit icon"></i>
         <div className="content">
-          Staticms Dashboard
-          <div className="sub header">Manage your content configurations</div>
+          Staticms
+          <div className="sub header">Manage headless contents with GitHub</div>
         </div>
       </h1>
 

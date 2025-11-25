@@ -261,7 +261,7 @@ function App() {
 
   // Check PR Status
   const checkPrStatus = async () => {
-    if (!prUrl) return;
+    if (!prUrl) return null;
     try {
       const res = await fetch(
         `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
@@ -271,6 +271,7 @@ function App() {
         if (data.state === "open") {
           setIsPrLocked(true);
           setPrStatus("open");
+          return "open";
         } else {
           setIsPrLocked(false);
           // PR is merged or closed -> Clear PR status and Reset content
@@ -288,11 +289,13 @@ function App() {
           }
 
           resetContent();
+          return "closed";
         }
       }
     } catch (e) {
       console.error("Failed to check PR status", e);
     }
+    return null;
   };
 
   // SSE Subscription
@@ -317,11 +320,38 @@ function App() {
             });
 
             if (fileChanged) {
-              console.log("File changed remotely, resetting content...");
-              resetContent();
+              console.log("File changed remotely, checking status...");
               if (prUrl) {
-                checkPrStatus();
+                checkPrStatus().then((status) => {
+                  // If PR is open, we still need to update the content because the file changed
+                  if (status === "open") {
+                    resetContent();
+                  }
+                  // If closed, resetContent is already called in checkPrStatus
+                });
+              } else {
+                resetContent();
               }
+            }
+          }
+        } else if (data.type === "pull_request" && currentContent) {
+          const repoFullName = `${currentContent.owner}/${currentContent.repo}`;
+          if (data.repo === repoFullName && data.prUrl === prUrl) {
+            if (data.action === "closed") {
+              console.log("PR closed remotely, resetting...");
+              setIsPrLocked(false);
+              setPrUrl(null);
+              setPrStatus(null);
+
+              // Clear local storage
+              const key =
+                `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+              localStorage.removeItem(key);
+              const prKey =
+                `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+              localStorage.removeItem(prKey);
+
+              resetContent();
             }
           }
         }
@@ -332,7 +362,7 @@ function App() {
     return () => {
       eventSource.close();
     };
-  }, [currentContent]);
+  }, [currentContent, prUrl]);
 
   useEffect(() => {
     if (view === "content-editor" && currentContent) {
