@@ -53,6 +53,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   onBack,
   loading,
 }) => {
+  const [newFieldName, setNewFieldName] = React.useState("");
+
   if (loading) {
     return <Loading />;
   }
@@ -104,37 +106,16 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               {/* Custom/Extra Fields */}
               {customFields.map((field) => (
                 <div key={field.id} className="form-group custom-field-group">
-                  <div className="custom-field-header">
-                    <input
-                      type="text"
-                      className="field-key-input"
-                      value={field.key}
-                      onChange={(e) => {
-                        const newKey = e.target.value;
-                        const oldKey = field.key;
-
-                        // Update customFields state
-                        setCustomFields((prev) =>
-                          prev.map((f) =>
-                            f.id === field.id ? { ...f, key: newKey } : f
-                          )
-                        );
-
-                        // Update frontMatter state
-                        if (oldKey !== newKey) {
-                          const { [oldKey]: value, ...rest } = frontMatter;
-                          // Strategy: Rename the key in frontMatter.
-                          // Let's try: Update frontMatter immediately.
-                          setFrontMatter({
-                            ...rest,
-                            [newKey]: value,
-                          });
-                        }
-                      }}
-                      placeholder="Key"
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
+                  <div
+                    className="custom-field-header"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
+                    <label style={{ marginBottom: 0 }}>{field.key}</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -170,29 +151,33 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
               {/* Add New Field Button */}
               <div className="form-group add-field-group">
+                <input
+                  type="text"
+                  value={newFieldName}
+                  onChange={(e) => setNewFieldName(e.target.value)}
+                  placeholder="New Field Name"
+                  className="new-field-input"
+                  disabled={isPrLocked}
+                />
                 <button
                   type="button"
                   onClick={() => {
-                    let newKey = "new_field";
-                    let counter = 1;
-                    while (frontMatter[newKey]) {
-                      newKey = `new_field_${counter}`;
-                      counter++;
-                    }
-
                     const newId = crypto.randomUUID();
                     setCustomFields([
                       ...customFields,
-                      { id: newId, key: newKey },
+                      { id: newId, key: newFieldName },
                     ]);
 
                     setFrontMatter({
                       ...frontMatter,
-                      [newKey]: "",
+                      [newFieldName]: "",
                     });
+                    setNewFieldName("");
                   }}
                   className="btn btn-secondary btn-sm btn-add-field"
-                  disabled={isPrLocked}
+                  disabled={isPrLocked ||
+                    !newFieldName.trim() ||
+                    Object.keys(frontMatter).includes(newFieldName)}
                 >
                   + Add Item
                 </button>
