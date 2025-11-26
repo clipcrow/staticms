@@ -244,7 +244,9 @@ router.post("/api/collection", async (ctx) => {
     const { content, sha, description, title, owner, repo, path, branch } =
       body;
 
-    console.log(`[POST /api/collection] branch param: "${branch}"`);
+    console.log(
+      `[POST /api/collection] branch param: "${branch}" (type: ${typeof branch})`,
+    );
 
     if (!owner || !repo || !path) {
       ctx.throw(400, "Missing owner, repo, or path in body");

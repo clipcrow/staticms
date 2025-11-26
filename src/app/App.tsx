@@ -418,8 +418,11 @@ function App() {
             }
 
             // Check if file is in commits
-            // deno-lint-ignore no-explicit-any
-            const fileChanged = data.commits.some((commit: any) => {
+            const fileChanged = data.commits.some((commit: {
+              added: string[];
+              modified: string[];
+              removed: string[];
+            }) => {
               const normalize = (p: string) => p.replace(/^\//, "");
               const path = normalize(currentContent.filePath);
               return (
@@ -793,6 +796,11 @@ function App() {
           setTargetRepo(null);
           setView("content-list");
         }}
+        onDelete={() => {
+          if (editingIndex !== null) {
+            handleDeleteContent(editingIndex);
+          }
+        }}
         repoInfo={targetRepo!}
       />
     );
@@ -803,7 +811,6 @@ function App() {
       <ContentList
         contents={contents}
         onEditContentConfig={handleEditContentConfig}
-        onDeleteContent={handleDeleteContent}
         onSelectContent={(content) => {
           setCurrentContent(content);
           setView("content-editor");

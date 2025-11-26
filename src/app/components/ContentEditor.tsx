@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vscDarkPlus from "prism-style";
@@ -341,12 +341,21 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
-                        // deno-lint-ignore no-explicit-any
-                        code(props: any) {
-                          const { children, className, node: _node, ...rest } =
-                            props;
+                        code(
+                          props: ComponentPropsWithoutRef<"code"> & {
+                            inline?: boolean;
+                            node?: unknown;
+                          },
+                        ) {
+                          const {
+                            children,
+                            className,
+                            inline,
+                            node: _node,
+                            ...rest
+                          } = props;
                           const match = /language-(\w+)/.exec(className || "");
-                          return match
+                          return !inline && match
                             ? (
                               <SyntaxHighlighter
                                 {...rest}
@@ -363,8 +372,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                               </code>
                             );
                         },
-                        // deno-lint-ignore no-explicit-any
-                        table(props: any) {
+                        table(props: ComponentPropsWithoutRef<"table">) {
                           return (
                             <table className="ui celled table" {...props} />
                           );

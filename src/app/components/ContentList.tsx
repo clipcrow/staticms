@@ -4,7 +4,6 @@ import { Content } from "../types.ts";
 interface ContentListProps {
   contents: Content[];
   onEditContentConfig: (index: number) => void;
-  onDeleteContent: (index: number) => void;
   onSelectContent: (content: Content) => void;
   onAddNewContent: () => void;
   onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
@@ -13,7 +12,6 @@ interface ContentListProps {
 export const ContentList: React.FC<ContentListProps> = ({
   contents,
   onEditContentConfig,
-  onDeleteContent,
   onSelectContent,
   onAddNewContent,
   onAddNewContentToRepo,
@@ -64,10 +62,10 @@ export const ContentList: React.FC<ContentListProps> = ({
               <button
                 type="button"
                 onClick={onAddNewContent}
-                className="ui primary button"
+                className="ui primary button icon"
+                title="Add Repository"
               >
                 <i className="plus icon"></i>
-                Add Repository
               </button>
             </div>
           </div>
@@ -109,15 +107,16 @@ export const ContentList: React.FC<ContentListProps> = ({
                       )}
                       <button
                         type="button"
-                        className="ui mini button primary right floated"
+                        className="ui mini button primary icon right floated"
                         onClick={() =>
                           onAddNewContentToRepo(
                             group.owner,
                             group.repo,
                             group.branch,
                           )}
+                        title="Add Content"
                       >
-                        <i className="plus icon"></i> Add Content
+                        <i className="plus icon"></i>
                       </button>
                     </div>
                   </div>
@@ -140,17 +139,6 @@ export const ContentList: React.FC<ContentListProps> = ({
                               title="Edit Configuration"
                             >
                               <i className="edit icon"></i>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteContent(item.originalIndex);
-                              }}
-                              className="ui icon button negative mini"
-                              title="Delete Configuration"
-                            >
-                              <i className="trash icon"></i>
                             </button>
                           </div>
                           <div

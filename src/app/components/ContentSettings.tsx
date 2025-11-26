@@ -7,6 +7,7 @@ interface ContentSettingsProps {
   editingIndex: number | null;
   onSave: (e: React.FormEvent) => void;
   onCancel: () => void;
+  onDelete: () => void;
   repoInfo: { owner: string; repo: string; branch?: string };
 }
 
@@ -16,13 +17,18 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   editingIndex,
   onSave,
   onCancel,
+  onDelete,
   repoInfo,
 }) => {
+  const [newFieldName, setNewFieldName] = React.useState("");
+
   const handleAddField = () => {
+    if (!newFieldName.trim()) return;
     setFormData({
       ...formData,
-      fields: [...formData.fields, { name: "New Field" }],
+      fields: [...formData.fields, { name: newFieldName }],
     });
+    setNewFieldName("");
   };
 
   const handleUpdateFieldName = (index: number, name: string) => {
@@ -79,37 +85,68 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
           <h4 className="ui dividing header">Front Matter</h4>
 
-          {formData.fields.map((field, index) => (
-            <div key={index} className="field">
-              <div className="ui action input">
-                <input
-                  type="text"
-                  value={field.name}
-                  onChange={(e) =>
-                    handleUpdateFieldName(index, e.target.value)}
-                  placeholder="Field Name"
-                />
+          <div className="ui grid middle aligned">
+            {formData.fields.map((field, index) => (
+              <div key={index} className="row">
+                <div className="four wide column">
+                  <div className="ui input fluid">
+                    <input
+                      type="text"
+                      value={field.name}
+                      onChange={(e) =>
+                        handleUpdateFieldName(index, e.target.value)}
+                      placeholder="Field Name"
+                    />
+                  </div>
+                </div>
+                <div className="eleven wide column">
+                  <div className="ui input fluid disabled">
+                    <input
+                      type="text"
+                      placeholder="Value will be set in editor"
+                      readOnly
+                    />
+                  </div>
+                </div>
+                <div className="one wide column">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleDeleteField(index)}
+                    className="ui icon button basic negative circular mini"
+                    title="Delete Field"
+                  >
+                    <i className="trash icon"></i>
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Add New Field */}
+            <div className="row">
+              <div className="four wide column">
+                <div className="ui input fluid">
+                  <input
+                    type="text"
+                    value={newFieldName}
+                    onChange={(e) => setNewFieldName(e.target.value)}
+                    placeholder="New Field Name"
+                  />
+                </div>
+              </div>
+              <div className="twelve wide column">
                 <button
                   type="button"
-                  onClick={() =>
-                    handleDeleteField(index)}
-                  className="ui icon button negative"
+                  onClick={handleAddField}
+                  className="ui button"
+                  disabled={!newFieldName.trim()}
                 >
-                  <i className="trash icon"></i>
+                  <i className="plus icon"></i>
+                  Add Field
                 </button>
               </div>
             </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={handleAddField}
-            className="ui button basic"
-            style={{ marginBottom: "1em" }}
-          >
-            <i className="plus icon"></i>
-            Add Field
-          </button>
+          </div>
 
           <div className="ui divider"></div>
 
@@ -122,8 +159,18 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               Cancel
             </button>
             <button type="submit" className="ui primary button">
-              {editingIndex !== null ? "Update Content" : "Add Content"}
+              {editingIndex !== null ? "Update" : "Add"}
             </button>
+            {editingIndex !== null && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="ui button negative right floated"
+              >
+                <i className="trash icon"></i>
+                Delete
+              </button>
+            )}
           </div>
         </form>
       </div>
