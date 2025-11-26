@@ -191,6 +191,9 @@ function App() {
       filePath: currentContent.filePath,
       t: Date.now().toString(), // Prevent caching
     });
+    if (currentContent.branch) {
+      params.append("branch", currentContent.branch);
+    }
     fetch(`/api/collection?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {

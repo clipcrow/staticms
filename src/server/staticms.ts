@@ -417,13 +417,17 @@ router.get("/api/commits", async (ctx) => {
     const owner = ctx.request.url.searchParams.get("owner");
     const repo = ctx.request.url.searchParams.get("repo");
     const filePath = ctx.request.url.searchParams.get("filePath");
+    const branch = ctx.request.url.searchParams.get("branch");
 
     if (!owner || !repo || !filePath) {
       ctx.throw(400, "Missing owner, repo, or filePath query parameters");
     }
 
-    const url =
+    let url =
       `https://api.github.com/repos/${owner}/${repo}/commits?path=${filePath}`;
+    if (branch) {
+      url += `&sha=${branch}`;
+    }
     const commits = await githubRequest(url);
 
     ctx.response.body = {
