@@ -201,22 +201,34 @@ function App() {
           setCollection(data.collection);
           setSha(data.sha);
 
-          // Parse Front Matter directly (ignoring draft since we just deleted it)
+          // Parse content based on file type
           const content = data.collection;
-          // Robust regex for Front Matter (handles \n, \r\n, and trailing spaces)
-          const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
-          const match = content.match(fmRegex);
-
-          let parsedBody = content;
+          const isYaml = currentContent.filePath.endsWith(".yaml") ||
+            currentContent.filePath.endsWith(".yml");
+          let parsedBody = "";
           let parsedFM = {};
 
-          if (match) {
+          if (isYaml) {
             try {
-              const fm = jsyaml.load(match[1]);
+              const fm = jsyaml.load(content);
               parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-              parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
+              parsedBody = "";
             } catch (e) {
-              console.error("Error parsing front matter", e);
+              console.error("Error parsing yaml file", e);
+            }
+          } else {
+            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
+            const match = content.match(fmRegex);
+            parsedBody = content;
+
+            if (match) {
+              try {
+                const fm = jsyaml.load(match[1]);
+                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
+              } catch (e) {
+                console.error("Error parsing front matter", e);
+              }
             }
           }
 
@@ -439,19 +451,32 @@ function App() {
             setLoadedBranch(data.branch);
 
             const content = data.collection;
-            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
-            const match = content.match(fmRegex);
-
-            let parsedBody = content;
+            const isYaml = currentContent.filePath.endsWith(".yaml") ||
+              currentContent.filePath.endsWith(".yml");
+            let parsedBody = "";
             let parsedFM = {};
 
-            if (match) {
+            if (isYaml) {
               try {
-                const fm = jsyaml.load(match[1]);
+                const fm = jsyaml.load(content);
                 parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
+                parsedBody = "";
               } catch (e) {
-                console.error("Error parsing front matter", e);
+                console.error("Error parsing yaml file", e);
+              }
+            } else {
+              const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
+              const match = content.match(fmRegex);
+              parsedBody = content;
+
+              if (match) {
+                try {
+                  const fm = jsyaml.load(match[1]);
+                  parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+                  parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
+                } catch (e) {
+                  console.error("Error parsing front matter", e);
+                }
               }
             }
 
@@ -580,7 +605,10 @@ function App() {
     setPrUrl(null); // Clear PR URL state temporarily until new PR is created
 
     // Reconstruct content with Front Matter
+    const isYaml = currentContent.filePath.endsWith(".yaml") ||
+      currentContent.filePath.endsWith(".yml");
     let finalContent = body;
+
     if (currentContent.fields && currentContent.fields.length > 0) {
       // Only include fields that are defined in the config
       const fmToSave: Record<string, unknown> = {};
@@ -595,7 +623,11 @@ function App() {
       if (Object.keys(mergedFM).length > 0) {
         try {
           const yamlString = jsyaml.dump(mergedFM);
-          finalContent = `---\n${yamlString}---\n${body}`;
+          if (isYaml) {
+            finalContent = yamlString;
+          } else {
+            finalContent = `---\n${yamlString}---\n${body}`;
+          }
         } catch (e) {
           console.error("Error dumping yaml", e);
           // Fallback to raw body if YAML fails
@@ -606,11 +638,18 @@ function App() {
       // If no fields configured but FM exists, preserve it
       try {
         const yamlString = jsyaml.dump(frontMatter);
-        finalContent = `---\n${yamlString}---\n${body}`;
+        if (isYaml) {
+          finalContent = yamlString;
+        } else {
+          finalContent = `---\n${yamlString}---\n${body}`;
+        }
       } catch (e) {
         console.error("Error dumping yaml", e);
         finalContent = body;
       }
+    } else if (isYaml) {
+      // YAML file with no fields/frontMatter? Should probably be empty object or empty string
+      finalContent = "";
     }
 
     try {
