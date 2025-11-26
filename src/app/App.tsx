@@ -298,13 +298,15 @@ function App() {
     return null;
   };
 
-  // Refs for accessing latest state in SSE callback and tracking save time
+  const [loadedBranch, setLoadedBranch] = useState("");
+
+  // Refs for accessing latest state in SSE callback
   const bodyRef = React.useRef(body);
   const frontMatterRef = React.useRef(frontMatter);
   const initialBodyRef = React.useRef(initialBody);
   const initialFrontMatterRef = React.useRef(initialFrontMatter);
   const prDescriptionRef = React.useRef(prDescription);
-  const lastSaveTimeRef = React.useRef(0);
+  const loadedBranchRef = React.useRef(loadedBranch);
 
   useEffect(() => {
     bodyRef.current = body;
@@ -321,6 +323,9 @@ function App() {
   useEffect(() => {
     prDescriptionRef.current = prDescription;
   }, [prDescription]);
+  useEffect(() => {
+    loadedBranchRef.current = loadedBranch;
+  }, [loadedBranch]);
 
   // SSE Subscription
   useEffect(() => {
@@ -331,6 +336,14 @@ function App() {
         if (data.type === "push" && currentContent) {
           const repoFullName = `${currentContent.owner}/${currentContent.repo}`;
           if (data.repo === repoFullName) {
+            // Check branch match
+            if (data.branch !== loadedBranchRef.current) {
+              console.log(
+                `Ignoring push to ${data.branch} (current: ${loadedBranchRef.current})`,
+              );
+              return;
+            }
+
             // Check if file is in commits
             // deno-lint-ignore no-explicit-any
             const fileChanged = data.commits.some((commit: any) => {
@@ -345,12 +358,6 @@ function App() {
 
             if (fileChanged) {
               console.log("File changed remotely, checking status...");
-
-              // Check if we just saved (ignore events within 10 seconds of save)
-              if (Date.now() - lastSaveTimeRef.current < 10000) {
-                console.log("Ignoring push event immediately after save");
-                return;
-              }
 
               // Check for unsaved changes
               const isDirty = bodyRef.current !== initialBodyRef.current ||
@@ -426,6 +433,7 @@ function App() {
           if (data.collection) {
             setCollection(data.collection);
             setSha(data.sha);
+            setLoadedBranch(data.branch);
 
             const content = data.collection;
             const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
@@ -611,6 +619,10 @@ function App() {
       const MM = String(now.getMinutes()).padStart(2, "0");
       const generatedTitle = `STATICMS ${yyyy}${mm}${dd}${HH}${MM}`;
 
+      console.log(
+        `[handleSaveCollection] Sending branch: "${currentContent.branch}"`,
+      );
+
       const res = await fetch("/api/collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -647,7 +659,6 @@ function App() {
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);
         setInitialFrontMatter(frontMatter);
-        lastSaveTimeRef.current = Date.now();
       } else {
         console.error("Failed to create PR: " + data.error);
       }

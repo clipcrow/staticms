@@ -97,7 +97,18 @@ export const ContentList: React.FC<ContentListProps> = ({
                     <a className="header">
                       {content.owner}/{content.repo}
                     </a>
-                    <div className="description">{content.filePath}</div>
+                    <div className="description">
+                      {content.filePath}
+                      {content.branch && (
+                        <span
+                          className="ui label mini basic"
+                          style={{ marginLeft: "0.5em" }}
+                        >
+                          <i className="code branch icon"></i>
+                          {content.branch}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

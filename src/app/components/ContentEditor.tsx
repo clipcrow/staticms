@@ -92,6 +92,15 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <i className="file icon"></i>
             {currentContent.filePath}
           </div>
+          {currentContent.branch && (
+            <div
+              className="ui label large basic"
+              style={{ marginLeft: "0.5em" }}
+            >
+              <i className="code branch icon"></i>
+              {currentContent.branch}
+            </div>
+          )}
         </div>
         {isPrLocked && (
           <div className="item">

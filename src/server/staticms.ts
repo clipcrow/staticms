@@ -119,9 +119,12 @@ router.post("/api/webhook", async (ctx) => {
     const event = ctx.request.headers.get("x-github-event");
     if (event === "push") {
       const payload = await ctx.request.body.json();
+      const ref = payload.ref;
+      const branch = ref.replace("refs/heads/", "");
       const message = JSON.stringify({
         type: "push",
         repo: payload.repository.full_name,
+        branch,
         commits: payload.commits,
       });
       for (const client of clients) {
@@ -165,11 +168,61 @@ router.get("/api/collection", async (ctx) => {
       ctx.throw(400, "Missing owner, repo, or filePath query parameters");
     }
 
-    let url =
-      `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
-    if (branch) {
-      url += `?ref=${branch}`;
+    let targetBranch = branch;
+    if (targetBranch) {
+      try {
+        // Check if branch exists
+        await githubRequest(
+          `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${targetBranch}`,
+        );
+      } catch (e) {
+        // If branch does not exist (404), create it
+        const errorMessage = (e as Error).message;
+        if (
+          errorMessage.includes("404") || errorMessage.includes("Not Found")
+        ) {
+          console.log(`Branch ${targetBranch} not found. Creating...`);
+          try {
+            const repoData = await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}`,
+            );
+            const defaultBranch = repoData.default_branch;
+            const refData = await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+            );
+            const baseSha = refData.object.sha;
+
+            await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}/git/refs`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  ref: `refs/heads/${targetBranch}`,
+                  sha: baseSha,
+                }),
+              },
+            );
+            console.log(`Branch ${targetBranch} created.`);
+          } catch (createError) {
+            console.error(
+              `Failed to create branch ${targetBranch}:`,
+              createError,
+            );
+            throw createError;
+          }
+        } else {
+          throw e;
+        }
+      }
+    } else {
+      const repoData = await githubRequest(
+        `https://api.github.com/repos/${owner}/${repo}`,
+      );
+      targetBranch = repoData.default_branch;
     }
+
+    const url =
+      `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${targetBranch}`;
     const data = await githubRequest(url);
 
     // Content is base64 encoded
@@ -177,7 +230,7 @@ router.get("/api/collection", async (ctx) => {
     const collection = new TextDecoder().decode(
       Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
     );
-    ctx.response.body = { collection, sha: data.sha };
+    ctx.response.body = { collection, sha: data.sha, branch: targetBranch };
   } catch (e) {
     console.error(e);
     ctx.response.status = 500;
@@ -191,6 +244,8 @@ router.post("/api/collection", async (ctx) => {
     const { content, sha, description, title, owner, repo, path, branch } =
       body;
 
+    console.log(`[POST /api/collection] branch param: "${branch}"`);
+
     if (!owner || !repo || !path) {
       ctx.throw(400, "Missing owner, repo, or path in body");
     }
@@ -202,6 +257,58 @@ router.post("/api/collection", async (ctx) => {
         `https://api.github.com/repos/${owner}/${repo}`,
       );
       baseBranch = repoData.default_branch;
+      console.log(`[POST /api/collection] Using default branch: ${baseBranch}`);
+    } else {
+      console.log(
+        `[POST /api/collection] Using specified branch: ${baseBranch}`,
+      );
+      // Check if baseBranch exists, if not create it from default branch
+      try {
+        await githubRequest(
+          `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
+        );
+        console.log(`[POST /api/collection] Branch ${baseBranch} exists.`);
+      } catch (e) {
+        const errorMessage = (e as Error).message;
+        console.log(
+          `[POST /api/collection] Branch check error: ${errorMessage}`,
+        );
+        if (
+          errorMessage.includes("404") || errorMessage.includes("Not Found")
+        ) {
+          console.log(`Base branch ${baseBranch} not found. Creating...`);
+          try {
+            const repoData = await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}`,
+            );
+            const defaultBranch = repoData.default_branch;
+            const refData = await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+            );
+            const baseSha = refData.object.sha;
+
+            await githubRequest(
+              `https://api.github.com/repos/${owner}/${repo}/git/refs`,
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  ref: `refs/heads/${baseBranch}`,
+                  sha: baseSha,
+                }),
+              },
+            );
+            console.log(`Base branch ${baseBranch} created.`);
+          } catch (createError) {
+            console.error(
+              `Failed to create base branch ${baseBranch}:`,
+              createError,
+            );
+            throw createError;
+          }
+        } else {
+          throw e;
+        }
+      }
     }
 
     // 2. Get ref of base branch
