@@ -1,5 +1,8 @@
 import React from "react";
 import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import vscDarkPlus from "prism-style";
+import remarkGfm from "remark-gfm";
 import { Commit, Content } from "../types.ts";
 import { Loading } from "./Loading.tsx";
 
@@ -278,7 +281,39 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 <div
                   style={{ overflowY: "auto", height: "100%", padding: "1em" }}
                 >
-                  <ReactMarkdown>{body}</ReactMarkdown>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      // deno-lint-ignore no-explicit-any
+                      code(props: any) {
+                        const { children, className, node: _node, ...rest } =
+                          props;
+                        const match = /language-(\w+)/.exec(className || "");
+                        return match
+                          ? (
+                            <SyntaxHighlighter
+                              {...rest}
+                              PreTag="div"
+                              language={match[1]}
+                              style={vscDarkPlus}
+                            >
+                              {String(children).replace(/\n$/, "")}
+                            </SyntaxHighlighter>
+                          )
+                          : (
+                            <code {...rest} className={className}>
+                              {children}
+                            </code>
+                          );
+                      },
+                      // deno-lint-ignore no-explicit-any
+                      table(props: any) {
+                        return <table className="ui celled table" {...props} />;
+                      },
+                    }}
+                  >
+                    {body}
+                  </ReactMarkdown>
                 </div>
               )}
           </div>
