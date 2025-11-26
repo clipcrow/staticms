@@ -77,7 +77,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             />
           </div>
 
-          <h4 className="ui dividing header">Form Fields (Front Matter)</h4>
+          <h4 className="ui dividing header">Front Matter</h4>
 
           {formData.fields.map((field, index) => (
             <div key={index} className="field">

@@ -153,18 +153,26 @@ export const ContentList: React.FC<ContentListProps> = ({
                               <i className="trash icon"></i>
                             </button>
                           </div>
-                          <i className="file outline icon middle aligned"></i>
                           <div
                             className="content"
                             onClick={() => onSelectContent(item)}
                             style={{
                               cursor: "pointer",
-                              display: "inline-block",
+                              display: "flex",
+                              alignItems: "center",
                             }}
                           >
-                            <a className="header" style={{ fontSize: "1em" }}>
+                            <i
+                              className="file outline icon"
+                              style={{ marginRight: "0.5em" }}
+                            >
+                            </i>
+                            <span
+                              className="header"
+                              style={{ fontSize: "1em" }}
+                            >
                               {item.filePath}
-                            </a>
+                            </span>
                           </div>
                         </div>
                       ))}
