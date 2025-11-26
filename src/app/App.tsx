@@ -298,6 +298,30 @@ function App() {
     return null;
   };
 
+  // Refs for accessing latest state in SSE callback and tracking save time
+  const bodyRef = React.useRef(body);
+  const frontMatterRef = React.useRef(frontMatter);
+  const initialBodyRef = React.useRef(initialBody);
+  const initialFrontMatterRef = React.useRef(initialFrontMatter);
+  const prDescriptionRef = React.useRef(prDescription);
+  const lastSaveTimeRef = React.useRef(0);
+
+  useEffect(() => {
+    bodyRef.current = body;
+  }, [body]);
+  useEffect(() => {
+    frontMatterRef.current = frontMatter;
+  }, [frontMatter]);
+  useEffect(() => {
+    initialBodyRef.current = initialBody;
+  }, [initialBody]);
+  useEffect(() => {
+    initialFrontMatterRef.current = initialFrontMatter;
+  }, [initialFrontMatter]);
+  useEffect(() => {
+    prDescriptionRef.current = prDescription;
+  }, [prDescription]);
+
   // SSE Subscription
   useEffect(() => {
     const eventSource = new EventSource("/api/events");
@@ -321,6 +345,26 @@ function App() {
 
             if (fileChanged) {
               console.log("File changed remotely, checking status...");
+
+              // Check if we just saved (ignore events within 10 seconds of save)
+              if (Date.now() - lastSaveTimeRef.current < 10000) {
+                console.log("Ignoring push event immediately after save");
+                return;
+              }
+
+              // Check for unsaved changes
+              const isDirty = bodyRef.current !== initialBodyRef.current ||
+                JSON.stringify(frontMatterRef.current) !==
+                  JSON.stringify(initialFrontMatterRef.current) ||
+                prDescriptionRef.current !== "";
+
+              if (isDirty) {
+                console.log(
+                  "Remote change detected but local changes exist. Skipping reset.",
+                );
+                return;
+              }
+
               if (prUrl) {
                 checkPrStatus().then((status) => {
                   // If PR is open, we still need to update the content because the file changed
@@ -373,6 +417,9 @@ function App() {
         filePath: currentContent.filePath,
         t: Date.now().toString(), // Prevent caching
       });
+      if (currentContent.branch) {
+        params.append("branch", currentContent.branch);
+      }
       fetch(`/api/collection?${params.toString()}`)
         .then((res) => res.json())
         .then((data) => {
@@ -571,9 +618,9 @@ function App() {
           owner: currentContent.owner,
           repo: currentContent.repo,
           path: currentContent.filePath,
+          branch: currentContent.branch,
           content: finalContent,
           message: prDescription || "Update collection via Staticms",
-          branch: `staticms-update-${Date.now()}`,
           title: generatedTitle,
           description: prDescription,
           sha,
@@ -600,6 +647,7 @@ function App() {
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);
         setInitialFrontMatter(frontMatter);
+        lastSaveTimeRef.current = Date.now();
       } else {
         console.error("Failed to create PR: " + data.error);
       }

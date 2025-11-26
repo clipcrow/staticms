@@ -159,13 +159,17 @@ router.get("/api/collection", async (ctx) => {
     const owner = ctx.request.url.searchParams.get("owner");
     const repo = ctx.request.url.searchParams.get("repo");
     const filePath = ctx.request.url.searchParams.get("filePath");
+    const branch = ctx.request.url.searchParams.get("branch");
 
     if (!owner || !repo || !filePath) {
       ctx.throw(400, "Missing owner, repo, or filePath query parameters");
     }
 
-    const url =
+    let url =
       `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+    if (branch) {
+      url += `?ref=${branch}`;
+    }
     const data = await githubRequest(url);
 
     // Content is base64 encoded
@@ -184,32 +188,36 @@ router.get("/api/collection", async (ctx) => {
 router.post("/api/collection", async (ctx) => {
   try {
     const body = await ctx.request.body.json();
-    const { content, sha, description, title, owner, repo, path } = body;
+    const { content, sha, description, title, owner, repo, path, branch } =
+      body;
 
     if (!owner || !repo || !path) {
       ctx.throw(400, "Missing owner, repo, or path in body");
     }
 
-    // 1. Get default branch
-    const repoData = await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}`,
-    );
-    const defaultBranch = repoData.default_branch;
+    // 1. Determine base branch
+    let baseBranch = branch;
+    if (!baseBranch) {
+      const repoData = await githubRequest(
+        `https://api.github.com/repos/${owner}/${repo}`,
+      );
+      baseBranch = repoData.default_branch;
+    }
 
-    // 2. Get ref of default branch
+    // 2. Get ref of base branch
     const refData = await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+      `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
     );
     const baseSha = refData.object.sha;
 
     // 3. Create new branch
-    const branchName = `staticms-update-${Date.now()}`;
+    const newBranchName = `staticms-update-${Date.now()}`;
     await githubRequest(
       `https://api.github.com/repos/${owner}/${repo}/git/refs`,
       {
         method: "POST",
         body: JSON.stringify({
-          ref: `refs/heads/${branchName}`,
+          ref: `refs/heads/${newBranchName}`,
           sha: baseSha,
         }),
       },
@@ -223,7 +231,7 @@ router.post("/api/collection", async (ctx) => {
         body: JSON.stringify({
           message: description || `Update ${path} via Staticms`,
           content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
-          branch: branchName,
+          branch: newBranchName,
           sha: sha, // Original file SHA
         }),
       },
@@ -237,8 +245,8 @@ router.post("/api/collection", async (ctx) => {
         body: JSON.stringify({
           title: title || `Update ${path}`,
           body: description || "Update content via Staticms",
-          head: branchName,
-          base: defaultBranch,
+          head: newBranchName,
+          base: baseBranch,
         }),
       },
     );

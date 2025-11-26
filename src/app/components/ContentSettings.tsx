@@ -70,6 +70,16 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             />
           </div>
           <div className="field">
+            <label>Branch (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. main"
+              value={formData.branch || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, branch: e.target.value })}
+            />
+          </div>
+          <div className="field">
             <label>File Path</label>
             <input
               type="text"

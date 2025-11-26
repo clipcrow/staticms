@@ -5,6 +5,7 @@ export interface Field {
 export interface Content {
   owner: string;
   repo: string;
+  branch?: string;
   filePath: string;
   fields: Field[];
 }
