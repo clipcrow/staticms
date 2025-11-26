@@ -7,6 +7,7 @@ interface ContentSettingsProps {
   editingIndex: number | null;
   onSave: (e: React.FormEvent) => void;
   onCancel: () => void;
+  repoInfo: { owner: string; repo: string; branch?: string };
 }
 
 export const ContentSettings: React.FC<ContentSettingsProps> = ({
@@ -15,6 +16,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   editingIndex,
   onSave,
   onCancel,
+  repoInfo,
 }) => {
   const handleAddField = () => {
     setFormData({
@@ -41,44 +43,28 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           {editingIndex !== null ? "Edit Content" : "Add Content"}
           <div className="sub header">
             {editingIndex !== null
-              ? "Update your GitHub content configuration."
-              : "Configure a new GitHub content."}
+              ? "Update your content configuration."
+              : "Configure a new content file."}
           </div>
         </h2>
 
+        <div className="ui message">
+          <div className="header">Repository</div>
+          <p>
+            {repoInfo.owner}/{repoInfo.repo}
+            {repoInfo.branch && (
+              <span
+                className="ui label mini basic"
+                style={{ marginLeft: "0.5em" }}
+              >
+                <i className="code branch icon"></i>
+                {repoInfo.branch}
+              </span>
+            )}
+          </p>
+        </div>
+
         <form onSubmit={onSave} className="ui form">
-          <div className="field">
-            <label>GitHub Owner</label>
-            <input
-              type="text"
-              placeholder="e.g. facebook"
-              value={formData.owner}
-              onChange={(e) =>
-                setFormData({ ...formData, owner: e.target.value })}
-              required
-            />
-          </div>
-          <div className="field">
-            <label>GitHub Repo</label>
-            <input
-              type="text"
-              placeholder="e.g. react"
-              value={formData.repo}
-              onChange={(e) =>
-                setFormData({ ...formData, repo: e.target.value })}
-              required
-            />
-          </div>
-          <div className="field">
-            <label>Branch (Optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. main"
-              value={formData.branch || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, branch: e.target.value })}
-            />
-          </div>
           <div className="field">
             <label>File Path</label>
             <input

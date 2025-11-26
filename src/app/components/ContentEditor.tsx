@@ -80,38 +80,62 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     >
       <div className="ui secondary menu">
         <div className="item">
-          <button
-            type="button"
-            onClick={onBack}
-            className="ui labeled icon button"
-          >
-            <i className="left arrow icon"></i>
-            Back
+          <button type="button" className="ui icon button" onClick={onBack}>
+            <i className="arrow left icon"></i>
           </button>
         </div>
         <div className="item">
-          <div className="ui label large">
-            <i className="file icon"></i>
-            {currentContent.filePath}
-          </div>
-          {currentContent.branch && (
+          <div style={{ display: "flex", alignItems: "baseline" }}>
             <div
-              className="ui label large basic"
-              style={{ marginLeft: "0.5em" }}
+              style={{
+                fontSize: "1em",
+                color: "rgba(0,0,0,0.6)",
+                marginRight: "0.2em",
+              }}
             >
-              <i className="code branch icon"></i>
-              {currentContent.branch}
+              {currentContent.filePath.substring(
+                0,
+                currentContent.filePath.lastIndexOf("/") + 1,
+              )}
             </div>
-          )}
+            <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>
+              {currentContent.filePath.substring(
+                currentContent.filePath.lastIndexOf("/") + 1,
+              )}
+            </div>
+            {currentContent.branch && (
+              <span
+                className="ui label mini basic"
+                style={{ marginLeft: "0.5em", verticalAlign: "middle" }}
+              >
+                <i className="code branch icon"></i>
+                {currentContent.branch}
+              </span>
+            )}
+          </div>
         </div>
         {isPrLocked && (
           <div className="item">
-            <div className="ui orange label">
+            <div className="ui label orange">
               <i className="lock icon"></i>
-              Locked (PR Open)
+              PR Open
             </div>
           </div>
         )}
+        <div className="right menu">
+          <div className="item">
+            <button
+              type="button"
+              className="ui button basic"
+              onClick={onReset}
+              disabled={loading || isSaving}
+              title="Reset changes"
+            >
+              <i className="undo icon"></i>
+              Reset
+            </button>
+          </div>
+        </div>
       </div>
 
       <div
@@ -126,7 +150,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             className="ui segment"
             style={{ overflowY: "auto", flexShrink: 0, maxHeight: "40%" }}
           >
-            <h4 className="ui dividing header">Front Matter</h4>
             <div className="ui form">
               <div className="ui grid middle aligned">
                 {/* Configured Fields */}
@@ -361,19 +384,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           style={{ height: "100%", overflowY: "auto" }}
         >
           <div className="ui segment">
-            <h3 className="ui header">
-              History
-              <button
-                type="button"
-                className="ui mini right floated button basic"
-                onClick={onReset}
-                disabled={!hasDraft || isPrLocked}
-                title="Discard local changes"
-              >
-                Reset
-              </button>
-            </h3>
-
             {prUrl && (
               <div
                 className={`ui message ${

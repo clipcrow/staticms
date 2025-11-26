@@ -6,13 +6,17 @@ import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Loading } from "./components/Loading.tsx";
+import { RepositorySettings } from "./components/RepositorySettings.tsx";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentContent, setCurrentContent] = useState<Content | null>(null);
   const [view, setView] = useState<
-    "content-list" | "content-editor" | "content-settings"
+    | "content-list"
+    | "content-editor"
+    | "content-settings"
+    | "repository-settings"
   >(
     "content-list",
   );
@@ -23,6 +27,53 @@ function App() {
     filePath: "",
     fields: [],
   });
+
+  const [targetRepo, setTargetRepo] = useState<
+    {
+      owner: string;
+      repo: string;
+      branch?: string;
+    } | null
+  >(null);
+
+  const handleAddNewRepository = () => {
+    setTargetRepo(null);
+    setView("repository-settings");
+  };
+
+  const handleRepositoryNext = (
+    owner: string,
+    repo: string,
+    branch?: string,
+  ) => {
+    setTargetRepo({ owner, repo, branch });
+    setFormData({
+      owner,
+      repo,
+      branch,
+      filePath: "",
+      fields: [],
+    });
+    setEditingIndex(null);
+    setView("content-settings");
+  };
+
+  const handleAddNewContentToRepo = (
+    owner: string,
+    repo: string,
+    branch?: string,
+  ) => {
+    setTargetRepo({ owner, repo, branch });
+    setFormData({
+      owner,
+      repo,
+      branch,
+      filePath: "",
+      fields: [],
+    });
+    setEditingIndex(null);
+    setView("content-settings");
+  };
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editorLoading, setEditorLoading] = useState(false);
@@ -63,6 +114,7 @@ function App() {
         setContents(newContents);
         setFormData({ owner: "", repo: "", filePath: "", fields: [] });
         setEditingIndex(null);
+        setTargetRepo(null);
         setView("content-list");
       } else {
         console.error("Failed to save configuration");
@@ -92,9 +144,15 @@ function App() {
   };
 
   const handleEditContentConfig = (index: number) => {
+    const content = contents[index];
+    setTargetRepo({
+      owner: content.owner,
+      repo: content.repo,
+      branch: content.branch,
+    });
     setFormData({
-      ...contents[index],
-      fields: contents[index].fields || [],
+      ...content,
+      fields: content.fields || [],
     });
     setEditingIndex(index);
     setView("content-settings");
@@ -715,6 +773,15 @@ function App() {
     return <Loading />;
   }
 
+  if (view === "repository-settings") {
+    return (
+      <RepositorySettings
+        onNext={handleRepositoryNext}
+        onCancel={() => setView("content-list")}
+      />
+    );
+  }
+
   if (view === "content-settings") {
     return (
       <ContentSettings
@@ -723,71 +790,60 @@ function App() {
         editingIndex={editingIndex}
         onSave={handleSaveContentConfig}
         onCancel={() => {
+          setTargetRepo(null);
           setView("content-list");
-          setEditingIndex(null);
-          setFormData({
-            owner: "",
-            repo: "",
-            filePath: "",
-            fields: [],
-          });
         }}
+        repoInfo={targetRepo!}
       />
     );
   }
 
-  if (view === "content-editor" && currentContent) {
+  if (view === "content-list") {
     return (
-      <ContentEditor
-        currentContent={currentContent}
-        body={body}
-        setBody={setBody}
-        frontMatter={frontMatter}
-        setFrontMatter={setFrontMatter}
-        customFields={customFields}
-        setCustomFields={setCustomFields}
-        isPrLocked={isPrLocked}
-        prStatus={prStatus}
-        prUrl={prUrl}
-        hasDraft={hasDraft}
-        draftTimestamp={draftTimestamp}
-        isPrOpen={isPrOpen}
-        setIsPrOpen={setIsPrOpen}
-        prDescription={prDescription}
-        setPrDescription={setPrDescription}
-        isSaving={isSaving}
-        commits={commits}
-        onSaveCollection={handleSaveCollection}
-        onReset={handleReset}
-        onBack={() => {
-          setView("content-list");
-          setCurrentContent(null);
-          setPrUrl(null);
-          setCollection("");
-          setBody("");
-          setFrontMatter({});
-          setSha("");
-          setCommits([]);
+      <ContentList
+        contents={contents}
+        onEditContentConfig={handleEditContentConfig}
+        onDeleteContent={handleDeleteContent}
+        onSelectContent={(content) => {
+          setCurrentContent(content);
+          setView("content-editor");
         }}
-        loading={editorLoading}
+        onAddNewContent={handleAddNewRepository}
+        onAddNewContentToRepo={handleAddNewContentToRepo}
       />
     );
   }
 
+  // If view is "content-editor" or any other view not explicitly handled,
+  // and currentContent is available, render ContentEditor.
+  // This assumes currentContent will be set when view is "content-editor".
   return (
-    <ContentList
-      contents={contents}
-      onEditContentConfig={handleEditContentConfig}
-      onDeleteContent={handleDeleteContent}
-      onSelectContent={(content) => {
-        setCurrentContent(content);
-        setView("content-editor");
+    <ContentEditor
+      currentContent={currentContent!}
+      onBack={() => {
+        setCurrentContent(null);
+        setView("content-list");
       }}
-      onAddNewContent={() => {
-        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-        setEditingIndex(null);
-        setView("content-settings");
-      }}
+      body={body}
+      setBody={setBody}
+      frontMatter={frontMatter}
+      setFrontMatter={setFrontMatter}
+      customFields={customFields}
+      setCustomFields={setCustomFields}
+      onSaveCollection={handleSaveCollection}
+      commits={commits}
+      prUrl={prUrl}
+      isSaving={isSaving}
+      hasDraft={hasDraft}
+      draftTimestamp={draftTimestamp}
+      prDescription={prDescription}
+      setPrDescription={setPrDescription}
+      isPrOpen={isPrOpen}
+      setIsPrOpen={setIsPrOpen}
+      isPrLocked={isPrLocked}
+      prStatus={prStatus}
+      onReset={handleReset}
+      loading={editorLoading}
     />
   );
 }

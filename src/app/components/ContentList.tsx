@@ -7,6 +7,7 @@ interface ContentListProps {
   onDeleteContent: (index: number) => void;
   onSelectContent: (content: Content) => void;
   onAddNewContent: () => void;
+  onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
 }
 
 export const ContentList: React.FC<ContentListProps> = ({
@@ -15,7 +16,34 @@ export const ContentList: React.FC<ContentListProps> = ({
   onDeleteContent,
   onSelectContent,
   onAddNewContent,
+  onAddNewContentToRepo,
 }) => {
+  // Group contents by repository (owner + repo + branch)
+  const groupedContents = contents.reduce(
+    (acc, content, index) => {
+      const key = `${content.owner}/${content.repo}:${content.branch || ""}`;
+      if (!acc[key]) {
+        acc[key] = {
+          owner: content.owner,
+          repo: content.repo,
+          branch: content.branch,
+          items: [],
+        };
+      }
+      acc[key].items.push({ ...content, originalIndex: index });
+      return acc;
+    },
+    {} as Record<
+      string,
+      {
+        owner: string;
+        repo: string;
+        branch?: string;
+        items: (Content & { originalIndex: number })[];
+      }
+    >,
+  );
+
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
       <h1 className="ui header">
@@ -30,7 +58,7 @@ export const ContentList: React.FC<ContentListProps> = ({
         <div className="ui grid">
           <div className="two column row">
             <div className="column">
-              <h2 className="ui header">Contents</h2>
+              <h2 className="ui header">Repositories</h2>
             </div>
             <div className="column right aligned">
               <button
@@ -39,75 +67,107 @@ export const ContentList: React.FC<ContentListProps> = ({
                 className="ui primary button"
               >
                 <i className="plus icon"></i>
-                Add Content
+                Add Repository
               </button>
             </div>
           </div>
         </div>
 
-        {contents.length === 0
+        {Object.keys(groupedContents).length === 0
           ? (
             <div className="ui placeholder segment">
               <div className="ui icon header">
-                <i className="file outline icon"></i>
-                No content configured
+                <i className="github icon"></i>
+                No repositories configured
               </div>
               <div className="inline">
                 <div className="ui primary button" onClick={onAddNewContent}>
-                  Add Content
+                  Add Repository
                 </div>
               </div>
             </div>
           )
           : (
-            <div className="ui relaxed divided list">
-              {contents.map((content, index) => (
-                <div key={index} className="item" style={{ padding: "1em" }}>
-                  <div className="right floated content">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditContentConfig(index);
-                      }}
-                      className="ui icon button"
-                      title="Edit Configuration"
-                    >
-                      <i className="edit icon"></i>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteContent(index);
-                      }}
-                      className="ui icon button negative"
-                      title="Delete Configuration"
-                    >
-                      <i className="trash icon"></i>
-                    </button>
-                  </div>
-                  <i className="large file middle aligned icon"></i>
-                  <div
-                    className="content"
-                    onClick={() =>
-                      onSelectContent(content)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <a className="header">
-                      {content.owner}/{content.repo}
-                    </a>
-                    <div className="description">
-                      {content.filePath}
-                      {content.branch && (
+            <div style={{ marginTop: "1em" }}>
+              {Object.values(groupedContents).map((group, groupIndex) => (
+                <div key={groupIndex} className="ui card fluid">
+                  <div className="content">
+                    <div className="header">
+                      <i className="github icon"></i>
+                      {group.owner}/{group.repo}
+                      {group.branch && (
                         <span
                           className="ui label mini basic"
-                          style={{ marginLeft: "0.5em" }}
+                          style={{
+                            marginLeft: "0.5em",
+                            verticalAlign: "middle",
+                          }}
                         >
                           <i className="code branch icon"></i>
-                          {content.branch}
+                          {group.branch}
                         </span>
                       )}
+                      <button
+                        type="button"
+                        className="ui mini button primary right floated"
+                        onClick={() =>
+                          onAddNewContentToRepo(
+                            group.owner,
+                            group.repo,
+                            group.branch,
+                          )}
+                      >
+                        <i className="plus icon"></i> Add Content
+                      </button>
+                    </div>
+                  </div>
+                  <div className="content">
+                    <div className="ui relaxed divided list">
+                      {group.items.map((item) => (
+                        <div
+                          key={item.originalIndex}
+                          className="item"
+                          style={{ padding: "0.5em 0" }}
+                        >
+                          <div className="right floated content">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditContentConfig(item.originalIndex);
+                              }}
+                              className="ui icon button mini"
+                              title="Edit Configuration"
+                            >
+                              <i className="edit icon"></i>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteContent(item.originalIndex);
+                              }}
+                              className="ui icon button negative mini"
+                              title="Delete Configuration"
+                            >
+                              <i className="trash icon"></i>
+                            </button>
+                          </div>
+                          <i className="file outline icon middle aligned"></i>
+                          <div
+                            className="content"
+                            onClick={() => onSelectContent(item)}
+                            style={{
+                              cursor: "pointer",
+                              display: "inline-block",
+                            }}
+                          >
+                            <a className="header" style={{ fontSize: "1em" }}>
+                              {item.filePath}
+                            </a>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
