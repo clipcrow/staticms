@@ -128,36 +128,57 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           >
             <h4 className="ui dividing header">Front Matter</h4>
             <div className="ui form">
-              <div className="ui grid">
+              <div className="ui grid middle aligned">
                 {/* Configured Fields */}
                 {currentContent.fields?.map((field, index) => (
-                  <div
-                    key={`configured-${index}`}
-                    className="eight wide column field"
-                  >
-                    <label>{field.name}</label>
-                    <input
-                      type="text"
-                      value={(frontMatter[field.name] as string) || ""}
-                      onChange={(e) =>
-                        setFrontMatter({
-                          ...frontMatter,
-                          [field.name]: e.target.value,
-                        })}
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
+                  <div key={`configured-${index}`} className="row">
+                    <div className="four wide column">
+                      <strong>{field.name}</strong>
+                    </div>
+                    <div className="eleven wide column">
+                      <div className="ui input fluid">
+                        <input
+                          type="text"
+                          value={(frontMatter[field.name] as string) || ""}
+                          onChange={(e) =>
+                            setFrontMatter({
+                              ...frontMatter,
+                              [field.name]: e.target.value,
+                            })}
+                          readOnly={isPrLocked}
+                          disabled={isPrLocked}
+                        />
+                      </div>
+                    </div>
+                    <div className="one wide column"></div>
                   </div>
                 ))}
 
                 {/* Custom/Extra Fields */}
                 {customFields.map((field) => (
-                  <div key={field.id} className="eight wide column field">
-                    <label>
-                      {field.key}
-                      <i
-                        className="trash icon link"
-                        style={{ marginLeft: "0.5em", color: "#db2828" }}
+                  <div key={field.id} className="row">
+                    <div className="four wide column">
+                      <strong>{field.key}</strong>
+                    </div>
+                    <div className="eleven wide column">
+                      <div className="ui input fluid">
+                        <input
+                          type="text"
+                          value={(frontMatter[field.key] as string) || ""}
+                          onChange={(e) =>
+                            setFrontMatter({
+                              ...frontMatter,
+                              [field.key]: e.target.value,
+                            })}
+                          readOnly={isPrLocked}
+                          disabled={isPrLocked}
+                        />
+                      </div>
+                    </div>
+                    <div className="one wide column">
+                      <button
+                        type="button"
+                        className="ui icon button basic negative circular mini"
                         onClick={() => {
                           if (isPrLocked) {
                             return;
@@ -170,57 +191,52 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                           const { [field.key]: _, ...rest } = frontMatter;
                           setFrontMatter(rest);
                         }}
+                        disabled={isPrLocked}
+                        title="Delete Field"
                       >
-                      </i>
-                    </label>
-                    <input
-                      type="text"
-                      value={(frontMatter[field.key] as string) || ""}
-                      onChange={(e) =>
-                        setFrontMatter({
-                          ...frontMatter,
-                          [field.key]: e.target.value,
-                        })}
-                      readOnly={isPrLocked}
-                      disabled={isPrLocked}
-                    />
+                        <i className="trash icon"></i>
+                      </button>
+                    </div>
                   </div>
                 ))}
-              </div>
+                {/* Add New Field */}
+                <div className="row">
+                  <div className="four wide column">
+                    <div className="ui input fluid">
+                      <input
+                        type="text"
+                        value={newFieldName}
+                        onChange={(e) => setNewFieldName(e.target.value)}
+                        placeholder="New Field Name"
+                        disabled={isPrLocked}
+                      />
+                    </div>
+                  </div>
+                  <div className="twelve wide column">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newId = crypto.randomUUID();
+                        setCustomFields([
+                          ...customFields,
+                          { id: newId, key: newFieldName },
+                        ]);
 
-              {/* Add New Field */}
-              <div className="field" style={{ marginTop: "1em" }}>
-                <div className="ui action input">
-                  <input
-                    type="text"
-                    value={newFieldName}
-                    onChange={(e) => setNewFieldName(e.target.value)}
-                    placeholder="New Field Name"
-                    disabled={isPrLocked}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newId = crypto.randomUUID();
-                      setCustomFields([
-                        ...customFields,
-                        { id: newId, key: newFieldName },
-                      ]);
-
-                      setFrontMatter({
-                        ...frontMatter,
-                        [newFieldName]: "",
-                      });
-                      setNewFieldName("");
-                    }}
-                    className="ui button"
-                    disabled={isPrLocked ||
-                      !newFieldName.trim() ||
-                      Object.keys(frontMatter).includes(newFieldName)}
-                  >
-                    <i className="plus icon"></i>
-                    Add Item
-                  </button>
+                        setFrontMatter({
+                          ...frontMatter,
+                          [newFieldName]: "",
+                        });
+                        setNewFieldName("");
+                      }}
+                      className="ui button"
+                      disabled={isPrLocked ||
+                        !newFieldName.trim() ||
+                        Object.keys(frontMatter).includes(newFieldName)}
+                    >
+                      <i className="plus icon"></i>
+                      Add Field
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
