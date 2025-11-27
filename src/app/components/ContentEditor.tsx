@@ -154,13 +154,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   <div className="ui grid middle aligned">
                     {frontMatter.map((item, itemIndex) => (
                       <React.Fragment key={itemIndex}>
-                        <div className="row">
-                          <div className="sixteen wide column">
-                            <h4 className="ui dividing header">
-                              Item {itemIndex + 1}
-                            </h4>
-                          </div>
-                        </div>
                         {currentContent.fields?.map((field, index) => (
                           <div
                             key={`configured-${itemIndex}-${index}`}
