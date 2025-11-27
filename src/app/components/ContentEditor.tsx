@@ -271,29 +271,20 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                           onDragEnd={handleDragEnd}
                         >
                           <div className="ui grid middle aligned">
-                            {/* Drag Handle */}
-                            <div className="row">
-                              <div className="sixteen wide column">
-                                <i
-                                  className="bars icon"
-                                  style={{
-                                    cursor: isPrLocked ? "default" : "grab",
-                                    color: "#ccc",
-                                  }}
-                                >
-                                </i>
-                              </div>
-                            </div>
                             {/* Configured Fields */}
                             {currentContent.fields?.map((field, index) => (
                               <div
                                 key={`configured-${itemIndex}-${index}`}
                                 className="row"
+                                style={{
+                                  paddingBottom: "0.5em",
+                                  paddingTop: "0.5em",
+                                }}
                               >
                                 <div className="four wide column">
                                   <strong>{field.name}</strong>
                                 </div>
-                                <div className="eleven wide column">
+                                <div className="twelve wide column">
                                   <div className="ui input fluid">
                                     <input
                                       type="text"
@@ -311,7 +302,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                     />
                                   </div>
                                 </div>
-                                <div className="one wide column"></div>
                               </div>
                             ))}
 
@@ -320,6 +310,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                               <div
                                 key={`unconfigured-${itemIndex}-${key}`}
                                 className="row"
+                                style={{
+                                  paddingBottom: "0.5em",
+                                  paddingTop: "0.5em",
+                                }}
                               >
                                 <div className="four wide column">
                                   <strong>{key}</strong>
@@ -357,8 +351,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                               </div>
                             ))}
 
-                            {/* Add New Field */}
-                            <div className="row">
+                            {/* Add New Field & Delete Item */}
+                            <div
+                              className="row"
+                              style={{
+                                paddingBottom: "0.5em",
+                                paddingTop: "0.5em",
+                              }}
+                            >
                               <div className="four wide column">
                                 <div className="ui input fluid">
                                   <input
@@ -374,7 +374,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                   />
                                 </div>
                               </div>
-                              <div className="twelve wide column">
+                              <div className="eight wide column">
                                 <button
                                   type="button"
                                   onClick={() =>
@@ -387,10 +387,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                   Add Field
                                 </button>
                               </div>
-                            </div>
-                            {/* Delete Item Button */}
-                            <div className="row">
-                              <div className="sixteen wide column right aligned">
+                              <div className="four wide column right aligned">
                                 <button
                                   type="button"
                                   className="ui button negative mini"
@@ -424,11 +421,15 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   <div className="ui grid middle aligned">
                     {/* Configured Fields */}
                     {currentContent.fields?.map((field, index) => (
-                      <div key={`configured-${index}`} className="row">
+                      <div
+                        key={`configured-${index}`}
+                        className="row"
+                        style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+                      >
                         <div className="four wide column">
                           <strong>{field.name}</strong>
                         </div>
-                        <div className="eleven wide column">
+                        <div className="twelve wide column">
                           <div className="ui input fluid">
                             <input
                               type="text"
@@ -443,13 +444,16 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                             />
                           </div>
                         </div>
-                        <div className="one wide column"></div>
                       </div>
                     ))}
 
                     {/* Custom/Extra Fields */}
                     {customFields.map((field) => (
-                      <div key={field.id} className="row">
+                      <div
+                        key={field.id}
+                        className="row"
+                        style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+                      >
                         <div className="four wide column">
                           <strong>{field.key}</strong>
                         </div>
@@ -477,9 +481,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                 return;
                               }
                               setCustomFields((prev) =>
-                                prev.filter((f) =>
-                                  f.id !== field.id
-                                )
+                                prev.filter((f) => f.id !== field.id)
                               );
                               const { [field.key]: _, ...rest } = frontMatter;
                               setFrontMatter(rest);

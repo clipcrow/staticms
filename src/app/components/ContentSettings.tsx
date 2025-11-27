@@ -91,7 +91,11 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
           <div className="ui grid middle aligned">
             {formData.fields.map((field, index) => (
-              <div key={index} className="row">
+              <div
+                key={index}
+                className="row"
+                style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+              >
                 <div className="four wide column">
                   <div className="ui input fluid">
                     <input
@@ -115,8 +119,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                 <div className="one wide column">
                   <button
                     type="button"
-                    onClick={() =>
-                      handleDeleteField(index)}
+                    onClick={() => handleDeleteField(index)}
                     className="ui icon button basic negative circular mini"
                     title="Delete Field"
                   >
@@ -127,7 +130,10 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             ))}
 
             {/* Add New Field */}
-            <div className="row">
+            <div
+              className="row"
+              style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+            >
               <div className="four wide column">
                 <div className="ui input fluid">
                   <input
