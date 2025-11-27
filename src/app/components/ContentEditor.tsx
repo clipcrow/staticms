@@ -84,44 +84,38 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <i className="arrow left icon"></i>
           </button>
         </div>
-        <div className="item">
-          <div style={{ display: "flex", alignItems: "baseline" }}>
-            <div
-              style={{
-                fontSize: "1em",
-                color: "rgba(0,0,0,0.6)",
-                marginRight: "0.2em",
-              }}
-            >
-              {currentContent.filePath.substring(
-                0,
-                currentContent.filePath.lastIndexOf("/") + 1,
-              )}
-            </div>
-            <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>
-              {currentContent.filePath.substring(
-                currentContent.filePath.lastIndexOf("/") + 1,
-              )}
-            </div>
+        <div className="item" style={{ flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <i className="github icon" style={{ marginRight: "0.5em" }}></i>
+            <span style={{ fontWeight: "bold", marginRight: "0.5em" }}>
+              {currentContent.owner}/{currentContent.repo}
+            </span>
             {currentContent.branch && (
               <span
                 className="ui label mini basic"
-                style={{ marginLeft: "0.5em", verticalAlign: "middle" }}
+                style={{ marginRight: "0.5em" }}
               >
                 <i className="code branch icon"></i>
                 {currentContent.branch}
               </span>
             )}
+            <span style={{ margin: "0 0.5em", color: "rgba(0,0,0,0.4)" }}>
+              /
+            </span>
+            <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+              {currentContent.filePath}
+            </span>
+            {isPrLocked && (
+              <div
+                className="ui label orange mini"
+                style={{ marginLeft: "1em" }}
+              >
+                <i className="lock icon"></i>
+                PR Open
+              </div>
+            )}
           </div>
         </div>
-        {isPrLocked && (
-          <div className="item">
-            <div className="ui label orange">
-              <i className="lock icon"></i>
-              PR Open
-            </div>
-          </div>
-        )}
         <div className="right menu">
           <div className="item">
             <button

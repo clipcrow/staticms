@@ -4,9 +4,10 @@ import { Content } from "../types.ts";
 interface ContentListProps {
   contents: Content[];
   onEditContentConfig: (index: number) => void;
-  onSelectContent: (content: Content) => void;
+  onSelectContent: (content: Content, index: number) => void;
   onAddNewContent: () => void;
   onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
+  loadingItemIndex: number | null;
 }
 
 export const ContentList: React.FC<ContentListProps> = ({
@@ -15,6 +16,7 @@ export const ContentList: React.FC<ContentListProps> = ({
   onSelectContent,
   onAddNewContent,
   onAddNewContentToRepo,
+  loadingItemIndex,
 }) => {
   // Group contents by repository (owner + repo + branch)
   const groupedContents = contents.reduce(
@@ -141,24 +143,45 @@ export const ContentList: React.FC<ContentListProps> = ({
                               }}
                               className="ui icon button mini"
                               title="Edit Configuration"
+                              disabled={loadingItemIndex !== null}
                             >
                               <i className="edit icon"></i>
                             </button>
                           </div>
                           <div
                             className="content"
-                            onClick={() => onSelectContent(item)}
+                            onClick={() => {
+                              if (loadingItemIndex === null) {
+                                onSelectContent(item, item.originalIndex);
+                              }
+                            }}
                             style={{
-                              cursor: "pointer",
+                              cursor: loadingItemIndex === null
+                                ? "pointer"
+                                : "default",
                               display: "flex",
                               alignItems: "center",
+                              opacity: loadingItemIndex !== null &&
+                                  loadingItemIndex !== item.originalIndex
+                                ? 0.5
+                                : 1,
                             }}
                           >
-                            <i
-                              className="file outline icon"
-                              style={{ marginRight: "0.5em" }}
-                            >
-                            </i>
+                            {loadingItemIndex === item.originalIndex
+                              ? (
+                                <div
+                                  className="ui active mini inline loader"
+                                  style={{ marginRight: "0.5em" }}
+                                >
+                                </div>
+                              )
+                              : (
+                                <i
+                                  className="file outline icon"
+                                  style={{ marginRight: "0.5em" }}
+                                >
+                                </i>
+                              )}
                             <span
                               className="header"
                               style={{ fontSize: "1em" }}

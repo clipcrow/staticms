@@ -135,6 +135,10 @@ function App() {
       });
       if (res.ok) {
         setContents(newContents);
+        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
+        setEditingIndex(null);
+        setTargetRepo(null);
+        setView("content-list");
       } else {
         console.error("Failed to delete content");
       }
@@ -491,165 +495,175 @@ function App() {
     };
   }, [currentContent, prUrl]);
 
-  useEffect(() => {
-    if (view === "content-editor" && currentContent) {
-      setEditorLoading(true); // Start loading
-      const params = new URLSearchParams({
-        owner: currentContent.owner,
-        repo: currentContent.repo,
-        filePath: currentContent.filePath,
-        t: Date.now().toString(), // Prevent caching
-      });
-      if (currentContent.branch) {
-        params.append("branch", currentContent.branch);
-      }
-      fetch(`/api/collection?${params.toString()}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.collection) {
-            setCollection(data.collection);
-            setSha(data.sha);
-            setLoadedBranch(data.branch);
+  const [loadingContentIndex, setLoadingContentIndex] = useState<number | null>(
+    null,
+  );
 
-            const content = data.collection;
-            const isYaml = currentContent.filePath.endsWith(".yaml") ||
-              currentContent.filePath.endsWith(".yml");
-            let parsedBody = "";
-            let parsedFM = {};
+  const loadContentData = (content: Content) => {
+    setEditorLoading(true); // Start loading
+    const params = new URLSearchParams({
+      owner: content.owner,
+      repo: content.repo,
+      filePath: content.filePath,
+      t: Date.now().toString(), // Prevent caching
+    });
+    if (content.branch) {
+      params.append("branch", content.branch);
+    }
+    fetch(`/api/collection?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.collection) {
+          setCollection(data.collection);
+          setSha(data.sha);
+          setLoadedBranch(data.branch);
 
-            if (isYaml) {
+          const rawContent = data.collection;
+          const isYaml = content.filePath.endsWith(".yaml") ||
+            content.filePath.endsWith(".yml");
+          let parsedBody = "";
+          let parsedFM = {};
+
+          if (isYaml) {
+            try {
+              const fm = jsyaml.load(rawContent);
+              parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+              parsedBody = "";
+            } catch (e) {
+              console.error("Error parsing yaml file", e);
+            }
+          } else {
+            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
+            const match = rawContent.match(fmRegex);
+            parsedBody = rawContent;
+
+            if (match) {
               try {
-                const fm = jsyaml.load(content);
+                const fm = jsyaml.load(match[1]);
                 parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = "";
+                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
               } catch (e) {
-                console.error("Error parsing yaml file", e);
-              }
-            } else {
-              const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
-              const match = content.match(fmRegex);
-              parsedBody = content;
-
-              if (match) {
-                try {
-                  const fm = jsyaml.load(match[1]);
-                  parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                  parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
-                } catch (e) {
-                  console.error("Error parsing front matter", e);
-                }
+                console.error("Error parsing front matter", e);
               }
             }
+          }
 
-            setInitialBody(parsedBody);
-            setInitialFrontMatter(parsedFM);
+          setInitialBody(parsedBody);
+          setInitialFrontMatter(parsedFM);
 
-            // Check for local draft
-            const key =
-              `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-            const savedDraft = localStorage.getItem(key);
+          // Check for local draft
+          const key =
+            `draft_${content.owner}_${content.repo}_${content.filePath}`;
+          const savedDraft = localStorage.getItem(key);
 
-            if (savedDraft) {
-              try {
-                const draft = JSON.parse(savedDraft);
-                if (draft.type === "created") {
-                  // This draft type is for a PR that was created, but not yet merged/closed
-                  // We should not restore content from this draft, but rather the PR URL
-                  setPrUrl(draft.prUrl);
-                  setHasDraft(true);
-                  setDraftTimestamp(draft.timestamp);
-                  setPrDescription(draft.description || "");
-                  // Continue to parse remote content since we don't have draft content
-                  setBody(parsedBody);
-                  setFrontMatter(parsedFM);
-
-                  // Initialize custom fields from remote content
-                  const configuredKeys = currentContent.fields?.map((f) =>
-                    f.name
-                  ) || [];
-                  const customKeys = Object.keys(parsedFM).filter((k) =>
-                    !configuredKeys.includes(k)
-                  );
-                  setCustomFields(
-                    customKeys.map((k) => ({
-                      id: crypto.randomUUID(),
-                      key: k,
-                    })),
-                  );
-                } else {
-                  // Restore from draft
-                  setBody(draft.body);
-                  setFrontMatter(draft.frontMatter);
-                  setPrDescription(draft.prDescription);
-                  setHasDraft(true);
-                  setDraftTimestamp(draft.timestamp);
-
-                  // Initialize custom fields from draft
-                  const configuredKeys = currentContent.fields?.map((f) =>
-                    f.name
-                  ) || [];
-                  const customKeys = Object.keys(draft.frontMatter).filter((
-                    k,
-                  ) => !configuredKeys.includes(k));
-                  setCustomFields(
-                    customKeys.map((k) => ({
-                      id: crypto.randomUUID(),
-                      key: k,
-                    })),
-                  );
-
-                  console.log("Restored draft from local storage");
-                }
-              } catch (e) {
-                console.error("Failed to parse draft", e);
-                // If draft parsing fails, proceed with remote content
+          if (savedDraft) {
+            try {
+              const draft = JSON.parse(savedDraft);
+              if (draft.type === "created") {
+                // This draft type is for a PR that was created, but not yet merged/closed
+                // We should not restore content from this draft, but rather the PR URL
+                setPrUrl(draft.prUrl);
+                setHasDraft(true);
+                setDraftTimestamp(draft.timestamp);
+                setPrDescription(draft.description || "");
+                // Continue to parse remote content since we don't have draft content
                 setBody(parsedBody);
                 setFrontMatter(parsedFM);
-                setHasDraft(false);
+
+                // Initialize custom fields from remote content
+                const configuredKeys = content.fields?.map((f) => f.name) || [];
+                const customKeys = Object.keys(parsedFM).filter((k) =>
+                  !configuredKeys.includes(k)
+                );
+                setCustomFields(
+                  customKeys.map((k) => ({
+                    id: crypto.randomUUID(),
+                    key: k,
+                  })),
+                );
+              } else {
+                // Restore from draft
+                setBody(draft.body);
+                setFrontMatter(draft.frontMatter);
+                setPrDescription(draft.prDescription);
+                setHasDraft(true);
+                setDraftTimestamp(draft.timestamp);
+
+                // Initialize custom fields from draft
+                const configuredKeys = content.fields?.map((f) => f.name) || [];
+                const customKeys = Object.keys(draft.frontMatter).filter((
+                  k,
+                ) => !configuredKeys.includes(k));
+                setCustomFields(
+                  customKeys.map((k) => ({
+                    id: crypto.randomUUID(),
+                    key: k,
+                  })),
+                );
+
+                console.log("Restored draft from local storage");
               }
-            } else {
+            } catch (e) {
+              console.error("Failed to parse draft", e);
+              // If draft parsing fails, proceed with remote content
               setBody(parsedBody);
               setFrontMatter(parsedFM);
               setHasDraft(false);
-
-              // Initialize custom fields from remote content
-              const configuredKeys = currentContent.fields?.map((f) =>
-                f.name
-              ) || [];
-              const customKeys = Object.keys(parsedFM).filter((k) =>
-                !configuredKeys.includes(k)
-              );
-              setCustomFields(
-                customKeys.map((k) => ({
-                  id: crypto.randomUUID(),
-                  key: k,
-                })),
-              );
             }
+          } else {
+            setBody(parsedBody);
+            setFrontMatter(parsedFM);
+            setHasDraft(false);
 
-            // Check for existing PR URL
-            const prKey =
-              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
-            const savedPrUrl = localStorage.getItem(prKey);
-            if (savedPrUrl) {
-              setPrUrl(savedPrUrl);
-            }
+            // Initialize custom fields from remote content
+            const configuredKeys = content.fields?.map((f) => f.name) ||
+              [];
+            const customKeys = Object.keys(parsedFM).filter((k) =>
+              !configuredKeys.includes(k)
+            );
+            setCustomFields(
+              customKeys.map((k) => ({
+                id: crypto.randomUUID(),
+                key: k,
+              })),
+            );
           }
-        })
-        .catch(console.error)
-        .finally(() => setEditorLoading(false));
 
-      // Fetch commit history
-      fetch(`/api/commits?${params.toString()}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.commits) {
-            setCommits(data.commits);
+          // Check for existing PR URL
+          const prKey =
+            `pr_${content.owner}_${content.repo}_${content.filePath}`;
+          const savedPrUrl = localStorage.getItem(prKey);
+          if (savedPrUrl) {
+            setPrUrl(savedPrUrl);
           }
-        })
-        .catch(console.error);
-    }
-  }, [view, currentContent]);
+        }
+
+        // Transition to editor view after data is loaded
+        setCurrentContent(content);
+        setView("content-editor");
+        setLoadingContentIndex(null);
+      })
+      .catch((e) => {
+        console.error(e);
+        setLoadingContentIndex(null);
+      })
+      .finally(() => setEditorLoading(false));
+
+    // Fetch commit history
+    fetch(`/api/commits?${params.toString()}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.commits) {
+          setCommits(data.commits);
+        }
+      })
+      .catch(console.error);
+  };
+
+  const handleSelectContent = (content: Content, index: number) => {
+    setLoadingContentIndex(index);
+    loadContentData(content);
+  };
 
   useEffect(() => {
     if (prUrl) {
@@ -811,12 +825,10 @@ function App() {
       <ContentList
         contents={contents}
         onEditContentConfig={handleEditContentConfig}
-        onSelectContent={(content) => {
-          setCurrentContent(content);
-          setView("content-editor");
-        }}
+        onSelectContent={handleSelectContent}
         onAddNewContent={handleAddNewRepository}
         onAddNewContentToRepo={handleAddNewContentToRepo}
+        loadingItemIndex={loadingContentIndex}
       />
     );
   }
