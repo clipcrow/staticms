@@ -120,7 +120,13 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                   <button
                     type="button"
                     onClick={() => handleDeleteField(index)}
-                    className="ui icon button basic negative circular mini"
+                    className="ui icon button"
+                    style={{
+                      background: "transparent",
+                      border: "none",
+                      boxShadow: "none",
+                      color: "#db2828",
+                    }}
                     title="Delete Field"
                   >
                     <i className="trash icon"></i>

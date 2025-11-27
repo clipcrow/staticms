@@ -204,6 +204,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <button
               type="button"
               className="ui button basic"
+              style={{
+                background: "transparent",
+                border: "none",
+                boxShadow: "none",
+                color: "#db2828",
+              }}
               onClick={onReset}
               disabled={loading || isSaving}
               title="Reset changes"
@@ -339,7 +345,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                 <div className="one wide column">
                                   <button
                                     type="button"
-                                    className="ui icon button basic negative circular mini"
+                                    className="ui icon button"
+                                    style={{
+                                      background: "transparent",
+                                      border: "none",
+                                      boxShadow: "none",
+                                      color: "#db2828",
+                                    }}
                                     onClick={() =>
                                       handleDeleteFieldFromItem(itemIndex, key)}
                                     disabled={isPrLocked}
@@ -475,7 +487,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                         <div className="one wide column">
                           <button
                             type="button"
-                            className="ui icon button basic negative circular mini"
+                            className="ui icon button"
+                            style={{
+                              background: "transparent",
+                              border: "none",
+                              boxShadow: "none",
+                              color: "#db2828",
+                            }}
                             onClick={() => {
                               if (isPrLocked) {
                                 return;
