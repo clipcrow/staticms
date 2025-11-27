@@ -391,7 +391,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           className="four wide column"
           style={{ height: "100%", overflowY: "auto" }}
         >
-          <div className="ui segment">
+          <div>
             {prUrl && (
               <div
                 className={`ui message ${

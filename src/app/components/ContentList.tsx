@@ -52,7 +52,7 @@ export const ContentList: React.FC<ContentListProps> = ({
         </div>
       </h1>
 
-      <div className="ui segment">
+      <div className="ui segment" style={{ marginTop: "2em" }}>
         <div className="ui grid">
           <div className="two column row">
             <div className="column">
@@ -86,9 +86,13 @@ export const ContentList: React.FC<ContentListProps> = ({
             </div>
           )
           : (
-            <div style={{ marginTop: "1em" }}>
+            <div style={{ marginTop: "2em" }}>
               {Object.values(groupedContents).map((group, groupIndex) => (
-                <div key={groupIndex} className="ui card fluid">
+                <div
+                  key={groupIndex}
+                  className="ui card fluid"
+                  style={{ marginBottom: "2em" }}
+                >
                   <div className="content">
                     <div className="header">
                       <i className="github icon"></i>

@@ -54,7 +54,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           </div>
         </h2>
 
-        <div className="ui message">
+        <div className="ui message" style={{ marginTop: "2em" }}>
           <div className="header">Repository</div>
           <p>
             {repoInfo.owner}/{repoInfo.repo}
@@ -70,7 +70,11 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           </p>
         </div>
 
-        <form onSubmit={onSave} className="ui form">
+        <form
+          onSubmit={onSave}
+          className="ui form"
+          style={{ marginTop: "2em" }}
+        >
           <div className="field">
             <label>File Path</label>
             <input
@@ -150,7 +154,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
           <div className="ui divider"></div>
 
-          <div className="actions">
+          <div className="actions" style={{ marginTop: "5em" }}>
             <button
               type="button"
               onClick={onCancel}

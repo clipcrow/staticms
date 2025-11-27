@@ -28,7 +28,11 @@ export const RepositorySettings: React.FC<RepositorySettingsProps> = ({
           </div>
         </h2>
 
-        <form onSubmit={handleSubmit} className="ui form">
+        <form
+          onSubmit={handleSubmit}
+          className="ui form"
+          style={{ marginTop: "2em" }}
+        >
           <div className="field">
             <label>GitHub Owner</label>
             <input
@@ -59,7 +63,7 @@ export const RepositorySettings: React.FC<RepositorySettingsProps> = ({
             />
           </div>
 
-          <div className="actions">
+          <div className="actions" style={{ marginTop: "5em" }}>
             <button
               type="button"
               onClick={onCancel}
