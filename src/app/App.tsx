@@ -579,9 +579,12 @@ function App() {
 
                 // Initialize custom fields from remote content
                 const configuredKeys = content.fields?.map((f) => f.name) || [];
-                const customKeys = Object.keys(parsedFM).filter((k) =>
-                  !configuredKeys.includes(k)
-                );
+                let customKeys: string[] = [];
+                if (!Array.isArray(parsedFM)) {
+                  customKeys = Object.keys(parsedFM).filter((k) =>
+                    !configuredKeys.includes(k)
+                  );
+                }
                 setCustomFields(
                   customKeys.map((k) => ({
                     id: crypto.randomUUID(),
@@ -598,9 +601,12 @@ function App() {
 
                 // Initialize custom fields from draft
                 const configuredKeys = content.fields?.map((f) => f.name) || [];
-                const customKeys = Object.keys(draft.frontMatter).filter((
-                  k,
-                ) => !configuredKeys.includes(k));
+                let customKeys: string[] = [];
+                if (!Array.isArray(draft.frontMatter)) {
+                  customKeys = Object.keys(draft.frontMatter).filter((k) =>
+                    !configuredKeys.includes(k)
+                  );
+                }
                 setCustomFields(
                   customKeys.map((k) => ({
                     id: crypto.randomUUID(),

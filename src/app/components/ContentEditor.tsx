@@ -63,6 +63,58 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const [activeTab, setActiveTab] = React.useState<"write" | "preview">(
     "write",
   );
+  const [newFieldNames, setNewFieldNames] = React.useState<
+    Record<number, string>
+  >({});
+
+  const handleAddFieldToItem = (index: number) => {
+    const fieldName = newFieldNames[index];
+    if (!fieldName || !fieldName.trim()) return;
+
+    if (Array.isArray(frontMatter)) {
+      const newFrontMatter = [...frontMatter];
+      newFrontMatter[index] = {
+        ...newFrontMatter[index],
+        [fieldName]: "",
+      };
+      setFrontMatter(newFrontMatter);
+      setNewFieldNames({ ...newFieldNames, [index]: "" });
+    }
+  };
+
+  const handleDeleteFieldFromItem = (index: number, key: string) => {
+    if (Array.isArray(frontMatter)) {
+      const newFrontMatter = [...frontMatter];
+      const newItem = { ...newFrontMatter[index] };
+      delete newItem[key];
+      newFrontMatter[index] = newItem;
+      setFrontMatter(newFrontMatter);
+    }
+  };
+
+  const handleAddItem = (position: "top" | "bottom") => {
+    if (!Array.isArray(frontMatter)) return;
+
+    const newItem: Record<string, unknown> = {};
+    // Initialize with configured fields
+    currentContent.fields?.forEach((field) => {
+      newItem[field.name] = "";
+    });
+
+    const newFrontMatter = position === "top"
+      ? [newItem, ...frontMatter]
+      : [...frontMatter, newItem];
+
+    setFrontMatter(newFrontMatter);
+  };
+
+  const handleDeleteItem = (index: number) => {
+    if (!Array.isArray(frontMatter)) return;
+
+    const newFrontMatter = frontMatter.filter((_, i) => i !== index);
+    setFrontMatter(newFrontMatter);
+  };
+
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
     currentContent.filePath.endsWith(".yml");
 
@@ -151,40 +203,168 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <div className="ui form">
               {Array.isArray(frontMatter)
                 ? (
-                  <div className="ui grid middle aligned">
-                    {frontMatter.map((item, itemIndex) => (
-                      <React.Fragment key={itemIndex}>
-                        {currentContent.fields?.map((field, index) => (
-                          <div
-                            key={`configured-${itemIndex}-${index}`}
-                            className="row"
-                          >
-                            <div className="four wide column">
-                              <strong>{field.name}</strong>
-                            </div>
-                            <div className="eleven wide column">
-                              <div className="ui input fluid">
-                                <input
-                                  type="text"
-                                  value={(item[field.name] as string) || ""}
-                                  onChange={(e) => {
-                                    const newFrontMatter = [...frontMatter];
-                                    newFrontMatter[itemIndex] = {
-                                      ...item,
-                                      [field.name]: e.target.value,
-                                    };
-                                    setFrontMatter(newFrontMatter);
-                                  }}
-                                  readOnly={isPrLocked}
-                                  disabled={isPrLocked}
-                                />
+                  <div>
+                    <div style={{ textAlign: "right", marginBottom: "1em" }}>
+                      <button
+                        type="button"
+                        className="ui icon button primary circular"
+                        onClick={() => handleAddItem("top")}
+                        disabled={isPrLocked}
+                        title="Add Item to Top"
+                      >
+                        <i className="plus icon"></i>
+                      </button>
+                    </div>
+                    {frontMatter.map((item, itemIndex) => {
+                      const configuredKeys = currentContent.fields?.map((f) =>
+                        f.name
+                      ) || [];
+                      const itemKeys = Object.keys(item);
+                      const unconfiguredKeys = itemKeys.filter((k) =>
+                        !configuredKeys.includes(k)
+                      );
+
+                      return (
+                        <div
+                          key={itemIndex}
+                          className="ui segment"
+                          style={{ marginBottom: "1em" }}
+                        >
+                          <div className="ui grid middle aligned">
+                            {/* Configured Fields */}
+                            {currentContent.fields?.map((field, index) => (
+                              <div
+                                key={`configured-${itemIndex}-${index}`}
+                                className="row"
+                              >
+                                <div className="four wide column">
+                                  <strong>{field.name}</strong>
+                                </div>
+                                <div className="eleven wide column">
+                                  <div className="ui input fluid">
+                                    <input
+                                      type="text"
+                                      value={(item[field.name] as string) || ""}
+                                      onChange={(e) => {
+                                        const newFrontMatter = [...frontMatter];
+                                        newFrontMatter[itemIndex] = {
+                                          ...item,
+                                          [field.name]: e.target.value,
+                                        };
+                                        setFrontMatter(newFrontMatter);
+                                      }}
+                                      readOnly={isPrLocked}
+                                      disabled={isPrLocked}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="one wide column"></div>
+                              </div>
+                            ))}
+
+                            {/* Unconfigured Fields */}
+                            {unconfiguredKeys.map((key) => (
+                              <div
+                                key={`unconfigured-${itemIndex}-${key}`}
+                                className="row"
+                              >
+                                <div className="four wide column">
+                                  <strong>{key}</strong>
+                                </div>
+                                <div className="eleven wide column">
+                                  <div className="ui input fluid">
+                                    <input
+                                      type="text"
+                                      value={(item[key] as string) || ""}
+                                      onChange={(e) => {
+                                        const newFrontMatter = [...frontMatter];
+                                        newFrontMatter[itemIndex] = {
+                                          ...item,
+                                          [key]: e.target.value,
+                                        };
+                                        setFrontMatter(newFrontMatter);
+                                      }}
+                                      readOnly={isPrLocked}
+                                      disabled={isPrLocked}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="one wide column">
+                                  <button
+                                    type="button"
+                                    className="ui icon button basic negative circular mini"
+                                    onClick={() =>
+                                      handleDeleteFieldFromItem(itemIndex, key)}
+                                    disabled={isPrLocked}
+                                    title="Delete Field"
+                                  >
+                                    <i className="trash icon"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* Add New Field */}
+                            <div className="row">
+                              <div className="four wide column">
+                                <div className="ui input fluid">
+                                  <input
+                                    type="text"
+                                    value={newFieldNames[itemIndex] || ""}
+                                    onChange={(e) =>
+                                      setNewFieldNames({
+                                        ...newFieldNames,
+                                        [itemIndex]: e.target.value,
+                                      })}
+                                    placeholder="New Field Name"
+                                    disabled={isPrLocked}
+                                  />
+                                </div>
+                              </div>
+                              <div className="twelve wide column">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleAddFieldToItem(itemIndex)}
+                                  className="ui button"
+                                  disabled={isPrLocked ||
+                                    !newFieldNames[itemIndex]?.trim()}
+                                >
+                                  <i className="plus icon"></i>
+                                  Add Field
+                                </button>
                               </div>
                             </div>
-                            <div className="one wide column"></div>
+                            {/* Delete Item Button */}
+                            <div className="row">
+                              <div className="sixteen wide column right aligned">
+                                <button
+                                  type="button"
+                                  className="ui button negative mini"
+                                  onClick={() => handleDeleteItem(itemIndex)}
+                                  disabled={isPrLocked}
+                                  title="Delete Item"
+                                >
+                                  <i className="trash icon"></i>
+                                  Delete Item
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        ))}
-                      </React.Fragment>
-                    ))}
+                        </div>
+                      );
+                    })}
+                    <div style={{ textAlign: "right", marginTop: "1em" }}>
+                      <button
+                        type="button"
+                        className="ui icon button primary circular"
+                        onClick={() => handleAddItem("bottom")}
+                        disabled={isPrLocked}
+                        title="Add Item to Bottom"
+                      >
+                        <i className="plus icon"></i>
+                      </button>
+                    </div>
                   </div>
                 )
                 : (
