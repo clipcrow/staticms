@@ -165,12 +165,14 @@ function App() {
   const [_collection, setCollection] = useState(""); // Raw file content
   const [body, setBody] = useState(""); // Markdown body
   const [initialBody, setInitialBody] = useState("");
-  const [frontMatter, setFrontMatter] = useState<Record<string, unknown>>({}); // Parsed FM
+  const [frontMatter, setFrontMatter] = useState<
+    Record<string, unknown> | Record<string, unknown>[]
+  >({}); // Parsed FM
   const [customFields, setCustomFields] = useState<
     { id: string; key: string }[]
   >([]);
   const [initialFrontMatter, setInitialFrontMatter] = useState<
-    Record<string, unknown>
+    Record<string, unknown> | Record<string, unknown>[]
   >({});
   const [sha, setSha] = useState("");
   const [commits, setCommits] = useState<Commit[]>([]);
@@ -522,12 +524,17 @@ function App() {
           const isYaml = content.filePath.endsWith(".yaml") ||
             content.filePath.endsWith(".yml");
           let parsedBody = "";
-          let parsedFM = {};
+          let parsedFM: Record<string, unknown> | Record<string, unknown>[] =
+            {};
 
           if (isYaml) {
             try {
               const fm = jsyaml.load(rawContent);
-              parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+              if (Array.isArray(fm)) {
+                parsedFM = fm as Record<string, unknown>[];
+              } else {
+                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
+              }
               parsedBody = "";
             } catch (e) {
               console.error("Error parsing yaml file", e);
@@ -615,18 +622,22 @@ function App() {
             setFrontMatter(parsedFM);
             setHasDraft(false);
 
-            // Initialize custom fields from remote content
-            const configuredKeys = content.fields?.map((f) => f.name) ||
-              [];
-            const customKeys = Object.keys(parsedFM).filter((k) =>
-              !configuredKeys.includes(k)
-            );
-            setCustomFields(
-              customKeys.map((k) => ({
-                id: crypto.randomUUID(),
-                key: k,
-              })),
-            );
+            // Initialize custom fields from remote content (only for object root)
+            if (!Array.isArray(parsedFM)) {
+              const configuredKeys = content.fields?.map((f) => f.name) ||
+                [];
+              const customKeys = Object.keys(parsedFM).filter((k) =>
+                !configuredKeys.includes(k)
+              );
+              setCustomFields(
+                customKeys.map((k) => ({
+                  id: crypto.randomUUID(),
+                  key: k,
+                })),
+              );
+            } else {
+              setCustomFields([]);
+            }
           }
 
           // Check for existing PR URL
@@ -686,30 +697,57 @@ function App() {
 
     if (currentContent.fields && currentContent.fields.length > 0) {
       // Only include fields that are defined in the config
-      const fmToSave: Record<string, unknown> = {};
-      currentContent.fields.forEach((field) => {
-        fmToSave[field.name] = frontMatter[field.name] || "";
-      });
+      if (Array.isArray(frontMatter)) {
+        // For array, we map over each item and filter/merge fields
+        const newFM = frontMatter.map((item) => {
+          const fmToSave: Record<string, unknown> = {};
+          currentContent.fields.forEach((field) => {
+            fmToSave[field.name] = item[field.name] || "";
+          });
+          return { ...item, ...fmToSave };
+        });
 
-      // If there are other existing FM keys not in config, should we keep them?
-      // For now, let's merge existing FM with configured fields to avoid data loss
-      const mergedFM = { ...frontMatter, ...fmToSave };
-
-      if (Object.keys(mergedFM).length > 0) {
         try {
-          const yamlString = jsyaml.dump(mergedFM);
+          const yamlString = jsyaml.dump(newFM);
           if (isYaml) {
             finalContent = yamlString;
           } else {
+            // Arrays are typically only for pure YAML files, but just in case
             finalContent = `---\n${yamlString}---\n${body}`;
           }
         } catch (e) {
           console.error("Error dumping yaml", e);
-          // Fallback to raw body if YAML fails
           finalContent = body;
         }
+      } else {
+        const fmToSave: Record<string, unknown> = {};
+        currentContent.fields.forEach((field) => {
+          fmToSave[field.name] = frontMatter[field.name] || "";
+        });
+
+        // If there are other existing FM keys not in config, should we keep them?
+        // For now, let's merge existing FM with configured fields to avoid data loss
+        const mergedFM = { ...frontMatter, ...fmToSave };
+
+        if (Object.keys(mergedFM).length > 0) {
+          try {
+            const yamlString = jsyaml.dump(mergedFM);
+            if (isYaml) {
+              finalContent = yamlString;
+            } else {
+              finalContent = `---\n${yamlString}---\n${body}`;
+            }
+          } catch (e) {
+            console.error("Error dumping yaml", e);
+            // Fallback to raw body if YAML fails
+            finalContent = body;
+          }
+        }
       }
-    } else if (Object.keys(frontMatter).length > 0) {
+    } else if (
+      (Array.isArray(frontMatter) && frontMatter.length > 0) ||
+      (!Array.isArray(frontMatter) && Object.keys(frontMatter).length > 0)
+    ) {
       // If no fields configured but FM exists, preserve it
       try {
         const yamlString = jsyaml.dump(frontMatter);

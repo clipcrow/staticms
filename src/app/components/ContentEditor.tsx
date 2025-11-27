@@ -10,8 +10,10 @@ interface ContentEditorProps {
   currentContent: Content;
   body: string;
   setBody: (body: string) => void;
-  frontMatter: Record<string, unknown>;
-  setFrontMatter: (fm: Record<string, unknown>) => void;
+  frontMatter: Record<string, unknown> | Record<string, unknown>[];
+  setFrontMatter: (
+    fm: Record<string, unknown> | Record<string, unknown>[],
+  ) => void;
   customFields: { id: string; key: string }[];
   setCustomFields: React.Dispatch<
     React.SetStateAction<{ id: string; key: string }[]>
@@ -142,120 +144,169 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         >
           <div
             className="ui segment"
-            style={{ overflowY: "auto", flexShrink: 0, maxHeight: "40%" }}
+            style={isYaml
+              ? { overflowY: "auto", flex: 1 }
+              : { overflowY: "auto", flexShrink: 0, maxHeight: "40%" }}
           >
             <div className="ui form">
-              <div className="ui grid middle aligned">
-                {/* Configured Fields */}
-                {currentContent.fields?.map((field, index) => (
-                  <div key={`configured-${index}`} className="row">
-                    <div className="four wide column">
-                      <strong>{field.name}</strong>
-                    </div>
-                    <div className="eleven wide column">
-                      <div className="ui input fluid">
-                        <input
-                          type="text"
-                          value={(frontMatter[field.name] as string) || ""}
-                          onChange={(e) =>
+              {Array.isArray(frontMatter)
+                ? (
+                  <div className="ui grid middle aligned">
+                    {frontMatter.map((item, itemIndex) => (
+                      <React.Fragment key={itemIndex}>
+                        <div className="row">
+                          <div className="sixteen wide column">
+                            <h4 className="ui dividing header">
+                              Item {itemIndex + 1}
+                            </h4>
+                          </div>
+                        </div>
+                        {currentContent.fields?.map((field, index) => (
+                          <div
+                            key={`configured-${itemIndex}-${index}`}
+                            className="row"
+                          >
+                            <div className="four wide column">
+                              <strong>{field.name}</strong>
+                            </div>
+                            <div className="eleven wide column">
+                              <div className="ui input fluid">
+                                <input
+                                  type="text"
+                                  value={(item[field.name] as string) || ""}
+                                  onChange={(e) => {
+                                    const newFrontMatter = [...frontMatter];
+                                    newFrontMatter[itemIndex] = {
+                                      ...item,
+                                      [field.name]: e.target.value,
+                                    };
+                                    setFrontMatter(newFrontMatter);
+                                  }}
+                                  readOnly={isPrLocked}
+                                  disabled={isPrLocked}
+                                />
+                              </div>
+                            </div>
+                            <div className="one wide column"></div>
+                          </div>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                )
+                : (
+                  <div className="ui grid middle aligned">
+                    {/* Configured Fields */}
+                    {currentContent.fields?.map((field, index) => (
+                      <div key={`configured-${index}`} className="row">
+                        <div className="four wide column">
+                          <strong>{field.name}</strong>
+                        </div>
+                        <div className="eleven wide column">
+                          <div className="ui input fluid">
+                            <input
+                              type="text"
+                              value={(frontMatter[field.name] as string) || ""}
+                              onChange={(e) =>
+                                setFrontMatter({
+                                  ...frontMatter,
+                                  [field.name]: e.target.value,
+                                })}
+                              readOnly={isPrLocked}
+                              disabled={isPrLocked}
+                            />
+                          </div>
+                        </div>
+                        <div className="one wide column"></div>
+                      </div>
+                    ))}
+
+                    {/* Custom/Extra Fields */}
+                    {customFields.map((field) => (
+                      <div key={field.id} className="row">
+                        <div className="four wide column">
+                          <strong>{field.key}</strong>
+                        </div>
+                        <div className="eleven wide column">
+                          <div className="ui input fluid">
+                            <input
+                              type="text"
+                              value={(frontMatter[field.key] as string) || ""}
+                              onChange={(e) =>
+                                setFrontMatter({
+                                  ...frontMatter,
+                                  [field.key]: e.target.value,
+                                })}
+                              readOnly={isPrLocked}
+                              disabled={isPrLocked}
+                            />
+                          </div>
+                        </div>
+                        <div className="one wide column">
+                          <button
+                            type="button"
+                            className="ui icon button basic negative circular mini"
+                            onClick={() => {
+                              if (isPrLocked) {
+                                return;
+                              }
+                              setCustomFields((prev) =>
+                                prev.filter((f) =>
+                                  f.id !== field.id
+                                )
+                              );
+                              const { [field.key]: _, ...rest } = frontMatter;
+                              setFrontMatter(rest);
+                            }}
+                            disabled={isPrLocked}
+                            title="Delete Field"
+                          >
+                            <i className="trash icon"></i>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Add New Field */}
+                    <div className="row">
+                      <div className="four wide column">
+                        <div className="ui input fluid">
+                          <input
+                            type="text"
+                            value={newFieldName}
+                            onChange={(e) => setNewFieldName(e.target.value)}
+                            placeholder="New Field Name"
+                            disabled={isPrLocked}
+                          />
+                        </div>
+                      </div>
+                      <div className="twelve wide column">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newId = crypto.randomUUID();
+                            setCustomFields([
+                              ...customFields,
+                              { id: newId, key: newFieldName },
+                            ]);
+
                             setFrontMatter({
                               ...frontMatter,
-                              [field.name]: e.target.value,
-                            })}
-                          readOnly={isPrLocked}
-                          disabled={isPrLocked}
-                        />
+                              [newFieldName]: "",
+                            });
+                            setNewFieldName("");
+                          }}
+                          className="ui button"
+                          disabled={isPrLocked ||
+                            !newFieldName.trim() ||
+                            Object.keys(frontMatter).includes(newFieldName)}
+                        >
+                          <i className="plus icon"></i>
+                          Add Field
+                        </button>
                       </div>
                     </div>
-                    <div className="one wide column"></div>
                   </div>
-                ))}
-
-                {/* Custom/Extra Fields */}
-                {customFields.map((field) => (
-                  <div key={field.id} className="row">
-                    <div className="four wide column">
-                      <strong>{field.key}</strong>
-                    </div>
-                    <div className="eleven wide column">
-                      <div className="ui input fluid">
-                        <input
-                          type="text"
-                          value={(frontMatter[field.key] as string) || ""}
-                          onChange={(e) =>
-                            setFrontMatter({
-                              ...frontMatter,
-                              [field.key]: e.target.value,
-                            })}
-                          readOnly={isPrLocked}
-                          disabled={isPrLocked}
-                        />
-                      </div>
-                    </div>
-                    <div className="one wide column">
-                      <button
-                        type="button"
-                        className="ui icon button basic negative circular mini"
-                        onClick={() => {
-                          if (isPrLocked) {
-                            return;
-                          }
-                          setCustomFields((prev) =>
-                            prev.filter((f) =>
-                              f.id !== field.id
-                            )
-                          );
-                          const { [field.key]: _, ...rest } = frontMatter;
-                          setFrontMatter(rest);
-                        }}
-                        disabled={isPrLocked}
-                        title="Delete Field"
-                      >
-                        <i className="trash icon"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {/* Add New Field */}
-                <div className="row">
-                  <div className="four wide column">
-                    <div className="ui input fluid">
-                      <input
-                        type="text"
-                        value={newFieldName}
-                        onChange={(e) => setNewFieldName(e.target.value)}
-                        placeholder="New Field Name"
-                        disabled={isPrLocked}
-                      />
-                    </div>
-                  </div>
-                  <div className="twelve wide column">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newId = crypto.randomUUID();
-                        setCustomFields([
-                          ...customFields,
-                          { id: newId, key: newFieldName },
-                        ]);
-
-                        setFrontMatter({
-                          ...frontMatter,
-                          [newFieldName]: "",
-                        });
-                        setNewFieldName("");
-                      }}
-                      className="ui button"
-                      disabled={isPrLocked ||
-                        !newFieldName.trim() ||
-                        Object.keys(frontMatter).includes(newFieldName)}
-                    >
-                      <i className="plus icon"></i>
-                      Add Field
-                    </button>
-                  </div>
-                </div>
-              </div>
+                )}
             </div>
           </div>
 
