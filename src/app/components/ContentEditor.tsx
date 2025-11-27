@@ -63,6 +63,35 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const [activeTab, setActiveTab] = React.useState<"write" | "preview">(
     "write",
   );
+  const [draggedItemIndex, setDraggedItemIndex] = React.useState<number | null>(
+    null,
+  );
+
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (index: number) => {
+    if (
+      draggedItemIndex === null || draggedItemIndex === index ||
+      !Array.isArray(frontMatter)
+    ) {
+      return;
+    }
+
+    const newFrontMatter = [...frontMatter];
+    const draggedItem = newFrontMatter[draggedItemIndex];
+    newFrontMatter.splice(draggedItemIndex, 1);
+    newFrontMatter.splice(index, 0, draggedItem);
+
+    setFrontMatter(newFrontMatter);
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+  };
+
   const [newFieldNames, setNewFieldNames] = React.useState<
     Record<number, string>
   >({});
@@ -228,9 +257,33 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                         <div
                           key={itemIndex}
                           className="ui segment"
-                          style={{ marginBottom: "1em" }}
+                          style={{
+                            marginBottom: "1em",
+                            opacity: draggedItemIndex === itemIndex ? 0.5 : 1,
+                            cursor: isPrLocked ? "default" : "grab",
+                          }}
+                          draggable={!isPrLocked}
+                          onDragStart={() => handleDragStart(itemIndex)}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            handleDragOver(itemIndex);
+                          }}
+                          onDragEnd={handleDragEnd}
                         >
                           <div className="ui grid middle aligned">
+                            {/* Drag Handle */}
+                            <div className="row">
+                              <div className="sixteen wide column">
+                                <i
+                                  className="bars icon"
+                                  style={{
+                                    cursor: isPrLocked ? "default" : "grab",
+                                    color: "#ccc",
+                                  }}
+                                >
+                                </i>
+                              </div>
+                            </div>
                             {/* Configured Fields */}
                             {currentContent.fields?.map((field, index) => (
                               <div
