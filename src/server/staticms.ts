@@ -17,7 +17,6 @@ export const shutdown = () => {
   kv.close();
 };
 
-const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN")?.trim();
 const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
 const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
@@ -31,13 +30,10 @@ console.log("- Client Secret loaded:", GITHUB_CLIENT_SECRET ? "Yes" : "No");
 async function githubRequest(
   url: string,
   options: RequestInit = {},
-  token?: string,
+  token: string,
 ) {
   const headers = new Headers(options.headers);
-  const authToken = token || GITHUB_TOKEN;
-  if (authToken) {
-    headers.set("Authorization", `Bearer ${authToken}`);
-  }
+  headers.set("Authorization", `Bearer ${token}`);
   headers.set("Accept", "application/vnd.github.v3+json");
   headers.set("Content-Type", "application/json");
 
@@ -194,7 +190,7 @@ router.get("/api/user/orgs", async (ctx) => {
 const PUBLIC_URL = Deno.env.get("PUBLIC_URL");
 const clients = new Set<ServerSentEventTarget>();
 
-async function setupWebhook(owner: string, repo: string, token?: string) {
+async function setupWebhook(owner: string, repo: string, token: string) {
   if (!PUBLIC_URL) {
     console.warn("PUBLIC_URL not set. Skipping WebHook setup.");
     return;
@@ -261,8 +257,11 @@ router.get("/api/config", async (ctx) => {
 
 router.post("/api/config", async (ctx) => {
   const token = await getSessionToken(ctx);
-  // Allow config update without token if using env token, but prefer user token
-  const authToken = token || GITHUB_TOKEN;
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
 
   try {
     const body = ctx.request.body;
@@ -273,7 +272,7 @@ router.post("/api/config", async (ctx) => {
     if (value.contents && Array.isArray(value.contents)) {
       for (const content of value.contents) {
         if (content.owner && content.repo) {
-          await setupWebhook(content.owner, content.repo, authToken);
+          await setupWebhook(content.owner, content.repo, token);
         }
       }
     }
@@ -331,7 +330,11 @@ router.get("/api/events", async (ctx) => {
 
 router.get("/api/collection", async (ctx) => {
   const token = await getSessionToken(ctx);
-  const authToken = token || GITHUB_TOKEN;
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
 
   try {
     const owner = ctx.request.url.searchParams.get("owner");
@@ -350,7 +353,7 @@ router.get("/api/collection", async (ctx) => {
         await githubRequest(
           `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${targetBranch}`,
           {},
-          authToken,
+          token,
         );
       } catch (e) {
         // If branch does not exist (404), create it
@@ -363,13 +366,13 @@ router.get("/api/collection", async (ctx) => {
             const repoData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}`,
               {},
-              authToken,
+              token,
             );
             const defaultBranch = repoData.default_branch;
             const refData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
               {},
-              authToken,
+              token,
             );
             const baseSha = refData.object.sha;
 
@@ -382,7 +385,7 @@ router.get("/api/collection", async (ctx) => {
                   sha: baseSha,
                 }),
               },
-              authToken,
+              token,
             );
             console.log(`Branch ${targetBranch} created.`);
           } catch (createError) {
@@ -400,14 +403,14 @@ router.get("/api/collection", async (ctx) => {
       const repoData = await githubRequest(
         `https://api.github.com/repos/${owner}/${repo}`,
         {},
-        authToken,
+        token,
       );
       targetBranch = repoData.default_branch;
     }
 
     const url =
       `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${targetBranch}`;
-    const data = await githubRequest(url, {}, authToken);
+    const data = await githubRequest(url, {}, token);
 
     // Content is base64 encoded
     const rawContent = atob(data.content.replace(/\n/g, ""));
@@ -424,7 +427,11 @@ router.get("/api/collection", async (ctx) => {
 
 router.post("/api/collection", async (ctx) => {
   const token = await getSessionToken(ctx);
-  const authToken = token || GITHUB_TOKEN;
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
 
   try {
     const body = await ctx.request.body.json();
@@ -445,7 +452,7 @@ router.post("/api/collection", async (ctx) => {
       const repoData = await githubRequest(
         `https://api.github.com/repos/${owner}/${repo}`,
         {},
-        authToken,
+        token,
       );
       baseBranch = repoData.default_branch;
       console.log(`[POST /api/collection] Using default branch: ${baseBranch}`);
@@ -458,7 +465,7 @@ router.post("/api/collection", async (ctx) => {
         await githubRequest(
           `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
           {},
-          authToken,
+          token,
         );
         console.log(`[POST /api/collection] Branch ${baseBranch} exists.`);
       } catch (e) {
@@ -474,13 +481,13 @@ router.post("/api/collection", async (ctx) => {
             const repoData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}`,
               {},
-              authToken,
+              token,
             );
             const defaultBranch = repoData.default_branch;
             const refData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
               {},
-              authToken,
+              token,
             );
             const baseSha = refData.object.sha;
 
@@ -493,7 +500,7 @@ router.post("/api/collection", async (ctx) => {
                   sha: baseSha,
                 }),
               },
-              authToken,
+              token,
             );
             console.log(`Base branch ${baseBranch} created.`);
           } catch (createError) {
@@ -513,7 +520,7 @@ router.post("/api/collection", async (ctx) => {
     const refData = await githubRequest(
       `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
       {},
-      authToken,
+      token,
     );
     const baseSha = refData.object.sha;
 
@@ -528,7 +535,7 @@ router.post("/api/collection", async (ctx) => {
           sha: baseSha,
         }),
       },
-      authToken,
+      token,
     );
 
     // 4. Update file in new branch
@@ -543,7 +550,7 @@ router.post("/api/collection", async (ctx) => {
           sha: sha, // Original file SHA
         }),
       },
-      authToken,
+      token,
     );
 
     // 5. Create Pull Request
@@ -558,7 +565,7 @@ router.post("/api/collection", async (ctx) => {
           base: baseBranch,
         }),
       },
-      authToken,
+      token,
     );
 
     ctx.response.body = { success: true, prUrl: prData.html_url };
@@ -583,7 +590,11 @@ interface GitHubCommit {
 
 router.get("/api/pr-status", async (ctx) => {
   const token = await getSessionToken(ctx);
-  const authToken = token || GITHUB_TOKEN;
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
 
   try {
     const prUrl = ctx.request.url.searchParams.get("prUrl");
@@ -605,7 +616,7 @@ router.get("/api/pr-status", async (ctx) => {
     const [_, owner, repo, number] = match;
     const apiUrl =
       `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`;
-    const data = await githubRequest(apiUrl, {}, authToken);
+    const data = await githubRequest(apiUrl, {}, token);
 
     ctx.response.body = {
       state: data.state, // "open" or "closed"
@@ -620,7 +631,11 @@ router.get("/api/pr-status", async (ctx) => {
 
 router.get("/api/commits", async (ctx) => {
   const token = await getSessionToken(ctx);
-  const authToken = token || GITHUB_TOKEN;
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
 
   try {
     const owner = ctx.request.url.searchParams.get("owner");
@@ -637,7 +652,7 @@ router.get("/api/commits", async (ctx) => {
     if (branch) {
       url += `&sha=${branch}`;
     }
-    const commits = await githubRequest(url, {}, authToken);
+    const commits = await githubRequest(url, {}, token);
 
     ctx.response.body = {
       commits: commits.map((c: GitHubCommit) => ({

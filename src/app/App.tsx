@@ -5,7 +5,6 @@ import { Commit, Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
-import { Loading } from "./components/Loading.tsx";
 import { RepositorySettings } from "./components/RepositorySettings.tsx";
 import { Login } from "./components/Login.tsx";
 import { OwnerSelector } from "./components/OwnerSelector.tsx";
@@ -858,7 +857,28 @@ function App() {
   };
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="ui container" style={{ marginTop: "2em" }}>
+        <div className="ui grid middle aligned">
+          <div className="twelve wide column">
+            <h1 className="ui header">
+              <i className="edit icon"></i>
+              <div className="content">
+                Staticms
+                <div className="sub header">
+                  Manage headless contents with GitHub
+                </div>
+              </div>
+            </h1>
+          </div>
+        </div>
+        <div
+          className="ui active centered inline loader"
+          style={{ marginTop: "4em" }}
+        >
+        </div>
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -872,6 +892,7 @@ function App() {
           setSelectedOwner(owner);
           localStorage.setItem("staticms_owner", owner);
         }}
+        onLogout={handleLogout}
       />
     );
   }
