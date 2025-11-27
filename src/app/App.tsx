@@ -7,6 +7,8 @@ import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Loading } from "./components/Loading.tsx";
 import { RepositorySettings } from "./components/RepositorySettings.tsx";
+import { Login } from "./components/Login.tsx";
+import { OwnerSelector } from "./components/OwnerSelector.tsx";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -19,6 +21,11 @@ function App() {
     | "repository-settings"
   >(
     "content-list",
+  );
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [selectedOwner, setSelectedOwner] = useState<string | null>(
+    localStorage.getItem("staticms_owner"),
   );
 
   const [formData, setFormData] = useState<Content>({
@@ -79,9 +86,17 @@ function App() {
   const [editorLoading, setEditorLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/config")
-      .then((res) => res.json())
-      .then((data) => {
+    const init = async () => {
+      try {
+        // Check auth
+        const userRes = await fetch("/api/user");
+        if (userRes.ok) {
+          setIsAuthenticated(true);
+        }
+
+        // Load config
+        const configRes = await fetch("/api/config");
+        const data = await configRes.json();
         if (data && data.contents) {
           // Ensure fields array exists for older configs
           const contentsWithFields = data.contents.map((c: Content) => ({
@@ -90,10 +105,22 @@ function App() {
           }));
           setContents(contentsWithFields);
         }
+      } catch (e) {
+        console.error(e);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      }
+    };
+    init();
   }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout");
+    setIsAuthenticated(false);
+    setSelectedOwner(null);
+    localStorage.removeItem("staticms_owner");
+    setView("content-list");
+  };
 
   const handleSaveContentConfig = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -834,11 +861,29 @@ function App() {
     return <Loading />;
   }
 
+  if (!isAuthenticated) {
+    return <Login />;
+  }
+
+  if (!selectedOwner) {
+    return (
+      <OwnerSelector
+        onSelect={(owner) => {
+          setSelectedOwner(owner);
+          localStorage.setItem("staticms_owner", owner);
+        }}
+      />
+    );
+  }
+
+  const filteredContents = contents.filter((c) => c.owner === selectedOwner);
+
   if (view === "repository-settings") {
     return (
       <RepositorySettings
         onNext={handleRepositoryNext}
         onCancel={() => setView("content-list")}
+        initialOwner={selectedOwner}
       />
     );
   }
@@ -867,12 +912,13 @@ function App() {
   if (view === "content-list") {
     return (
       <ContentList
-        contents={contents}
+        contents={filteredContents}
         onEditContentConfig={handleEditContentConfig}
         onSelectContent={handleSelectContent}
         onAddNewContent={handleAddNewRepository}
         onAddNewContentToRepo={handleAddNewContentToRepo}
         loadingItemIndex={loadingContentIndex}
+        onLogout={handleLogout}
       />
     );
   }

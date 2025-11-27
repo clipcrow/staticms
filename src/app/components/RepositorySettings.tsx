@@ -3,13 +3,15 @@ import React, { useState } from "react";
 interface RepositorySettingsProps {
   onNext: (owner: string, repo: string, branch?: string) => void;
   onCancel: () => void;
+  initialOwner?: string;
 }
 
 export const RepositorySettings: React.FC<RepositorySettingsProps> = ({
   onNext,
   onCancel,
+  initialOwner,
 }) => {
-  const [owner, setOwner] = useState("");
+  const [owner, setOwner] = useState(initialOwner || "");
   const [repo, setRepo] = useState("");
   const [branch, setBranch] = useState("");
 
@@ -41,6 +43,8 @@ export const RepositorySettings: React.FC<RepositorySettingsProps> = ({
               value={owner}
               onChange={(e) => setOwner(e.target.value)}
               required
+              readOnly={!!initialOwner}
+              disabled={!!initialOwner}
             />
           </div>
           <div className="field">

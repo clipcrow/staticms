@@ -1,4 +1,10 @@
-import { Application, Router, send, ServerSentEventTarget } from "@oak/oak";
+import {
+  Application,
+  Context,
+  Router,
+  send,
+  ServerSentEventTarget,
+} from "@oak/oak";
 import { load } from "@std/dotenv";
 
 await load({ export: true });
@@ -11,11 +17,27 @@ export const shutdown = () => {
   kv.close();
 };
 
-const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN");
+const GITHUB_TOKEN = Deno.env.get("GITHUB_TOKEN")?.trim();
+const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
+const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
-async function githubRequest(url: string, options: RequestInit = {}) {
+console.log("GitHub Auth Config:");
+console.log("- Client ID loaded:", GITHUB_CLIENT_ID ? "Yes" : "No");
+if (GITHUB_CLIENT_ID) {
+  console.log("- Client ID prefix:", GITHUB_CLIENT_ID.substring(0, 5) + "...");
+}
+console.log("- Client Secret loaded:", GITHUB_CLIENT_SECRET ? "Yes" : "No");
+
+async function githubRequest(
+  url: string,
+  options: RequestInit = {},
+  token?: string,
+) {
   const headers = new Headers(options.headers);
-  headers.set("Authorization", `Bearer ${GITHUB_TOKEN}`);
+  const authToken = token || GITHUB_TOKEN;
+  if (authToken) {
+    headers.set("Authorization", `Bearer ${authToken}`);
+  }
   headers.set("Accept", "application/vnd.github.v3+json");
   headers.set("Content-Type", "application/json");
 
@@ -27,10 +49,152 @@ async function githubRequest(url: string, options: RequestInit = {}) {
   return response.json();
 }
 
+// Session Management
+async function createSession(accessToken: string): Promise<string> {
+  const sessionId = crypto.randomUUID();
+  await kv.set(["sessions", sessionId], accessToken, {
+    expireIn: 60 * 60 * 24 * 7, // 1 week
+  });
+  return sessionId;
+}
+
+async function getSessionToken(ctx: Context): Promise<string | null> {
+  const sessionId = await ctx.cookies.get("session_id");
+  if (!sessionId) return null;
+  const session = await kv.get(["sessions", sessionId]);
+  return session.value as string | null;
+}
+
+async function deleteSession(ctx: Context) {
+  const sessionId = await ctx.cookies.get("session_id");
+  if (sessionId) {
+    await kv.delete(["sessions", sessionId]);
+    await ctx.cookies.delete("session_id");
+  }
+}
+
+// Auth Routes
+router.get("/api/auth/login", (ctx) => {
+  if (!GITHUB_CLIENT_ID) {
+    ctx.throw(500, "GITHUB_CLIENT_ID not configured");
+    return;
+  }
+  const redirectUrl =
+    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,read:org`;
+  ctx.response.redirect(redirectUrl);
+});
+
+router.get("/api/auth/callback", async (ctx) => {
+  const code = ctx.request.url.searchParams.get("code");
+  if (!code) {
+    ctx.throw(400, "Missing code");
+    return;
+  }
+
+  if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
+    ctx.throw(500, "GitHub OAuth not configured");
+    return;
+  }
+
+  try {
+    console.log("Exchanging code for token...");
+    const response = await fetch(
+      "https://github.com/login/oauth/access_token",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          client_id: GITHUB_CLIENT_ID,
+          client_secret: GITHUB_CLIENT_SECRET,
+          code,
+        }),
+      },
+    );
+
+    console.log("Token response status:", response.status);
+    const responseText = await response.text();
+    console.log("Token response body:", responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (e) {
+      console.error("Failed to parse token response JSON:", e);
+      throw new Error("Invalid response from GitHub");
+    }
+
+    if (data.error) {
+      console.error("GitHub Auth Error:", data.error, data.error_description);
+      throw new Error(data.error_description || data.error);
+    }
+
+    console.log("Token received, creating session...");
+    const sessionId = await createSession(data.access_token);
+    await ctx.cookies.set("session_id", sessionId, {
+      httpOnly: true,
+      secure: false, // Set to true in production with HTTPS
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    });
+    console.log("Session created, redirecting...");
+
+    ctx.response.redirect("/");
+  } catch (e) {
+    console.error("Auth error details:", e);
+    ctx.throw(500, "Authentication failed");
+  }
+});
+
+router.get("/api/auth/logout", async (ctx) => {
+  await deleteSession(ctx);
+  ctx.response.body = { success: true };
+});
+
+router.get("/api/user", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
+
+  try {
+    const user = await githubRequest("https://api.github.com/user", {}, token);
+    ctx.response.body = user;
+  } catch (e) {
+    console.error(e);
+    ctx.response.status = 500;
+  }
+});
+
+router.get("/api/user/orgs", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
+
+  try {
+    const orgs = await githubRequest(
+      "https://api.github.com/user/orgs",
+      {},
+      token,
+    );
+    ctx.response.body = orgs;
+  } catch (e) {
+    console.error(e);
+    ctx.response.status = 500;
+  }
+});
+
 const PUBLIC_URL = Deno.env.get("PUBLIC_URL");
 const clients = new Set<ServerSentEventTarget>();
 
-async function setupWebhook(owner: string, repo: string) {
+async function setupWebhook(owner: string, repo: string, token?: string) {
   if (!PUBLIC_URL) {
     console.warn("PUBLIC_URL not set. Skipping WebHook setup.");
     return;
@@ -38,6 +202,8 @@ async function setupWebhook(owner: string, repo: string) {
   try {
     const hooks = await githubRequest(
       `https://api.github.com/repos/${owner}/${repo}/hooks`,
+      {},
+      token,
     );
     const hookUrl = `${PUBLIC_URL}/api/webhook`;
     // deno-lint-ignore no-explicit-any
@@ -60,6 +226,7 @@ async function setupWebhook(owner: string, repo: string) {
             },
           }),
         },
+        token,
       );
       console.log(`Webhook created for ${owner}/${repo}`);
     } else {
@@ -77,6 +244,7 @@ async function setupWebhook(owner: string, repo: string) {
               events: ["push", "pull_request"],
             }),
           },
+          token,
         );
         console.log(`Webhook updated for ${owner}/${repo}`);
       }
@@ -92,6 +260,10 @@ router.get("/api/config", async (ctx) => {
 });
 
 router.post("/api/config", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  // Allow config update without token if using env token, but prefer user token
+  const authToken = token || GITHUB_TOKEN;
+
   try {
     const body = ctx.request.body;
     const value = await body.json();
@@ -101,7 +273,7 @@ router.post("/api/config", async (ctx) => {
     if (value.contents && Array.isArray(value.contents)) {
       for (const content of value.contents) {
         if (content.owner && content.repo) {
-          await setupWebhook(content.owner, content.repo);
+          await setupWebhook(content.owner, content.repo, authToken);
         }
       }
     }
@@ -158,6 +330,9 @@ router.get("/api/events", async (ctx) => {
 });
 
 router.get("/api/collection", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  const authToken = token || GITHUB_TOKEN;
+
   try {
     const owner = ctx.request.url.searchParams.get("owner");
     const repo = ctx.request.url.searchParams.get("repo");
@@ -174,6 +349,8 @@ router.get("/api/collection", async (ctx) => {
         // Check if branch exists
         await githubRequest(
           `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${targetBranch}`,
+          {},
+          authToken,
         );
       } catch (e) {
         // If branch does not exist (404), create it
@@ -185,10 +362,14 @@ router.get("/api/collection", async (ctx) => {
           try {
             const repoData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}`,
+              {},
+              authToken,
             );
             const defaultBranch = repoData.default_branch;
             const refData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+              {},
+              authToken,
             );
             const baseSha = refData.object.sha;
 
@@ -201,6 +382,7 @@ router.get("/api/collection", async (ctx) => {
                   sha: baseSha,
                 }),
               },
+              authToken,
             );
             console.log(`Branch ${targetBranch} created.`);
           } catch (createError) {
@@ -217,13 +399,15 @@ router.get("/api/collection", async (ctx) => {
     } else {
       const repoData = await githubRequest(
         `https://api.github.com/repos/${owner}/${repo}`,
+        {},
+        authToken,
       );
       targetBranch = repoData.default_branch;
     }
 
     const url =
       `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${targetBranch}`;
-    const data = await githubRequest(url);
+    const data = await githubRequest(url, {}, authToken);
 
     // Content is base64 encoded
     const rawContent = atob(data.content.replace(/\n/g, ""));
@@ -239,6 +423,9 @@ router.get("/api/collection", async (ctx) => {
 });
 
 router.post("/api/collection", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  const authToken = token || GITHUB_TOKEN;
+
   try {
     const body = await ctx.request.body.json();
     const { content, sha, description, title, owner, repo, path, branch } =
@@ -257,6 +444,8 @@ router.post("/api/collection", async (ctx) => {
     if (!baseBranch) {
       const repoData = await githubRequest(
         `https://api.github.com/repos/${owner}/${repo}`,
+        {},
+        authToken,
       );
       baseBranch = repoData.default_branch;
       console.log(`[POST /api/collection] Using default branch: ${baseBranch}`);
@@ -268,6 +457,8 @@ router.post("/api/collection", async (ctx) => {
       try {
         await githubRequest(
           `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
+          {},
+          authToken,
         );
         console.log(`[POST /api/collection] Branch ${baseBranch} exists.`);
       } catch (e) {
@@ -282,10 +473,14 @@ router.post("/api/collection", async (ctx) => {
           try {
             const repoData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}`,
+              {},
+              authToken,
             );
             const defaultBranch = repoData.default_branch;
             const refData = await githubRequest(
               `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${defaultBranch}`,
+              {},
+              authToken,
             );
             const baseSha = refData.object.sha;
 
@@ -298,6 +493,7 @@ router.post("/api/collection", async (ctx) => {
                   sha: baseSha,
                 }),
               },
+              authToken,
             );
             console.log(`Base branch ${baseBranch} created.`);
           } catch (createError) {
@@ -316,6 +512,8 @@ router.post("/api/collection", async (ctx) => {
     // 2. Get ref of base branch
     const refData = await githubRequest(
       `https://api.github.com/repos/${owner}/${repo}/git/ref/heads/${baseBranch}`,
+      {},
+      authToken,
     );
     const baseSha = refData.object.sha;
 
@@ -330,6 +528,7 @@ router.post("/api/collection", async (ctx) => {
           sha: baseSha,
         }),
       },
+      authToken,
     );
 
     // 4. Update file in new branch
@@ -344,6 +543,7 @@ router.post("/api/collection", async (ctx) => {
           sha: sha, // Original file SHA
         }),
       },
+      authToken,
     );
 
     // 5. Create Pull Request
@@ -358,6 +558,7 @@ router.post("/api/collection", async (ctx) => {
           base: baseBranch,
         }),
       },
+      authToken,
     );
 
     ctx.response.body = { success: true, prUrl: prData.html_url };
@@ -381,6 +582,9 @@ interface GitHubCommit {
 }
 
 router.get("/api/pr-status", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  const authToken = token || GITHUB_TOKEN;
+
   try {
     const prUrl = ctx.request.url.searchParams.get("prUrl");
     if (!prUrl) {
@@ -401,7 +605,7 @@ router.get("/api/pr-status", async (ctx) => {
     const [_, owner, repo, number] = match;
     const apiUrl =
       `https://api.github.com/repos/${owner}/${repo}/pulls/${number}`;
-    const data = await githubRequest(apiUrl);
+    const data = await githubRequest(apiUrl, {}, authToken);
 
     ctx.response.body = {
       state: data.state, // "open" or "closed"
@@ -415,6 +619,9 @@ router.get("/api/pr-status", async (ctx) => {
 });
 
 router.get("/api/commits", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  const authToken = token || GITHUB_TOKEN;
+
   try {
     const owner = ctx.request.url.searchParams.get("owner");
     const repo = ctx.request.url.searchParams.get("repo");
@@ -430,7 +637,7 @@ router.get("/api/commits", async (ctx) => {
     if (branch) {
       url += `&sha=${branch}`;
     }
-    const commits = await githubRequest(url);
+    const commits = await githubRequest(url, {}, authToken);
 
     ctx.response.body = {
       commits: commits.map((c: GitHubCommit) => ({

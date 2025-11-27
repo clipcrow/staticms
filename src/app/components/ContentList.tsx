@@ -8,6 +8,7 @@ interface ContentListProps {
   onAddNewContent: () => void;
   onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
   loadingItemIndex: number | null;
+  onLogout: () => void;
 }
 
 export const ContentList: React.FC<ContentListProps> = ({
@@ -17,6 +18,7 @@ export const ContentList: React.FC<ContentListProps> = ({
   onAddNewContent,
   onAddNewContentToRepo,
   loadingItemIndex,
+  onLogout,
 }) => {
   // Group contents by repository (owner + repo + branch)
   const groupedContents = contents.reduce(
@@ -46,13 +48,25 @@ export const ContentList: React.FC<ContentListProps> = ({
 
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
-      <h1 className="ui header">
-        <i className="edit icon"></i>
-        <div className="content">
-          Staticms
-          <div className="sub header">Manage headless contents with GitHub</div>
+      <div className="ui grid middle aligned">
+        <div className="twelve wide column">
+          <h1 className="ui header">
+            <i className="edit icon"></i>
+            <div className="content">
+              Staticms
+              <div className="sub header">
+                Manage headless contents with GitHub
+              </div>
+            </div>
+          </h1>
         </div>
-      </h1>
+        <div className="four wide column right aligned">
+          <button type="button" className="ui button" onClick={onLogout}>
+            <i className="sign out icon"></i>
+            Logout
+          </button>
+        </div>
+      </div>
 
       <div className="ui segment" style={{ marginTop: "2em" }}>
         <div className="ui grid">
