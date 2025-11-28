@@ -109,7 +109,7 @@ export const ContentList: React.FC<ContentListProps> = ({
                         className="header"
                         style={{ fontSize: "1em" }}
                       >
-                        {item.filePath}
+                        {item.name || item.filePath}
                       </span>
                       {item.branch && (
                         <span

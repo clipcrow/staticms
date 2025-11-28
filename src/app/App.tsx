@@ -101,6 +101,7 @@ function App() {
 
   const handleSaveContentConfig = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSaving(true);
     let newContents = [...contents];
     if (editingIndex !== null) {
       newContents[editingIndex] = formData;
@@ -125,6 +126,8 @@ function App() {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -885,6 +888,7 @@ function App() {
           }
         }}
         repoInfo={targetRepo!}
+        loading={isSaving}
       />
     );
   }

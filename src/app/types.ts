@@ -7,6 +7,7 @@ export interface Content {
   repo: string;
   branch?: string;
   filePath: string;
+  name?: string;
   fields: Field[];
 }
 

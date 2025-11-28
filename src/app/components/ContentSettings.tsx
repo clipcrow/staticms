@@ -9,6 +9,7 @@ interface ContentSettingsProps {
   onCancel: () => void;
   onDelete: () => void;
   repoInfo: { owner: string; repo: string; branch?: string };
+  loading?: boolean;
 }
 
 export const ContentSettings: React.FC<ContentSettingsProps> = ({
@@ -18,6 +19,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   onSave,
   onCancel,
   onDelete,
+  loading = false,
 }) => {
   const [newFieldName, setNewFieldName] = React.useState("");
 
@@ -59,6 +61,22 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           style={{ marginTop: "2em" }}
         >
           <div className="field">
+            <label>Content Name (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. Blog Post"
+              value={formData.name || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })}
+              disabled={loading}
+            />
+            <small style={{ color: "rgba(0,0,0,0.6)" }}>
+              A friendly name for this content. If left empty, the file path
+              will be used.
+            </small>
+          </div>
+
+          <div className="field">
             <label>File Path</label>
             <input
               type="text"
@@ -67,6 +85,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               onChange={(e) =>
                 setFormData({ ...formData, filePath: e.target.value })}
               required
+              disabled={loading}
             />
           </div>
 
@@ -78,6 +97,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               value={formData.branch || ""}
               onChange={(e) =>
                 setFormData({ ...formData, branch: e.target.value })}
+              disabled={loading}
             />
             <small style={{ color: "rgba(0,0,0,0.6)" }}>
               Leave empty to use the repository's default branch.
@@ -101,6 +121,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                       onChange={(e) =>
                         handleUpdateFieldName(index, e.target.value)}
                       placeholder="Field Name"
+                      disabled={loading}
                     />
                   </div>
                 </div>
@@ -138,6 +159,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                       height: "100%",
                     }}
                     title="Delete Field"
+                    disabled={loading}
                   >
                     <i className="trash icon" style={{ margin: 0 }}></i>
                   </button>
@@ -157,6 +179,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                     value={newFieldName}
                     onChange={(e) => setNewFieldName(e.target.value)}
                     placeholder="New Field Name"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -165,7 +188,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                   type="button"
                   onClick={handleAddField}
                   className="ui button"
-                  disabled={!newFieldName.trim()}
+                  disabled={!newFieldName.trim() || loading}
                 >
                   <i className="plus icon"></i>
                   Add Field
@@ -181,10 +204,15 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               type="button"
               onClick={onCancel}
               className="ui button"
+              disabled={loading}
             >
               Cancel
             </button>
-            <button type="submit" className="ui primary button">
+            <button
+              type="submit"
+              className={`ui primary button ${loading ? "loading" : ""}`}
+              disabled={loading}
+            >
               {editingIndex !== null ? "Update" : "Add"}
             </button>
             {editingIndex !== null && (
@@ -192,6 +220,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                 type="button"
                 onClick={onDelete}
                 className="ui button negative right floated"
+                disabled={loading}
               >
                 <i className="trash icon"></i>
                 Delete

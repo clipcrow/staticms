@@ -89,8 +89,8 @@ async function generateAppJwt() {
   const jwt = await create(
     { alg: "RS256", typ: "JWT" },
     {
-      iat: getNumericDate(0),
-      exp: getNumericDate(60 * 10), // 10 minutes
+      iat: getNumericDate(-60), // 60 seconds in the past to allow for clock skew
+      exp: getNumericDate(60 * 9), // 9 minutes to avoid clock skew
       iss: GITHUB_APP_ID,
     },
     key,

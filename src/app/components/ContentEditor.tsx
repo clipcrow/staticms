@@ -215,7 +215,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             /
           </span>
           <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
-            {currentContent.filePath}
+            {currentContent.name || currentContent.filePath}
           </span>
           {isPrLocked && (
             <div
