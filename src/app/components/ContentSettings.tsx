@@ -116,7 +116,14 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                     />
                   </div>
                 </div>
-                <div className="one wide column">
+                <div
+                  className="one wide column"
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => handleDeleteField(index)}
@@ -126,10 +133,16 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                       border: "none",
                       boxShadow: "none",
                       color: "#db2828",
+                      padding: 0,
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: "100%",
+                      height: "100%",
                     }}
                     title="Delete Field"
                   >
-                    <i className="trash icon"></i>
+                    <i className="trash icon" style={{ margin: 0 }}></i>
                   </button>
                 </div>
               </div>

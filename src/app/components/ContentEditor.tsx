@@ -342,7 +342,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                     />
                                   </div>
                                 </div>
-                                <div className="one wide column">
+                                <div
+                                  className="one wide column"
+                                  style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                  }}
+                                >
                                   <button
                                     type="button"
                                     className="ui icon button"
@@ -351,13 +358,23 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                       border: "none",
                                       boxShadow: "none",
                                       color: "#db2828",
+                                      padding: 0,
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      alignItems: "center",
+                                      width: "100%",
+                                      height: "100%",
                                     }}
                                     onClick={() =>
                                       handleDeleteFieldFromItem(itemIndex, key)}
                                     disabled={isPrLocked}
                                     title="Delete Field"
                                   >
-                                    <i className="trash icon"></i>
+                                    <i
+                                      className="trash icon"
+                                      style={{ margin: 0 }}
+                                    >
+                                    </i>
                                   </button>
                                 </div>
                               </div>
@@ -484,7 +501,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                             />
                           </div>
                         </div>
-                        <div className="one wide column">
+                        <div
+                          className="one wide column"
+                          style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                          }}
+                        >
                           <button
                             type="button"
                             className="ui icon button"
@@ -493,6 +517,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                               border: "none",
                               boxShadow: "none",
                               color: "#db2828",
+                              padding: 0,
+                              display: "flex",
+                              justifyContent: "center",
+                              alignItems: "center",
+                              width: "100%",
+                              height: "100%",
                             }}
                             onClick={() => {
                               if (isPrLocked) {
@@ -507,7 +537,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                             disabled={isPrLocked}
                             title="Delete Field"
                           >
-                            <i className="trash icon"></i>
+                            <i className="trash icon" style={{ margin: 0 }}></i>
                           </button>
                         </div>
                       </div>

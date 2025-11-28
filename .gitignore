@@ -1,6 +1,7 @@
 /public/js/
 
 .env
+*.pem
 
 .DS_Store
 Thumbs.db

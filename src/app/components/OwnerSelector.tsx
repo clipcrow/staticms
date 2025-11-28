@@ -1,46 +1,39 @@
 import React, { useEffect, useState } from "react";
 
 interface OwnerSelectorProps {
-  onSelect: (owner: string) => void;
+  onSelect: (repoFullName: string) => void;
   onLogout: () => void;
 }
 
-interface User {
-  login: string;
-  avatar_url: string;
+interface Repository {
+  id: number;
   name: string;
-}
-
-interface Org {
-  login: string;
-  avatar_url: string;
-  description: string;
+  full_name: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+  };
+  private: boolean;
+  description: string | null;
 }
 
 export const OwnerSelector: React.FC<OwnerSelectorProps> = ({
   onSelect,
   onLogout,
 }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [orgs, setOrgs] = useState<Org[]>([]);
+  const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userRes, orgsRes] = await Promise.all([
-          fetch("/api/user"),
-          fetch("/api/user/orgs"),
-        ]);
-
-        if (userRes.ok && orgsRes.ok) {
-          const userData = await userRes.json();
-          const orgsData = await orgsRes.json();
-          setUser(userData);
-          setOrgs(orgsData);
+        const response = await fetch("/api/user/repos");
+        if (response.ok) {
+          const data = await response.json();
+          setRepos(data);
         }
       } catch (e) {
-        console.error("Failed to fetch user data", e);
+        console.error("Failed to fetch repositories", e);
       } finally {
         setLoading(false);
       }
@@ -50,8 +43,14 @@ export const OwnerSelector: React.FC<OwnerSelectorProps> = ({
   }, []);
 
   return (
-    <div className="ui container" style={{ marginTop: "2em" }}>
-      <div className="ui grid middle aligned">
+    <div
+      className="ui container"
+      style={{ height: "100vh", display: "flex", flexDirection: "column" }}
+    >
+      <div
+        className="ui grid middle aligned"
+        style={{ marginTop: "2em", flexShrink: 0 }}
+      >
         <div className="twelve wide column">
           <h1 className="ui header">
             <i className="edit icon"></i>
@@ -73,62 +72,64 @@ export const OwnerSelector: React.FC<OwnerSelectorProps> = ({
 
       <div
         style={{
-          marginTop: "4em",
-          maxWidth: "600px",
-          marginLeft: "auto",
-          marginRight: "auto",
+          flexGrow: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          alignItems: "center",
+          paddingTop: "15vh",
         }}
       >
-        <h2 className="ui header center aligned">
-          Select Owner or Organization
-        </h2>
-        {loading
-          ? (
-            <div className="ui segment" style={{ minHeight: "200px" }}>
-              <div className="ui active inverted dimmer">
-                <div className="ui loader"></div>
+        <div style={{ width: "100%", maxWidth: "600px" }}>
+          <h2 className="ui header center aligned">
+            Select Repository
+          </h2>
+          {loading
+            ? (
+              <div className="ui segment" style={{ minHeight: "200px" }}>
+                <div className="ui active inverted dimmer">
+                  <div className="ui loader"></div>
+                </div>
               </div>
-            </div>
-          )
-          : (
-            <div className="ui segment">
-              <div className="ui relaxed divided list selection">
-                {user && (
-                  <div
-                    className="item"
-                    onClick={() => onSelect(user.login)}
-                  >
-                    <img
-                      className="ui avatar image"
-                      src={user.avatar_url}
-                      alt=""
-                    />
-                    <div className="content">
-                      <div className="header">{user.login}</div>
-                      <div className="description">Personal Account</div>
+            )
+            : (
+              <div className="ui segment">
+                {repos.length === 0
+                  ? (
+                    <div className="ui message warning">
+                      <div className="header">No repositories found</div>
+                      <p>
+                        Please install the Staticms GitHub App on your
+                        repositories.
+                      </p>
                     </div>
-                  </div>
-                )}
-                {orgs.map((org) => (
-                  <div
-                    key={org.login}
-                    className="item"
-                    onClick={() => onSelect(org.login)}
-                  >
-                    <img
-                      className="ui avatar image"
-                      src={org.avatar_url}
-                      alt=""
-                    />
-                    <div className="content">
-                      <div className="header">{org.login}</div>
-                      <div className="description">{org.description}</div>
+                  )
+                  : (
+                    <div className="ui relaxed divided list selection">
+                      {repos.map((repo) => (
+                        <div
+                          key={repo.id}
+                          className="item"
+                          onClick={() => onSelect(repo.full_name)}
+                        >
+                          <i
+                            className={`large middle aligned icon ${
+                              repo.private ? "lock" : "github"
+                            }`}
+                          />
+                          <div className="content">
+                            <div className="header">{repo.full_name}</div>
+                            <div className="description">
+                              {repo.description || "No description"}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  )}
               </div>
-            </div>
-          )}
+            )}
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   ServerSentEventTarget,
 } from "@oak/oak";
 import { load } from "@std/dotenv";
+import { create, getNumericDate } from "djwt";
 
 await load({ export: true });
 
@@ -19,6 +20,8 @@ export const shutdown = () => {
 
 const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
 const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
+const GITHUB_APP_ID = Deno.env.get("GITHUB_APP_ID")?.trim();
+const GITHUB_APP_PRIVATE_KEY = Deno.env.get("GITHUB_APP_PRIVATE_KEY")?.trim();
 
 console.log("GitHub Auth Config:");
 console.log("- Client ID loaded:", GITHUB_CLIENT_ID ? "Yes" : "No");
@@ -26,6 +29,8 @@ if (GITHUB_CLIENT_ID) {
   console.log("- Client ID prefix:", GITHUB_CLIENT_ID.substring(0, 5) + "...");
 }
 console.log("- Client Secret loaded:", GITHUB_CLIENT_SECRET ? "Yes" : "No");
+console.log("- App ID loaded:", GITHUB_APP_ID ? "Yes" : "No");
+console.log("- App Private Key loaded:", GITHUB_APP_PRIVATE_KEY ? "Yes" : "No");
 
 async function githubRequest(
   url: string,
@@ -43,6 +48,100 @@ async function githubRequest(
     throw new Error(`GitHub API Error: ${response.status} ${error}`);
   }
   return response.json();
+}
+
+// GitHub App Authentication Helpers
+async function importPrivateKey(pem: string) {
+  const pemHeader = "-----BEGIN PRIVATE KEY-----";
+  const pemFooter = "-----END PRIVATE KEY-----";
+
+  // Handle cases where the key might be one line with \n characters
+  const formattedPem = pem.replace(/\\n/g, "\n");
+
+  let pemContents = formattedPem;
+  if (formattedPem.includes(pemHeader)) {
+    pemContents = formattedPem.substring(
+      formattedPem.indexOf(pemHeader) + pemHeader.length,
+      formattedPem.indexOf(pemFooter),
+    );
+  }
+
+  const binaryDerString = atob(pemContents.replace(/\s/g, ""));
+  const binaryDer = new Uint8Array(binaryDerString.length);
+  for (let i = 0; i < binaryDerString.length; i++) {
+    binaryDer[i] = binaryDerString.charCodeAt(i);
+  }
+
+  return await crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer,
+    {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256",
+    },
+    true,
+    ["sign"],
+  );
+}
+
+async function generateAppJwt() {
+  if (!GITHUB_APP_ID || !GITHUB_APP_PRIVATE_KEY) {
+    throw new Error("GitHub App not configured");
+  }
+
+  const key = await importPrivateKey(GITHUB_APP_PRIVATE_KEY);
+  const jwt = await create(
+    { alg: "RS256", typ: "JWT" },
+    {
+      iat: getNumericDate(0),
+      exp: getNumericDate(60 * 10), // 10 minutes
+      iss: GITHUB_APP_ID,
+    },
+    key,
+  );
+  return jwt;
+}
+
+async function getInstallationToken(owner: string, repo: string) {
+  const jwt = await generateAppJwt();
+
+  // 1. Get installation ID for the repo
+  const installationRes = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/installation`,
+    {
+      headers: {
+        "Authorization": `Bearer ${jwt}`,
+        "Accept": "application/vnd.github.v3+json",
+      },
+    },
+  );
+
+  if (!installationRes.ok) {
+    throw new Error(
+      `Failed to get installation: ${installationRes.statusText}`,
+    );
+  }
+
+  const installation = await installationRes.json();
+
+  // 2. Get access token for the installation
+  const tokenRes = await fetch(
+    `https://api.github.com/app/installations/${installation.id}/access_tokens`,
+    {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${jwt}`,
+        "Accept": "application/vnd.github.v3+json",
+      },
+    },
+  );
+
+  if (!tokenRes.ok) {
+    throw new Error(`Failed to get installation token: ${tokenRes.statusText}`);
+  }
+
+  const data = await tokenRes.json();
+  return data.token;
 }
 
 // Session Management
@@ -166,7 +265,7 @@ router.get("/api/user", async (ctx) => {
   }
 });
 
-router.get("/api/user/orgs", async (ctx) => {
+router.get("/api/user/repos", async (ctx) => {
   const token = await getSessionToken(ctx);
   if (!token) {
     ctx.response.status = 401;
@@ -175,27 +274,50 @@ router.get("/api/user/orgs", async (ctx) => {
   }
 
   try {
-    const orgs = await githubRequest(
-      "https://api.github.com/user/orgs",
+    // 1. Get user's installations
+    const installationsData = await githubRequest(
+      "https://api.github.com/user/installations",
       {},
       token,
     );
-    ctx.response.body = orgs;
+
+    const installations = installationsData.installations || [];
+    // deno-lint-ignore no-explicit-any
+    let allRepos: any[] = [];
+
+    // 2. Get repositories for each installation
+    for (const installation of installations) {
+      const reposData = await githubRequest(
+        `https://api.github.com/user/installations/${installation.id}/repositories`,
+        {},
+        token,
+      );
+      if (reposData.repositories) {
+        allRepos = [...allRepos, ...reposData.repositories];
+      }
+    }
+
+    ctx.response.body = allRepos;
   } catch (e) {
     console.error(e);
     ctx.response.status = 500;
+    ctx.response.body = { error: (e as Error).message };
   }
 });
 
 const PUBLIC_URL = Deno.env.get("PUBLIC_URL");
 const clients = new Set<ServerSentEventTarget>();
 
-async function setupWebhook(owner: string, repo: string, token: string) {
+async function setupWebhook(owner: string, repo: string, _userToken?: string) {
   if (!PUBLIC_URL) {
     console.warn("PUBLIC_URL not set. Skipping WebHook setup.");
     return;
   }
+
   try {
+    // Use Installation Token for Webhook operations
+    const token = await getInstallationToken(owner, repo);
+
     const hooks = await githubRequest(
       `https://api.github.com/repos/${owner}/${repo}/hooks`,
       {},

@@ -23,8 +23,8 @@ function App() {
   );
 
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [selectedOwner, setSelectedOwner] = useState<string | null>(
-    localStorage.getItem("staticms_owner"),
+  const [selectedRepo, setSelectedRepo] = useState<string | null>(
+    localStorage.getItem("staticms_repo"),
   );
 
   const [formData, setFormData] = useState<Content>({
@@ -116,8 +116,8 @@ function App() {
   const handleLogout = async () => {
     await fetch("/api/auth/logout");
     setIsAuthenticated(false);
-    setSelectedOwner(null);
-    localStorage.removeItem("staticms_owner");
+    setSelectedRepo(null);
+    localStorage.removeItem("staticms_repo");
     setView("content-list");
   };
 
@@ -885,26 +885,29 @@ function App() {
     return <Login />;
   }
 
-  if (!selectedOwner) {
+  if (!selectedRepo) {
     return (
       <OwnerSelector
-        onSelect={(owner) => {
-          setSelectedOwner(owner);
-          localStorage.setItem("staticms_owner", owner);
+        onSelect={(repoFullName) => {
+          setSelectedRepo(repoFullName);
+          localStorage.setItem("staticms_repo", repoFullName);
         }}
         onLogout={handleLogout}
       />
     );
   }
 
-  const filteredContents = contents.filter((c) => c.owner === selectedOwner);
+  const [selectedRepoOwner, selectedRepoName] = selectedRepo.split("/");
+  const filteredContents = contents.filter((c) =>
+    c.owner === selectedRepoOwner && c.repo === selectedRepoName
+  );
 
   if (view === "repository-settings") {
     return (
       <RepositorySettings
         onNext={handleRepositoryNext}
         onCancel={() => setView("content-list")}
-        initialOwner={selectedOwner}
+        initialOwner={selectedRepoOwner}
       />
     );
   }
