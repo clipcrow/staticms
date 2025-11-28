@@ -109,6 +109,32 @@ function App() {
       newContents = [...contents, formData];
     }
 
+    // Validate file existence
+    try {
+      const params = new URLSearchParams({
+        owner: formData.owner,
+        repo: formData.repo,
+        filePath: formData.filePath,
+        t: Date.now().toString(),
+        validate: "true",
+      });
+      if (formData.branch) {
+        params.append("branch", formData.branch);
+      }
+      const checkRes = await fetch(`/api/content?${params.toString()}`);
+      if (checkRes.status === 404) {
+        alert("File path not found in the repository.");
+        setIsSaving(false);
+        return;
+      }
+      if (!checkRes.ok) {
+        console.error("Failed to validate file path");
+        // Optional: decide if we block on other errors. For now, let's assume only 404 is blocking.
+      }
+    } catch (e) {
+      console.error("Error validating file path", e);
+    }
+
     try {
       const res = await fetch("/api/config", {
         method: "POST",

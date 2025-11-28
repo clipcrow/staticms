@@ -537,9 +537,19 @@ router.get("/api/content", async (ctx) => {
     );
     ctx.response.body = { content, sha: data.sha, branch: targetBranch };
   } catch (e) {
-    console.error(e);
-    ctx.response.status = 500;
-    ctx.response.body = { error: (e as Error).message };
+    const errorMessage = (e as Error).message;
+    if (errorMessage.includes("404")) {
+      ctx.response.status = 404;
+      // Only log 404 if not in validation mode
+      const validate = ctx.request.url.searchParams.get("validate") === "true";
+      if (!validate) {
+        console.error(e);
+      }
+    } else {
+      console.error(e);
+      ctx.response.status = 500;
+    }
+    ctx.response.body = { error: errorMessage };
   }
 });
 
