@@ -1,6 +1,6 @@
 # Staticms
 
-**Staticms** は、GitHub上のコンテンツを管理するためのモダンなヘッドレスCMSです。
+**Staticms** は、GitHubの自分のリポジトリをストレージとするヘッドレスCMSです。
 DenoとReactで構築されており、GitHub
 Appとして動作することで、リポジトリ内のMarkdownやYAMLファイルを直感的なUIで編集・管理できます。
 

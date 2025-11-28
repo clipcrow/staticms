@@ -33,11 +33,8 @@ ngrok http 3030
 
 ### 3. GitHub Appの作成
 
-GitHub
-Appは個人アカウントではなく、Organizationで作成してください。個人アカウントでは作成できません。
-
-1. GitHubでOrganizationの **Settings** > **Developer settings** > **GitHub
-   Apps** を開きます。
+1. GitHubで個人アカウントもしくはOrganizationの **Settings** > **Developer
+   settings** > **GitHub Apps** を開きます。
 2. **New GitHub App** をクリックします。
 3. 以下の項目を入力します：
    - **GitHub App name**: 任意の名前（例: `staticms-dev-yourname`）
