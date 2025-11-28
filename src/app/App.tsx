@@ -166,7 +166,7 @@ function App() {
     setView("content-settings");
   };
 
-  const [_collection, setCollection] = useState(""); // Raw file content
+  const [_content, setContent] = useState(""); // Raw file content
   const [body, setBody] = useState(""); // Markdown body
   const [initialBody, setInitialBody] = useState("");
   const [frontMatter, setFrontMatter] = useState<
@@ -262,15 +262,15 @@ function App() {
     if (currentContent.branch) {
       params.append("branch", currentContent.branch);
     }
-    fetch(`/api/collection?${params.toString()}`)
+    fetch(`/api/content?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.collection) {
-          setCollection(data.collection);
+        if (data.content) {
+          setContent(data.content);
           setSha(data.sha);
 
           // Parse content based on file type
-          const content = data.collection;
+          const content = data.content;
           const isYaml = currentContent.filePath.endsWith(".yaml") ||
             currentContent.filePath.endsWith(".yml");
           let parsedBody = "";
@@ -516,15 +516,15 @@ function App() {
     if (content.branch) {
       params.append("branch", content.branch);
     }
-    fetch(`/api/collection?${params.toString()}`)
+    fetch(`/api/content?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.collection) {
-          setCollection(data.collection);
+        if (data.content) {
+          setContent(data.content);
           setSha(data.sha);
           setLoadedBranch(data.branch);
 
-          const rawContent = data.collection;
+          const rawContent = data.content;
           const isYaml = content.filePath.endsWith(".yaml") ||
             content.filePath.endsWith(".yml");
           let parsedBody = "";
@@ -695,7 +695,7 @@ function App() {
     }
   }, [prUrl, currentContent]);
 
-  const handleSaveCollection = async () => {
+  const handleSaveContent = async () => {
     if (!currentContent) return;
     setIsSaving(true);
     setPrUrl(null); // Clear PR URL state temporarily until new PR is created
@@ -785,10 +785,10 @@ function App() {
       const generatedTitle = `STATICMS ${yyyy}${mm}${dd}${HH}${MM}`;
 
       console.log(
-        `[handleSaveCollection] Sending branch: "${currentContent.branch}"`,
+        `[handleSaveContent] Sending branch: "${currentContent.branch}"`,
       );
 
-      const res = await fetch("/api/collection", {
+      const res = await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -797,7 +797,7 @@ function App() {
           path: currentContent.filePath,
           branch: currentContent.branch,
           content: finalContent,
-          message: prDescription || "Update collection via Staticms",
+          message: prDescription || "Update content via Staticms",
           title: generatedTitle,
           description: prDescription,
           sha,
@@ -919,7 +919,7 @@ function App() {
       setFrontMatter={setFrontMatter}
       customFields={customFields}
       setCustomFields={setCustomFields}
-      onSaveCollection={handleSaveCollection}
+      onSaveContent={handleSaveContent}
       commits={commits}
       prUrl={prUrl}
       isSaving={isSaving}

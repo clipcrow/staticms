@@ -446,7 +446,7 @@ router.get("/api/events", async (ctx) => {
   });
 });
 
-router.get("/api/collection", async (ctx) => {
+router.get("/api/content", async (ctx) => {
   const token = await getSessionToken(ctx);
   if (!token) {
     ctx.response.status = 401;
@@ -532,10 +532,10 @@ router.get("/api/collection", async (ctx) => {
 
     // Content is base64 encoded
     const rawContent = atob(data.content.replace(/\n/g, ""));
-    const collection = new TextDecoder().decode(
+    const content = new TextDecoder().decode(
       Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
     );
-    ctx.response.body = { collection, sha: data.sha, branch: targetBranch };
+    ctx.response.body = { content, sha: data.sha, branch: targetBranch };
   } catch (e) {
     console.error(e);
     ctx.response.status = 500;
@@ -543,7 +543,7 @@ router.get("/api/collection", async (ctx) => {
   }
 });
 
-router.post("/api/collection", async (ctx) => {
+router.post("/api/content", async (ctx) => {
   const token = await getSessionToken(ctx);
   if (!token) {
     ctx.response.status = 401;
@@ -557,7 +557,7 @@ router.post("/api/collection", async (ctx) => {
       body;
 
     console.log(
-      `[POST /api/collection] branch param: "${branch}" (type: ${typeof branch})`,
+      `[POST /api/content] branch param: "${branch}" (type: ${typeof branch})`,
     );
 
     if (!owner || !repo || !path) {
@@ -573,10 +573,10 @@ router.post("/api/collection", async (ctx) => {
         token,
       );
       baseBranch = repoData.default_branch;
-      console.log(`[POST /api/collection] Using default branch: ${baseBranch}`);
+      console.log(`[POST /api/content] Using default branch: ${baseBranch}`);
     } else {
       console.log(
-        `[POST /api/collection] Using specified branch: ${baseBranch}`,
+        `[POST /api/content] Using specified branch: ${baseBranch}`,
       );
       // Check if baseBranch exists, if not create it from default branch
       try {
@@ -585,11 +585,11 @@ router.post("/api/collection", async (ctx) => {
           {},
           token,
         );
-        console.log(`[POST /api/collection] Branch ${baseBranch} exists.`);
+        console.log(`[POST /api/content] Branch ${baseBranch} exists.`);
       } catch (e) {
         const errorMessage = (e as Error).message;
         console.log(
-          `[POST /api/collection] Branch check error: ${errorMessage}`,
+          `[POST /api/content] Branch check error: ${errorMessage}`,
         );
         if (
           errorMessage.includes("404") || errorMessage.includes("Not Found")

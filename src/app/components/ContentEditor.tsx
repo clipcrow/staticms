@@ -28,7 +28,7 @@ interface ContentEditorProps {
   setPrDescription: (desc: string) => void;
   isSaving: boolean;
   commits: Commit[];
-  onSaveCollection: () => void;
+  onSaveContent: () => void;
   onReset: () => void;
   onBack: () => void;
   loading: boolean;
@@ -53,7 +53,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   setPrDescription,
   isSaving,
   commits,
-  onSaveCollection,
+  onSaveContent,
   onReset,
   onBack,
   loading,
@@ -787,7 +787,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                           className={`ui primary button fluid ${
                             isSaving ? "loading" : ""
                           }`}
-                          onClick={onSaveCollection}
+                          onClick={onSaveContent}
                           disabled={isSaving}
                         >
                           Create PR
