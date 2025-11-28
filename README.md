@@ -1,60 +1,57 @@
 # Staticms
 
-GitHub上のコンテンツを管理するための、モダンなDenoベースのCMSです。
+**Staticms** は、GitHub上のコンテンツを管理するためのモダンなヘッドレスCMSです。
+DenoとReactで構築されており、GitHub
+Appとして動作することで、リポジトリ内のMarkdownやYAMLファイルを直感的なUIで編集・管理できます。
 
-## セットアップ
+## 特徴
 
-1. **環境変数**: ルートディレクトリに `.env`
-   ファイルを作成し、以下の内容を記述してください：
+- **GitHub完全統合**:
+  データはすべてGitHubリポジトリに保存されます。データベースは不要です。
+- **リアルタイム更新**:
+  Webhookを利用し、GitHub上での変更が即座にエディタに反映されます。
+- **Pull Requestベース**: 変更はPull
+  Requestとして作成されるため、レビュープロセスに自然に組み込めます。
+- **柔軟な設定**:
+  フロントマターのスキーマを自由に定義でき、様々な静的サイトジェネレーター（Hugo,
+  Jekyll, Next.jsなど。そしてLume！）に対応可能です。
+- **GitHub App認証**: セキュアな認証と、細かい権限管理が可能です。
 
-   ```env
-   GITHUB_TOKEN=your_github_personal_access_token
-   STATICMS_PORT=3030
-   PUBLIC_URL=https://your-public-url.com
-   ```
+## インストールと利用開始
 
-   - `GITHUB_TOKEN`: `repo` スコープを持つGitHub Personal Access Token。
-   - `STATICMS_PORT`: サーバーのポート番号（デフォルト: 3030）。
-   - `PUBLIC_URL`: サーバーの公開URL（WebHookに必要）。
+Staticmsを利用するには、対象のGitHubリポジトリにStaticms GitHub
+Appをインストールする必要があります。
 
-2. **ローカルでの実行**:
+### 1. GitHub Appのインストール
 
-   ```bash
-   deno task serve
-   ```
+1. StaticmsのGitHub App公開ページ（管理者が提供するURL）にアクセスします。
+2. **Install** ボタンをクリックします。
+3. インストール先のアカウントまたはOrganizationを選択します。
+4. **Only select repositories**
+   を選択し、Staticmsで管理したいリポジトリを選択して **Install**
+   をクリックします。
 
-   `http://localhost:3030` でダッシュボードにアクセスできます。
+### 2. アプリケーションへのアクセス
 
-## Ngrokを使用したWebHookのセットアップ（ローカル開発用）
+1. StaticmsのURL（管理者が提供するURL）にアクセスします。
+2. **Login with GitHub** ボタンをクリックしてログインします。
+3. **Select Repository**
+   画面で、先ほどAppをインストールしたリポジトリを選択します。
 
-ローカル開発中にGitHubからのリアルタイム更新を有効にするには、`ngrok`
-を使用してローカルサーバーをインターネットに公開する必要があります。
+### 3. コンテンツの管理
 
-1. **Ngrokのインストール**: [ngrok.com](https://ngrok.com/)
-   からngrokをダウンロードしてインストールしてください。
+- **コンテンツ一覧**: リポジトリ内のファイルが一覧表示されます。
+- **編集**:
+  ファイルを選択するとエディタが開きます。Markdown本文とフロントマターをGUIで編集できます。
+- **保存**: 変更を保存すると、自動的に新しいブランチが作成され、Pull
+  Requestがオープンされます。
 
-2. **Ngrokの起動**:
-   以下のコマンドを実行して、ローカルポート（3030）を公開します：
+## 開発者向け情報
 
-   ```bash
-   ngrok http 3030
-   ```
+Staticms自体の開発や、自前のサーバーでのホスティングに興味がある方は、[DEVELOPMENT.md](./DEVELOPMENT.md)
+を参照してください。 ローカル環境でのセットアップ方法や、独自のGitHub
+Appの作成方法について詳しく解説しています。
 
-3. **.envの更新**: ngrokが表示するHTTPSのURL（例:
-   `https://a1b2-c3d4.ngrok-free.app`）をコピーし、`.env`
-   ファイルを更新してください：
+## ライセンス
 
-   ```env
-   PUBLIC_URL=https://a1b2-c3d4.ngrok-free.app
-   ```
-
-4. **サーバーの再起動**: Staticmsサーバーを再起動します：
-
-   ```bash
-   deno task serve
-   ```
-
-5. **コンテンツの設定**:
-   Staticmsのダッシュボードに移動し、コンテンツ設定を再度保存してください。これにより、新しいngrokのURLを使用して、GitHubリポジトリにWebHookが自動的に設定されます。
-
-これで、GitHub上のファイルを変更すると、エディタが自動的にリフレッシュされるようになります！
+MIT License
