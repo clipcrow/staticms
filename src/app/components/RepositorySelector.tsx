@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Header } from "./Header.tsx";
 
-interface OwnerSelectorProps {
+interface RepositorySelectorProps {
   onSelect: (repoFullName: string) => void;
   onLogout: () => void;
 }
@@ -18,7 +18,7 @@ interface Repository {
   description: string | null;
 }
 
-export const OwnerSelector: React.FC<OwnerSelectorProps> = ({
+export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   onSelect,
   onLogout,
 }) => {

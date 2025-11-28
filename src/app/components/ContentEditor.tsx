@@ -156,15 +156,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
   return (
     <div
-      className="ui fluid container"
+      className="ui container"
       style={{
-        padding: "1em",
         height: "100vh",
         display: "flex",
         flexDirection: "column",
       }}
     >
-      <div className="ui secondary menu">
+      <div className="ui secondary menu" style={{ marginTop: "2em" }}>
         <div className="item">
           <button type="button" className="ui icon button" onClick={onBack}>
             <i className="arrow left icon"></i>
@@ -211,7 +210,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 background: "transparent",
                 border: "none",
                 boxShadow: "none",
-                color: "#db2828",
               }}
               onClick={onReset}
               disabled={loading || isSaving}
@@ -226,7 +224,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
       <div
         className="ui grid"
-        style={{ flex: 1, overflow: "hidden", height: "100%" }}
+        style={{ flex: 1, overflow: "hidden", marginTop: "1em" }}
       >
         <div
           className="twelve wide column"

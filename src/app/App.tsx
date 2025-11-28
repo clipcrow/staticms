@@ -6,7 +6,7 @@ import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Login } from "./components/Login.tsx";
-import { OwnerSelector } from "./components/OwnerSelector.tsx";
+import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { Header } from "./components/Header.tsx";
 
 function App() {
@@ -853,7 +853,7 @@ function App() {
 
   if (!selectedRepo) {
     return (
-      <OwnerSelector
+      <RepositorySelector
         onSelect={(repoFullName) => {
           setSelectedRepo(repoFullName);
           localStorage.setItem("staticms_repo", repoFullName);
