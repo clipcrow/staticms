@@ -42,11 +42,6 @@ function App() {
     } | null
   >(null);
 
-  const handleAddNewRepository = () => {
-    setTargetRepo(null);
-    setView("repository-settings");
-  };
-
   const handleRepositoryNext = (
     owner: string,
     repo: string,
@@ -937,9 +932,9 @@ function App() {
     return (
       <ContentList
         contents={filteredContents}
+        selectedRepo={selectedRepo}
         onEditContentConfig={handleEditContentConfig}
         onSelectContent={handleSelectContent}
-        onAddNewContent={handleAddNewRepository}
         onAddNewContentToRepo={handleAddNewContentToRepo}
         loadingItemIndex={loadingContentIndex}
         onLogout={handleLogout}

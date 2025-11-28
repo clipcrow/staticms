@@ -18,7 +18,6 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   onSave,
   onCancel,
   onDelete,
-  repoInfo,
 }) => {
   const [newFieldName, setNewFieldName] = React.useState("");
 
@@ -53,22 +52,6 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               : "Configure a new content file."}
           </div>
         </h2>
-
-        <div className="ui message" style={{ marginTop: "2em" }}>
-          <div className="header">Repository</div>
-          <p>
-            {repoInfo.owner}/{repoInfo.repo}
-            {repoInfo.branch && (
-              <span
-                className="ui label mini basic"
-                style={{ marginLeft: "0.5em" }}
-              >
-                <i className="code branch icon"></i>
-                {repoInfo.branch}
-              </span>
-            )}
-          </p>
-        </div>
 
         <form
           onSubmit={onSave}
