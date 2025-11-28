@@ -1,4 +1,4 @@
-import React from "react";
+import { Header } from "./Header.tsx";
 
 export const Login: React.FC = () => {
   return (
@@ -6,22 +6,7 @@ export const Login: React.FC = () => {
       className="ui container"
       style={{ height: "100vh", display: "flex", flexDirection: "column" }}
     >
-      <div
-        className="ui grid middle aligned"
-        style={{ marginTop: "2em", flexShrink: 0 }}
-      >
-        <div className="twelve wide column">
-          <h1 className="ui header">
-            <i className="edit icon"></i>
-            <div className="content">
-              Staticms
-              <div className="sub header">
-                Manage headless contents with GitHub
-              </div>
-            </div>
-          </h1>
-        </div>
-      </div>
+      <Header />
 
       <div
         style={{

@@ -7,6 +7,7 @@ import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Login } from "./components/Login.tsx";
 import { OwnerSelector } from "./components/OwnerSelector.tsx";
+import { Header } from "./components/Header.tsx";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -835,20 +836,8 @@ function App() {
 
   if (loading) {
     return (
-      <div className="ui container" style={{ marginTop: "2em" }}>
-        <div className="ui grid middle aligned">
-          <div className="twelve wide column">
-            <h1 className="ui header">
-              <i className="edit icon"></i>
-              <div className="content">
-                Staticms
-                <div className="sub header">
-                  Manage headless contents with GitHub
-                </div>
-              </div>
-            </h1>
-          </div>
-        </div>
+      <div className="ui container">
+        <Header />
         <div
           className="ui active centered inline loader"
           style={{ marginTop: "4em" }}

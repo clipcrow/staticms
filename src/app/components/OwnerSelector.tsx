@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Header } from "./Header.tsx";
 
 interface OwnerSelectorProps {
   onSelect: (repoFullName: string) => void;
@@ -47,28 +48,7 @@ export const OwnerSelector: React.FC<OwnerSelectorProps> = ({
       className="ui container"
       style={{ height: "100vh", display: "flex", flexDirection: "column" }}
     >
-      <div
-        className="ui grid middle aligned"
-        style={{ marginTop: "2em", flexShrink: 0 }}
-      >
-        <div className="twelve wide column">
-          <h1 className="ui header">
-            <i className="edit icon"></i>
-            <div className="content">
-              Staticms
-              <div className="sub header">
-                Manage headless contents with GitHub
-              </div>
-            </div>
-          </h1>
-        </div>
-        <div className="four wide column right aligned">
-          <button type="button" className="ui button" onClick={onLogout}>
-            <i className="sign out icon"></i>
-            Logout
-          </button>
-        </div>
-      </div>
+      <Header onLogout={onLogout} />
 
       <div
         style={{
