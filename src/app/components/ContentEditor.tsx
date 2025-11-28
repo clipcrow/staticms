@@ -4,6 +4,7 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vscDarkPlus from "prism-style";
 import remarkGfm from "remark-gfm";
 import { Commit, Content } from "../types.ts";
+import { Header } from "./Header.tsx";
 
 interface ContentEditorProps {
   currentContent: Content;
@@ -163,64 +164,70 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         flexDirection: "column",
       }}
     >
-      <div className="ui secondary menu" style={{ marginTop: "2em" }}>
-        <div className="item">
-          <button type="button" className="ui icon button" onClick={onBack}>
-            <i className="arrow left icon"></i>
+      <Header
+        rightContent={
+          <button
+            type="button"
+            className="ui button basic"
+            style={{
+              background: "transparent",
+              border: "none",
+              boxShadow: "none",
+            }}
+            onClick={onReset}
+            disabled={loading || isSaving}
+            title="Reset changes"
+          >
+            <i className="undo icon"></i>
+            Reset
           </button>
-        </div>
-        <div className="item" style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <i className="github icon" style={{ marginRight: "0.5em" }}></i>
-            <span style={{ fontWeight: "bold", marginRight: "0.5em" }}>
-              {currentContent.owner}/{currentContent.repo}
-            </span>
-            {currentContent.branch && (
-              <span
-                className="ui label mini basic"
-                style={{ marginRight: "0.5em" }}
-              >
-                <i className="code branch icon"></i>
-                {currentContent.branch}
-              </span>
-            )}
-            <span style={{ margin: "0 0.5em", color: "rgba(0,0,0,0.4)" }}>
-              /
-            </span>
-            <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
-              {currentContent.filePath}
-            </span>
-            {isPrLocked && (
-              <div
-                className="ui label orange mini"
-                style={{ marginLeft: "1em" }}
-              >
-                <i className="lock icon"></i>
-                PR Open
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="right menu">
-          <div className="item">
-            <button
-              type="button"
-              className="ui button basic"
-              style={{
-                background: "transparent",
-                border: "none",
-                boxShadow: "none",
-              }}
-              onClick={onReset}
-              disabled={loading || isSaving}
-              title="Reset changes"
+        }
+      >
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <i className="github icon" style={{ marginRight: "0.5em" }}></i>
+          <button
+            type="button"
+            className="ui button basic"
+            style={{
+              fontWeight: "bold",
+              marginRight: "0.5em",
+              padding: 0,
+              border: "none",
+              background: "transparent",
+              boxShadow: "none",
+              cursor: "pointer",
+              color: "inherit",
+            }}
+            onClick={onBack}
+          >
+            {currentContent.owner}/{currentContent.repo}
+          </button>
+          {currentContent.branch && (
+            <span
+              className="ui label mini basic"
+              style={{ marginRight: "0.5em" }}
             >
-              <i className="undo icon"></i>
-              Reset
-            </button>
-          </div>
+              <i className="code branch icon"></i>
+              {currentContent.branch}
+            </span>
+          )}
+          <span style={{ margin: "0 0.5em", color: "rgba(0,0,0,0.4)" }}>
+            /
+          </span>
+          <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+            {currentContent.filePath}
+          </span>
+          {isPrLocked && (
+            <div
+              className="ui label orange mini"
+              style={{ marginLeft: "1em" }}
+            >
+              <i className="lock icon"></i>
+              PR Open
+            </div>
+          )}
         </div>
-      </div>
+      </Header>
 
       <div
         className="ui grid"
