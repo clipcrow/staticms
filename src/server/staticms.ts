@@ -7,6 +7,7 @@ import {
 } from "@oak/oak";
 import { load } from "@std/dotenv";
 import { create, getNumericDate } from "djwt";
+import { createPrivateKey } from "node:crypto";
 
 await load({ export: true });
 
@@ -52,36 +53,31 @@ async function githubRequest(
 
 // GitHub App Authentication Helpers
 async function importPrivateKey(pem: string) {
-  const pemHeader = "-----BEGIN PRIVATE KEY-----";
-  const pemFooter = "-----END PRIVATE KEY-----";
-
   // Handle cases where the key might be one line with \n characters
   const formattedPem = pem.replace(/\\n/g, "\n");
 
-  let pemContents = formattedPem;
-  if (formattedPem.includes(pemHeader)) {
-    pemContents = formattedPem.substring(
-      formattedPem.indexOf(pemHeader) + pemHeader.length,
-      formattedPem.indexOf(pemFooter),
+  try {
+    const keyObject = createPrivateKey(formattedPem);
+    const pkcs8Der = keyObject.export({
+      type: "pkcs8",
+      format: "der",
+    });
+
+    return await crypto.subtle.importKey(
+      "pkcs8",
+      // deno-lint-ignore no-explicit-any
+      pkcs8Der as any,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256",
+      },
+      true,
+      ["sign"],
     );
+  } catch (e) {
+    console.error("Failed to import private key:", e);
+    throw e;
   }
-
-  const binaryDerString = atob(pemContents.replace(/\s/g, ""));
-  const binaryDer = new Uint8Array(binaryDerString.length);
-  for (let i = 0; i < binaryDerString.length; i++) {
-    binaryDer[i] = binaryDerString.charCodeAt(i);
-  }
-
-  return await crypto.subtle.importKey(
-    "pkcs8",
-    binaryDer,
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256",
-    },
-    true,
-    ["sign"],
-  );
 }
 
 async function generateAppJwt() {

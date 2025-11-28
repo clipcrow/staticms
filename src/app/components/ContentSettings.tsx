@@ -70,6 +70,20 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             />
           </div>
 
+          <div className="field">
+            <label>Branch (Optional)</label>
+            <input
+              type="text"
+              placeholder="e.g. main, develop"
+              value={formData.branch || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, branch: e.target.value })}
+            />
+            <small style={{ color: "rgba(0,0,0,0.6)" }}>
+              Leave empty to use the repository's default branch.
+            </small>
+          </div>
+
           <h4 className="ui dividing header">Front Matter</h4>
 
           <div className="ui grid middle aligned">
