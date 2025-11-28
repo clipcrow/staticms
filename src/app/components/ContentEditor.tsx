@@ -4,7 +4,6 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vscDarkPlus from "prism-style";
 import remarkGfm from "remark-gfm";
 import { Commit, Content } from "../types.ts";
-import { Loading } from "./Loading.tsx";
 
 interface ContentEditorProps {
   currentContent: Content;
@@ -148,7 +147,11 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     currentContent.filePath.endsWith(".yml");
 
   if (loading) {
-    return <Loading />;
+    return (
+      <div className="ui active dimmer">
+        <div className="ui loader"></div>
+      </div>
+    );
   }
 
   return (

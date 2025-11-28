@@ -5,7 +5,6 @@ import { Commit, Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
-import { RepositorySettings } from "./components/RepositorySettings.tsx";
 import { Login } from "./components/Login.tsx";
 import { OwnerSelector } from "./components/OwnerSelector.tsx";
 
@@ -41,23 +40,6 @@ function App() {
       branch?: string;
     } | null
   >(null);
-
-  const handleRepositoryNext = (
-    owner: string,
-    repo: string,
-    branch?: string,
-  ) => {
-    setTargetRepo({ owner, repo, branch });
-    setFormData({
-      owner,
-      repo,
-      branch,
-      filePath: "",
-      fields: [],
-    });
-    setEditingIndex(null);
-    setView("content-settings");
-  };
 
   const handleAddNewContentToRepo = (
     owner: string,
@@ -896,16 +878,6 @@ function App() {
   const filteredContents = contents.filter((c) =>
     c.owner === selectedRepoOwner && c.repo === selectedRepoName
   );
-
-  if (view === "repository-settings") {
-    return (
-      <RepositorySettings
-        onNext={handleRepositoryNext}
-        onCancel={() => setView("content-list")}
-        initialOwner={selectedRepoOwner}
-      />
-    );
-  }
 
   if (view === "content-settings") {
     return (
