@@ -123,11 +123,27 @@ function App() {
       }
       const checkRes = await fetch(`/api/content?${params.toString()}`);
       if (checkRes.status === 404) {
-        alert("File path not found in the repository.");
+        alert("Content path not found in the repository.");
         setIsSaving(false);
         return;
       }
-      if (!checkRes.ok) {
+      if (checkRes.ok) {
+        const data = await checkRes.json();
+        if (data.type === "dir") {
+          // If it's a directory, append index.md
+          const newFilePath = formData.filePath.endsWith("/")
+            ? `${formData.filePath}index.md`
+            : `${formData.filePath}/index.md`;
+
+          const updatedFormData = { ...formData, filePath: newFilePath };
+
+          if (editingIndex !== null) {
+            newContents[editingIndex] = updatedFormData;
+          } else {
+            newContents[newContents.length - 1] = updatedFormData;
+          }
+        }
+      } else {
         console.error("Failed to validate file path");
         // Optional: decide if we block on other errors. For now, let's assume only 404 is blocking.
       }
@@ -224,7 +240,7 @@ function App() {
 
   // Draft Saving Logic
   useEffect(() => {
-    if (view === "content-editor" && currentContent && sha) {
+    if (view === "content-editor" && currentContent) {
       const key =
         `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
 
@@ -541,13 +557,39 @@ function App() {
       repo: content.repo,
       filePath: content.filePath,
       t: Date.now().toString(), // Prevent caching
+      allowMissing: "true",
     });
     if (content.branch) {
       params.append("branch", content.branch);
     }
     fetch(`/api/content?${params.toString()}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 404) {
+          return { error: "404" };
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (data.error === "404") {
+          // New file (e.g. index.md in a folder)
+          setContent("");
+          setSha("");
+          setLoadedBranch(content.branch || ""); // We don't know the branch for sure if it's new, but use config
+
+          setBody("");
+          setInitialBody("");
+          setFrontMatter({});
+          setInitialFrontMatter({});
+          setCustomFields([]);
+          setPrDescription("");
+
+          setCurrentContent(content);
+          setView("content-editor");
+          setLoadingContentIndex(null);
+          setEditorLoading(false);
+          return;
+        }
+
         if (data.content) {
           setContent(data.content);
           setSha(data.sha);

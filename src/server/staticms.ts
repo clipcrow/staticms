@@ -530,19 +530,31 @@ router.get("/api/content", async (ctx) => {
       `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}?ref=${targetBranch}`;
     const data = await githubRequest(url, {}, token);
 
-    // Content is base64 encoded
-    const rawContent = atob(data.content.replace(/\n/g, ""));
-    const content = new TextDecoder().decode(
-      Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
-    );
-    ctx.response.body = { content, sha: data.sha, branch: targetBranch };
+    // Check if data is an array (directory) or object (file)
+    if (Array.isArray(data)) {
+      ctx.response.body = { type: "dir", branch: targetBranch };
+    } else {
+      // Content is base64 encoded
+      const rawContent = atob(data.content.replace(/\n/g, ""));
+      const content = new TextDecoder().decode(
+        Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
+      );
+      ctx.response.body = {
+        type: "file",
+        content,
+        sha: data.sha,
+        branch: targetBranch,
+      };
+    }
   } catch (e) {
     const errorMessage = (e as Error).message;
     if (errorMessage.includes("404")) {
       ctx.response.status = 404;
-      // Only log 404 if not in validation mode
+      // Only log 404 if not in validation mode or allowMissing is true
       const validate = ctx.request.url.searchParams.get("validate") === "true";
-      if (!validate) {
+      const allowMissing =
+        ctx.request.url.searchParams.get("allowMissing") === "true";
+      if (!validate && !allowMissing) {
         console.error(e);
       }
     } else {

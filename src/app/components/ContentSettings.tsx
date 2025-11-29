@@ -77,7 +77,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           </div>
 
           <div className="field">
-            <label>File Path</label>
+            <label>Content Path</label>
             <input
               type="text"
               placeholder="e.g. content/blog/post.md"
