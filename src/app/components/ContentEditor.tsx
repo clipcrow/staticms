@@ -184,23 +184,31 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         }
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <i className="github icon" style={{ marginRight: "0.5em" }}></i>
           <button
             type="button"
             className="ui button basic"
             style={{
-              fontWeight: "bold",
-              marginRight: "0.5em",
+              display: "flex",
+              alignItems: "center",
               padding: 0,
               border: "none",
               background: "transparent",
               boxShadow: "none",
               cursor: "pointer",
-              color: "inherit",
+              color: "#4183c4",
+              marginRight: "0.5em",
             }}
             onClick={onBack}
           >
-            {currentContent.owner}/{currentContent.repo}
+            <i
+              className="material-icons"
+              style={{ marginRight: "0.2em", fontSize: "1.2em" }}
+            >
+              north_west
+            </i>
+            <span style={{ fontWeight: "bold" }}>
+              {currentContent.owner}/{currentContent.repo}
+            </span>
           </button>
           {currentContent.branch && (
             <span
