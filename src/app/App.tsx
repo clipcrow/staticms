@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-import { Content } from "./types.ts";
+import { Content, ViewState } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -12,81 +12,16 @@ import { useAuth } from "./hooks/useAuth.ts";
 import { useDraft } from "./hooks/useDraft.ts";
 import { usePullRequest } from "./hooks/usePullRequest.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
+import { useContentConfig } from "./hooks/useContentConfig.ts";
 
 function App() {
-  const [contents, setContents] = useState<Content[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentContent, setCurrentContent] = useState<Content | null>(null);
-  const [view, setView] = useState<
-    | "content-list"
-    | "content-editor"
-    | "content-settings"
-    | "repository-settings"
-  >(
-    "content-list",
-  );
+  const [view, setView] = useState<ViewState>("content-list");
 
   const { isAuthenticated, loading: authLoading, logout } = useAuth();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(
     localStorage.getItem("staticms_repo"),
   );
-
-  const [formData, setFormData] = useState<Content>({
-    owner: "",
-    repo: "",
-    filePath: "",
-    fields: [],
-  });
-
-  const [targetRepo, setTargetRepo] = useState<
-    {
-      owner: string;
-      repo: string;
-      branch?: string;
-    } | null
-  >(null);
-
-  const handleAddNewContentToRepo = (
-    owner: string,
-    repo: string,
-    branch?: string,
-  ) => {
-    setTargetRepo({ owner, repo, branch });
-    setFormData({
-      owner,
-      repo,
-      branch,
-      filePath: "",
-      fields: [],
-    });
-    setEditingIndex(null);
-    setView("content-settings");
-  };
-
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        // Load config
-        const configRes = await fetch("/api/config");
-        const data = await configRes.json();
-        if (data && data.contents) {
-          // Ensure fields array exists for older configs
-          const contentsWithFields = data.contents.map((c: Content) => ({
-            ...c,
-            fields: c.fields || [],
-          }));
-          setContents(contentsWithFields);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    init();
-  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -95,117 +30,20 @@ function App() {
     setView("content-list");
   };
 
-  const handleSaveContentConfig = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-    let newContents = [...contents];
-    if (editingIndex !== null) {
-      newContents[editingIndex] = formData;
-    } else {
-      newContents = [...contents, formData];
-    }
-
-    // Validate file existence
-    try {
-      const params = new URLSearchParams({
-        owner: formData.owner,
-        repo: formData.repo,
-        filePath: formData.filePath,
-        t: Date.now().toString(),
-        validate: "true",
-      });
-      if (formData.branch) {
-        params.append("branch", formData.branch);
-      }
-      const checkRes = await fetch(`/api/content?${params.toString()}`);
-      if (checkRes.status === 404) {
-        alert("Content path not found in the repository.");
-        setIsSaving(false);
-        return;
-      }
-      if (checkRes.ok) {
-        const data = await checkRes.json();
-        if (data.type === "dir") {
-          // If it's a directory, append index.md
-          const newFilePath = formData.filePath.endsWith("/")
-            ? `${formData.filePath}index.md`
-            : `${formData.filePath}/index.md`;
-
-          const updatedFormData = { ...formData, filePath: newFilePath };
-
-          if (editingIndex !== null) {
-            newContents[editingIndex] = updatedFormData;
-          } else {
-            newContents[newContents.length - 1] = updatedFormData;
-          }
-        }
-      } else {
-        console.error("Failed to validate file path");
-        // Optional: decide if we block on other errors. For now, let's assume only 404 is blocking.
-      }
-    } catch (e) {
-      console.error("Error validating file path", e);
-    }
-
-    try {
-      const res = await fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: newContents }),
-      });
-      if (res.ok) {
-        setContents(newContents);
-        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-        setEditingIndex(null);
-        setTargetRepo(null);
-        setView("content-list");
-      } else {
-        console.error("Failed to save configuration");
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleDeleteContent = async (index: number) => {
-    if (!confirm("Are you sure you want to delete this content?")) return;
-    const newContents = contents.filter((_, i) => i !== index);
-    try {
-      const res = await fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: newContents }),
-      });
-      if (res.ok) {
-        setContents(newContents);
-        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-        setEditingIndex(null);
-        setTargetRepo(null);
-        setView("content-list");
-      } else {
-        console.error("Failed to delete content");
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const handleEditContentConfig = (index: number) => {
-    const content = contents[index];
-    setTargetRepo({
-      owner: content.owner,
-      repo: content.repo,
-      branch: content.branch,
-    });
-    setFormData({
-      ...content,
-      fields: content.fields || [],
-    });
-    setEditingIndex(index);
-    setView("content-settings");
-  };
+  const {
+    contents,
+    configLoading,
+    formData,
+    setFormData,
+    targetRepo,
+    setTargetRepo,
+    editingIndex,
+    isSavingConfig,
+    handleAddNewContentToRepo,
+    handleEditContentConfig,
+    handleSaveContentConfig,
+    handleDeleteContent,
+  } = useContentConfig(setView);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -602,7 +440,7 @@ function App() {
     }
   };
 
-  if (loading || authLoading) {
+  if (configLoading || authLoading) {
     return (
       <div className="ui container">
         <Header />
@@ -653,7 +491,7 @@ function App() {
           }
         }}
         repoInfo={targetRepo!}
-        loading={isSaving}
+        loading={isSavingConfig}
       />
     );
   }

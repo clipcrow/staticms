@@ -39,3 +39,9 @@ export interface PrDetails {
   created_at: string;
   html_url: string;
 }
+
+export type ViewState =
+  | "content-list"
+  | "content-editor"
+  | "content-settings"
+  | "repository-settings";

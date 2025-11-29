@@ -87,3 +87,30 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 - **Event: `pull_request`**:
   - `action: closed` かつ現在の PR URL と一致する場合
   - `checkPrStatus` を実行し、`closed` であれば `resetContent()` で最新化
+
+## 5. コンテンツ設定管理 (Content Configuration)
+
+コンテンツ設定（監視対象ファイルのリスト）の管理フローです。ロジックは
+`useContentConfig` フックに集約されています。
+
+1. **Initialization**:
+   - `App.tsx` マウント時に `useContentConfig` 内の `useEffect` が発火
+   - `GET /api/config`: 現在の設定（コンテンツリスト）を取得し、`contents` State
+     にセット
+
+2. **Add / Edit Config**:
+   - **Trigger**: `ContentSettings` 画面での保存ボタン
+   - **Validation**: `GET /api/content?validate=true`
+     を呼び出し、指定されたパスがリポジトリに存在するか確認
+     - ディレクトリの場合は `index.md` を付与して補完
+   - **Save**: `POST /api/config`
+     - Payload: 更新された全コンテンツリスト (`contents`)
+     - Server: `staticms-config.json` (または `config.json`) を更新
+   - **Update State**: レスポンスが成功なら `contents` State
+     を更新し、リスト画面へ遷移
+
+3. **Delete Config**:
+   - **Trigger**: `ContentList` 画面での削除ボタン
+   - **Action**: 確認ダイアログ後、対象を除外したリストで `POST /api/config`
+     を実行
+   - **Update State**: 成功なら `contents` State を更新

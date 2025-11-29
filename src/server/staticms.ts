@@ -53,11 +53,56 @@ async function githubRequest(
 
 // GitHub App Authentication Helpers
 async function importPrivateKey(pem: string) {
-  // Handle cases where the key might be one line with \n characters
-  const formattedPem = pem.replace(/\\n/g, "\n");
+  let key = pem.trim();
+
+  // Remove surrounding quotes
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+
+  // Unescape newlines (handle \n literal)
+  key = key.replace(/\\n/g, "\n");
+
+  // Identify header and footer
+  const rsaHeader = "-----BEGIN RSA PRIVATE KEY-----";
+  const rsaFooter = "-----END RSA PRIVATE KEY-----";
+  const pkcs8Header = "-----BEGIN PRIVATE KEY-----";
+  const pkcs8Footer = "-----END PRIVATE KEY-----";
+
+  let header = "";
+  let footer = "";
+
+  if (key.includes(rsaHeader) && key.includes(rsaFooter)) {
+    header = rsaHeader;
+    footer = rsaFooter;
+  } else if (key.includes(pkcs8Header) && key.includes(pkcs8Footer)) {
+    header = pkcs8Header;
+    footer = pkcs8Footer;
+  }
+
+  if (header && footer) {
+    // Extract body, remove all whitespace, and re-chunk
+    const headerIdx = key.indexOf(header);
+    const footerIdx = key.indexOf(footer);
+    let body = key.substring(headerIdx + header.length, footerIdx).trim();
+    // Remove all whitespace (spaces, newlines, tabs)
+    body = body.replace(/\s/g, "");
+    // Chunk body into 64 chars
+    const chunkedBody = body.match(/.{1,64}/g)?.join("\n");
+    key = `${header}\n${chunkedBody}\n${footer}`;
+  } else {
+    console.warn(
+      "Warning: Could not find valid PEM header/footer in private key.",
+    );
+    // Try to use as is, or maybe it's just the body?
+    // If it's just the body, we might assume PKCS#8, but let's leave it for createPrivateKey to fail if invalid.
+  }
 
   try {
-    const keyObject = createPrivateKey(formattedPem);
+    const keyObject = createPrivateKey(key);
     const pkcs8Der = keyObject.export({
       type: "pkcs8",
       format: "der",
@@ -76,6 +121,11 @@ async function importPrivateKey(pem: string) {
     );
   } catch (e) {
     console.error("Failed to import private key:", e);
+    console.error(
+      "Key start:",
+      key.substring(0, 50).replace(/\n/g, "\\n"),
+      "...",
+    );
     throw e;
   }
 }
