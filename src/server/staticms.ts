@@ -873,6 +873,14 @@ staticms.use(router.routes());
 staticms.use(router.allowedMethods());
 
 staticms.use(async (ctx) => {
+  // Disable caching for static files during development
+  ctx.response.headers.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate",
+  );
+  ctx.response.headers.set("Pragma", "no-cache");
+  ctx.response.headers.set("Expires", "0");
+
   try {
     await send(ctx, ctx.request.url.pathname, {
       root: "./public",

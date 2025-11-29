@@ -72,7 +72,7 @@
 }
 
 .staticms-settings-help-text {
-  color: rgba(0,0,0,0.6) !important;
+  color: rgba(0, 0, 0, 0.6) !important;
 }
 
 .staticms-settings-row {
@@ -135,7 +135,7 @@
 
 .staticms-editor-separator {
   margin: 0 0.5em !important;
-  color: rgba(0,0,0,0.4) !important;
+  color: rgba(0, 0, 0, 0.4) !important;
 }
 
 .staticms-editor-file-name {
@@ -150,13 +150,19 @@
 .staticms-editor-grid {
   flex: 1;
   overflow: hidden;
-  margin-top: 1em !important;
+  margin: 0 !important;
+  width: 100% !important;
+  height: 100%;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch;
 }
 
 .staticms-editor-main-column {
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding: 0 1em !important; /* Keep horizontal padding */
 }
 
 .staticms-editor-fm-segment {
@@ -254,8 +260,18 @@
   margin-top: 1em !important;
 }
 
+.staticms-md-editor-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  height: 100%;
+}
+
 .staticms-md-tab-menu {
   margin-top: 1em !important;
+  flex-shrink: 0;
 }
 
 .staticms-md-tab-item {
@@ -264,30 +280,31 @@
 
 .staticms-md-bottom-segment {
   flex: 1;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   margin-top: 0 !important;
   padding: 0 !important;
   overflow: hidden;
+  border-top: none !important;
 }
 
 .staticms-md-write-container {
   flex: 1;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
-  height: 100%;
+  min-height: 0;
 }
 
 .staticms-md-textarea {
   flex: 1;
   width: 100%;
-  height: 100%;
   resize: none !important;
   font-family: monospace !important;
   border: none !important;
   outline: none !important;
   border-radius: 0 !important;
   padding: 1em !important;
+  display: block;
 }
 
 .staticms-md-preview-container {

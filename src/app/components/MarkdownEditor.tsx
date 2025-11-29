@@ -20,7 +20,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   );
 
   return (
-    <>
+    <div className="staticms-md-editor-root">
       <div className="ui top attached tabular menu staticms-md-tab-menu">
         <a
           className={`item staticms-md-tab-item ${
@@ -100,6 +100,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             </div>
           )}
       </div>
-    </>
+    </div>
   );
 };
