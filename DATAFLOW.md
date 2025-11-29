@@ -8,10 +8,11 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 
 1. **Trigger**: `ContentList` でアイテムクリック ->
    `App.tsx: handleSelectContent`
-2. **Fetch Content (useRemoteContent Hook)**: `loadContent` が実行される
+2. **State Update (useNavigation Hook)**: `loadingContentIndex` をセット
+3. **Fetch Content (useRemoteContent Hook)**: `loadContent` が実行される
    - `GET /api/content`: ファイルの生データ、SHA、ブランチ情報を取得
    - `GET /api/commits`: ファイルのコミット履歴を取得
-3. **Parse & State Setup (useRemoteContent Hook)**:
+4. **Parse & State Setup (useRemoteContent Hook)**:
    - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
    - `useDraft` フックのキー生成ロジックを使用して `localStorage` (`draft_...`
      ※実際は `|` 区切り) を確認
@@ -20,8 +21,11 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
      - ドラフトがない場合: リモートの内容を State にセット
    - `usePullRequest` フックのキー生成ロジックを使用して `localStorage`
      (`pr_...` ※実際は `|` 区切り) を確認し、`prUrl` State にセット
-4. **View Transition**: `view` state を `content-editor`
-   に変更し、`ContentEditor` コンポーネントを表示
+5. **View Transition (useNavigation Hook)**:
+   - `currentContent` を更新
+   - `view` state を `content-editor` に変更し、`ContentEditor`
+     コンポーネントを表示
+   - `loadingContentIndex` をリセット
 
 ## 2. 編集 (Editing)
 

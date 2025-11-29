@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-import { Content, ViewState } from "./types.ts";
+import { Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -13,20 +13,25 @@ import { useDraft } from "./hooks/useDraft.ts";
 import { usePullRequest } from "./hooks/usePullRequest.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
 import { useContentConfig } from "./hooks/useContentConfig.ts";
+import { useNavigation } from "./hooks/useNavigation.ts";
+import { useRepository } from "./hooks/useRepository.ts";
 
 function App() {
-  const [currentContent, setCurrentContent] = useState<Content | null>(null);
-  const [view, setView] = useState<ViewState>("content-list");
+  const {
+    view,
+    setView,
+    currentContent,
+    setCurrentContent,
+    loadingContentIndex,
+    setLoadingContentIndex,
+  } = useNavigation();
 
   const { isAuthenticated, loading: authLoading, logout } = useAuth();
-  const [selectedRepo, setSelectedRepo] = useState<string | null>(
-    localStorage.getItem("staticms_repo"),
-  );
+  const { selectedRepo, selectRepo, clearRepo } = useRepository();
 
   const handleLogout = async () => {
     await logout();
-    setSelectedRepo(null);
-    localStorage.removeItem("staticms_repo");
+    clearRepo();
     setView("content-list");
   };
 
@@ -272,10 +277,6 @@ function App() {
     };
   }, [currentContent, prUrl, clearDraft, clearPrState, resetContent]);
 
-  const [loadingContentIndex, setLoadingContentIndex] = useState<number | null>(
-    null,
-  );
-
   const loadContentData = (content: Content) => {
     loadContent(
       content,
@@ -461,8 +462,7 @@ function App() {
     return (
       <RepositorySelector
         onSelect={(repoFullName) => {
-          setSelectedRepo(repoFullName);
-          localStorage.setItem("staticms_repo", repoFullName);
+          selectRepo(repoFullName);
         }}
         onLogout={handleLogout}
       />
