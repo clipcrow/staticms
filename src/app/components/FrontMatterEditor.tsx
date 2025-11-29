@@ -108,7 +108,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
       {Array.isArray(frontMatter)
         ? (
           <div>
-            <div style={{ textAlign: "right", marginBottom: "1em" }}>
+            <div className="staticms-fm-add-top-container">
               <button
                 type="button"
                 className="ui icon button primary circular"
@@ -131,9 +131,8 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
               return (
                 <div
                   key={itemIndex}
-                  className="ui segment"
+                  className="ui segment staticms-fm-item-segment"
                   style={{
-                    marginBottom: "1em",
                     opacity: draggedItemIndex === itemIndex ? 0.5 : 1,
                     cursor: isPrLocked ? "default" : "grab",
                   }}
@@ -150,11 +149,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                     {currentContent.fields?.map((field, index) => (
                       <div
                         key={`configured-${itemIndex}-${index}`}
-                        className="row"
-                        style={{
-                          paddingBottom: "0.5em",
-                          paddingTop: "0.5em",
-                        }}
+                        className="row staticms-fm-row"
                       >
                         <div className="four wide column">
                           <strong>{field.name}</strong>
@@ -184,11 +179,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                     {unconfiguredKeys.map((key) => (
                       <div
                         key={`unconfigured-${itemIndex}-${key}`}
-                        className="row"
-                        style={{
-                          paddingBottom: "0.5em",
-                          paddingTop: "0.5em",
-                        }}
+                        className="row staticms-fm-row"
                       >
                         <div className="four wide column">
                           <strong>{key}</strong>
@@ -211,38 +202,16 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                             />
                           </div>
                         </div>
-                        <div
-                          className="one wide column"
-                          style={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                          }}
-                        >
+                        <div className="one wide column staticms-fm-delete-container">
                           <button
                             type="button"
-                            className="ui red icon button"
-                            style={{
-                              background: "transparent",
-                              border: "none",
-                              boxShadow: "none",
-                              color: "#db2828",
-                              padding: 0,
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              width: "100%",
-                              height: "100%",
-                            }}
+                            className="ui red icon button staticms-fm-delete-button"
                             onClick={() =>
                               handleDeleteFieldFromItem(itemIndex, key)}
                             disabled={isPrLocked}
                             title="Delete Field"
                           >
-                            <i
-                              className="trash icon"
-                              style={{ margin: 0 }}
-                            >
+                            <i className="trash icon staticms-fm-trash-icon">
                             </i>
                           </button>
                         </div>
@@ -250,13 +219,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                     ))}
 
                     {/* Add New Field & Delete Item */}
-                    <div
-                      className="row"
-                      style={{
-                        paddingBottom: "0.5em",
-                        paddingTop: "0.5em",
-                      }}
-                    >
+                    <div className="row staticms-fm-row">
                       <div className="four wide column">
                         <div className="ui input fluid">
                           <input
@@ -301,7 +264,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                 </div>
               );
             })}
-            <div style={{ textAlign: "right", marginTop: "1em" }}>
+            <div className="staticms-fm-add-bottom-container">
               <button
                 type="button"
                 className="ui icon button primary circular"
@@ -320,8 +283,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
             {currentContent.fields?.map((field, index) => (
               <div
                 key={`configured-${index}`}
-                className="row"
-                style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+                className="row staticms-fm-row"
               >
                 <div className="four wide column">
                   <strong>{field.name}</strong>
@@ -348,8 +310,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
             {customFields.map((field) => (
               <div
                 key={field.id}
-                className="row"
-                style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+                className="row staticms-fm-row"
               >
                 <div className="four wide column">
                   <strong>{field.key}</strong>
@@ -369,29 +330,10 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                     />
                   </div>
                 </div>
-                <div
-                  className="one wide column"
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+                <div className="one wide column staticms-fm-delete-container">
                   <button
                     type="button"
-                    className="ui red icon button"
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      boxShadow: "none",
-                      color: "#db2828",
-                      padding: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: "100%",
-                      height: "100%",
-                    }}
+                    className="ui red icon button staticms-fm-delete-button"
                     onClick={() => {
                       if (isPrLocked) {
                         return;
@@ -405,7 +347,7 @@ export const FrontMatterEditor: React.FC<FrontMatterEditorProps> = ({
                     disabled={isPrLocked}
                     title="Delete Field"
                   >
-                    <i className="trash icon" style={{ margin: 0 }}></i>
+                    <i className="trash icon staticms-fm-trash-icon"></i>
                   </button>
                 </div>
               </div>

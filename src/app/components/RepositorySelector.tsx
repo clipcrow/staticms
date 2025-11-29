@@ -44,29 +44,17 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   }, []);
 
   return (
-    <div
-      className="ui container"
-      style={{ height: "100vh", display: "flex", flexDirection: "column" }}
-    >
+    <div className="ui container staticms-repo-selector-container">
       <Header onLogout={onLogout} />
 
-      <div
-        style={{
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          paddingTop: "15vh",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "600px" }}>
+      <div className="staticms-repo-selector-content">
+        <div className="staticms-repo-selector-inner">
           <h2 className="ui header center aligned">
             Select Repository
           </h2>
           {loading
             ? (
-              <div className="ui segment" style={{ minHeight: "200px" }}>
+              <div className="ui segment staticms-repo-selector-loading-segment">
                 <div className="ui active inverted dimmer">
                   <div className="ui loader"></div>
                 </div>

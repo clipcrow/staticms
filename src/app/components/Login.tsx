@@ -2,23 +2,11 @@ import { Header } from "./Header.tsx";
 
 export const Login: React.FC = () => {
   return (
-    <div
-      className="ui container"
-      style={{ height: "100vh", display: "flex", flexDirection: "column" }}
-    >
+    <div className="ui container staticms-login-container">
       <Header />
 
-      <div
-        style={{
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-start",
-          alignItems: "center",
-          paddingTop: "15vh",
-        }}
-      >
-        <div style={{ width: "100%", maxWidth: "450px" }}>
+      <div className="staticms-login-content">
+        <div className="staticms-login-inner">
           <h2 className="ui header center aligned">
             Log-in to Staticms
           </h2>

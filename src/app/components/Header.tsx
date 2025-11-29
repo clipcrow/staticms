@@ -12,20 +12,9 @@ export const Header = ({
   rightContent,
 }: HeaderProps) => {
   return (
-    <div
-      style={{
-        marginTop: "2em",
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <h1
-          className="ui header"
-          style={{ margin: "0 1em 0 0", flexShrink: 0 }}
-        >
+    <div className="staticms-header-container">
+      <div className="staticms-header-left">
+        <h1 className="ui header staticms-header-title">
           <i className="edit icon"></i>
           <div className="content">
             Staticms
@@ -35,14 +24,7 @@ export const Header = ({
           </div>
         </h1>
         {children && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              borderLeft: "1px solid rgba(34,36,38,.15)",
-              paddingLeft: "1em",
-            }}
-          >
+          <div className="staticms-header-children">
             {children}
           </div>
         )}

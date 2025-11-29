@@ -1,0 +1,345 @@
+.staticms-header-container {
+  margin-top: 2em;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.staticms-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.staticms-header-title {
+  margin: 0 1em 0 0 !important;
+  flex-shrink: 0;
+}
+
+.staticms-header-children {
+  display: flex;
+  align-items: center;
+  border-left: 1px solid rgba(34, 36, 38, 0.15);
+  padding-left: 1em;
+}
+
+.staticms-content-list-card {
+  margin-top: 2em !important;
+}
+
+.staticms-content-list-item {
+  padding: 0.5em 0 !important;
+}
+
+.staticms-content-list-clickable {
+  display: flex;
+  align-items: center;
+}
+
+.staticms-content-list-loader {
+  margin-right: 0.5em !important;
+}
+
+.staticms-content-list-icon {
+  margin-right: 0.5em !important;
+}
+
+.staticms-content-list-header {
+  font-size: 1em !important;
+}
+
+.staticms-content-list-branch {
+  margin-left: 0.5em !important;
+  vertical-align: middle !important;
+}
+
+.staticms-settings-header-title-container {
+  display: flex;
+  align-items: center;
+}
+
+.staticms-settings-header-title {
+  font-weight: bold !important;
+  font-size: 1.2em !important;
+}
+
+.staticms-settings-segment {
+  margin-top: 2em !important;
+}
+
+.staticms-settings-form {
+  margin-top: 2em !important;
+}
+
+.staticms-settings-help-text {
+  color: rgba(0,0,0,0.6) !important;
+}
+
+.staticms-settings-row {
+  padding-bottom: 0.5em !important;
+  padding-top: 0.5em !important;
+}
+
+.staticms-settings-delete-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.staticms-settings-delete-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #db2828 !important;
+  padding: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.staticms-settings-trash-icon {
+  margin: 0 !important;
+}
+
+.staticms-settings-actions {
+  margin-top: 5em !important;
+}
+
+.staticms-editor-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.staticms-editor-back-button {
+  display: flex;
+  align-items: center;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  color: #4183c4 !important;
+  margin-right: 0.5em !important;
+}
+
+.staticms-editor-repo-name {
+  font-weight: bold !important;
+}
+
+.staticms-editor-branch-label {
+  margin-right: 0.5em !important;
+}
+
+.staticms-editor-separator {
+  margin: 0 0.5em !important;
+  color: rgba(0,0,0,0.4) !important;
+}
+
+.staticms-editor-file-name {
+  font-weight: bold !important;
+  font-size: 1.2em !important;
+}
+
+.staticms-editor-pr-label {
+  margin-left: 1em !important;
+}
+
+.staticms-editor-grid {
+  flex: 1;
+  overflow: hidden;
+  margin-top: 1em !important;
+}
+
+.staticms-editor-main-column {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.staticms-editor-fm-segment {
+  overflow-y: auto;
+}
+
+.staticms-editor-fm-segment-yaml {
+  flex: 1;
+}
+
+.staticms-editor-fm-segment-md {
+  flex-shrink: 0;
+  max-height: 40%;
+}
+
+.staticms-editor-sidebar-column {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.staticms-editor-pr-number {
+  font-weight: normal !important;
+  margin-left: 0.5em !important;
+}
+
+.staticms-editor-pr-body {
+  margin-top: 0.5em !important;
+  font-style: italic !important;
+}
+
+.staticms-editor-view-pr-link {
+  display: block;
+  margin-top: 0.5em !important;
+}
+
+.staticms-editor-draft-header {
+  cursor: pointer;
+}
+
+.staticms-editor-draft-description {
+  margin-top: 1em !important;
+}
+
+.staticms-editor-reset-container {
+  margin-top: 0.5em !important;
+  text-align: center;
+}
+
+.staticms-editor-reset-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #db2828 !important;
+}
+
+.staticms-fm-add-top-container {
+  text-align: right;
+  margin-bottom: 1em !important;
+}
+
+.staticms-fm-item-segment {
+  margin-bottom: 1em !important;
+}
+
+.staticms-fm-row {
+  padding-bottom: 0.5em !important;
+  padding-top: 0.5em !important;
+}
+
+.staticms-fm-delete-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.staticms-fm-delete-button {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #db2828 !important;
+  padding: 0 !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.staticms-fm-trash-icon {
+  margin: 0 !important;
+}
+
+.staticms-fm-add-bottom-container {
+  text-align: right;
+  margin-top: 1em !important;
+}
+
+.staticms-md-tab-menu {
+  margin-top: 1em !important;
+}
+
+.staticms-md-tab-item {
+  cursor: pointer !important;
+}
+
+.staticms-md-bottom-segment {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.staticms-md-write-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.staticms-md-textarea {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  resize: none !important;
+  font-family: monospace !important;
+  border: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+  padding: 1em !important;
+}
+
+.staticms-md-preview-container {
+  overflow-y: auto;
+  height: 100%;
+  padding: 1em !important;
+}
+
+.staticms-repo-selector-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.staticms-repo-selector-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 15vh !important;
+}
+
+.staticms-repo-selector-inner {
+  width: 100%;
+  max-width: 600px;
+}
+
+.staticms-repo-selector-loading-segment {
+  min-height: 200px !important;
+}
+
+.staticms-login-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.staticms-login-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  padding-top: 15vh !important;
+}
+
+.staticms-login-inner {
+  width: 100%;
+  max-width: 450px;
+}
+
+.staticms-app-loader {
+  margin-top: 4em !important;
+}

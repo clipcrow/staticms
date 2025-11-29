@@ -21,59 +21,31 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <>
-      <div
-        className="ui top attached tabular menu"
-        style={{ marginTop: "1em" }}
-      >
+      <div className="ui top attached tabular menu staticms-md-tab-menu">
         <a
-          className={`item ${activeTab === "write" ? "active" : ""}`}
+          className={`item staticms-md-tab-item ${
+            activeTab === "write" ? "active" : ""
+          }`}
           onClick={() => setActiveTab("write")}
-          style={{ cursor: "pointer" }}
         >
           Write
         </a>
         <a
-          className={`item ${activeTab === "preview" ? "active" : ""}`}
+          className={`item staticms-md-tab-item ${
+            activeTab === "preview" ? "active" : ""
+          }`}
           onClick={() => setActiveTab("preview")}
-          style={{ cursor: "pointer" }}
         >
           Preview
         </a>
       </div>
 
-      <div
-        className="ui bottom attached segment"
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          marginTop: 0,
-          padding: 0,
-          overflow: "hidden",
-        }}
-      >
+      <div className="ui bottom attached segment staticms-md-bottom-segment">
         {activeTab === "write"
           ? (
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-              }}
-            >
+            <div className="staticms-md-write-container">
               <textarea
-                style={{
-                  flex: 1,
-                  width: "100%",
-                  height: "100%",
-                  resize: "none",
-                  fontFamily: "monospace",
-                  border: "none",
-                  outline: "none",
-                  borderRadius: 0,
-                  padding: "1em",
-                }}
+                className="staticms-md-textarea"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Start editing markdown body..."
@@ -83,13 +55,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             </div>
           )
           : (
-            <div
-              style={{
-                overflowY: "auto",
-                height: "100%",
-                padding: "1em",
-              }}
-            >
+            <div className="staticms-md-preview-container">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{

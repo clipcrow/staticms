@@ -27,7 +27,7 @@ export const ContentList: React.FC<ContentListProps> = ({
     <div className="ui container">
       <Header onLogout={onLogout} />
 
-      <div className="ui card fluid" style={{ marginTop: "2em" }}>
+      <div className="ui card fluid staticms-content-list-card">
         <div className="content">
           <div className="header">
             <i className="github icon"></i>
@@ -54,8 +54,7 @@ export const ContentList: React.FC<ContentListProps> = ({
                 {contents.map((item, index) => (
                   <div
                     key={index}
-                    className="item"
-                    style={{ padding: "0.5em 0" }}
+                    className="item staticms-content-list-item"
                   >
                     <div className="right floated content">
                       <button
@@ -72,7 +71,7 @@ export const ContentList: React.FC<ContentListProps> = ({
                       </button>
                     </div>
                     <div
-                      className="content"
+                      className="content staticms-content-list-clickable"
                       onClick={() => {
                         if (loadingItemIndex === null) {
                           onSelectContent(item, index);
@@ -82,8 +81,6 @@ export const ContentList: React.FC<ContentListProps> = ({
                         cursor: loadingItemIndex === null
                           ? "pointer"
                           : "default",
-                        display: "flex",
-                        alignItems: "center",
                         opacity: loadingItemIndex !== null &&
                             loadingItemIndex !== index
                           ? 0.5
@@ -92,33 +89,18 @@ export const ContentList: React.FC<ContentListProps> = ({
                     >
                       {loadingItemIndex === index
                         ? (
-                          <div
-                            className="ui active mini inline loader"
-                            style={{ marginRight: "0.5em" }}
-                          >
+                          <div className="ui active mini inline loader staticms-content-list-loader">
                           </div>
                         )
                         : (
-                          <i
-                            className="file outline icon"
-                            style={{ marginRight: "0.5em" }}
-                          >
+                          <i className="file outline icon staticms-content-list-icon">
                           </i>
                         )}
-                      <span
-                        className="header"
-                        style={{ fontSize: "1em" }}
-                      >
+                      <span className="header staticms-content-list-header">
                         {item.name || item.filePath}
                       </span>
                       {item.branch && (
-                        <span
-                          className="ui label mini basic"
-                          style={{
-                            marginLeft: "0.5em",
-                            verticalAlign: "middle",
-                          }}
-                        >
+                        <span className="ui label mini basic staticms-content-list-branch">
                           <i className="code branch icon"></i>
                           {item.branch}
                         </span>

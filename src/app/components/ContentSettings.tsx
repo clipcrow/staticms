@@ -47,17 +47,16 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   return (
     <div className="ui container">
       <Header>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+        <div className="staticms-settings-header-title-container">
+          <span className="staticms-settings-header-title">
             {editingIndex !== null ? "Edit Content" : "Add Content"}
           </span>
         </div>
       </Header>
-      <div className="ui segment" style={{ marginTop: "2em" }}>
+      <div className="ui segment staticms-settings-segment">
         <form
           onSubmit={onSave}
-          className="ui form"
-          style={{ marginTop: "2em" }}
+          className="ui form staticms-settings-form"
         >
           <div className="field">
             <label>Content Name (Optional)</label>
@@ -69,7 +68,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                 setFormData({ ...formData, name: e.target.value })}
               disabled={loading}
             />
-            <small style={{ color: "rgba(0,0,0,0.6)" }}>
+            <small className="staticms-settings-help-text">
               A friendly name for this content. If left empty, the file path
               will be used.
             </small>
@@ -98,7 +97,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                 setFormData({ ...formData, branch: e.target.value })}
               disabled={loading}
             />
-            <small style={{ color: "rgba(0,0,0,0.6)" }}>
+            <small className="staticms-settings-help-text">
               Leave empty to use the repository's default branch.
             </small>
           </div>
@@ -109,8 +108,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             {formData.fields.map((field, index) => (
               <div
                 key={index}
-                className="row"
-                style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
+                className="row staticms-settings-row"
               >
                 <div className="four wide column">
                   <div className="ui input fluid">
@@ -133,44 +131,22 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                     />
                   </div>
                 </div>
-                <div
-                  className="one wide column"
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
+                <div className="one wide column staticms-settings-delete-container">
                   <button
                     type="button"
                     onClick={() => handleDeleteField(index)}
-                    className="ui icon button"
-                    style={{
-                      background: "transparent",
-                      border: "none",
-                      boxShadow: "none",
-                      color: "#db2828",
-                      padding: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      width: "100%",
-                      height: "100%",
-                    }}
+                    className="ui icon button staticms-settings-delete-button"
                     title="Delete Field"
                     disabled={loading}
                   >
-                    <i className="trash icon" style={{ margin: 0 }}></i>
+                    <i className="trash icon staticms-settings-trash-icon"></i>
                   </button>
                 </div>
               </div>
             ))}
 
             {/* Add New Field */}
-            <div
-              className="row"
-              style={{ paddingBottom: "0.5em", paddingTop: "0.5em" }}
-            >
+            <div className="row staticms-settings-row">
               <div className="four wide column">
                 <div className="ui input fluid">
                   <input
@@ -198,7 +174,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
           <div className="ui divider"></div>
 
-          <div className="actions" style={{ marginTop: "5em" }}>
+          <div className="actions staticms-settings-actions">
             <button
               type="button"
               onClick={onCancel}

@@ -445,10 +445,7 @@ function App() {
     return (
       <div className="ui container">
         <Header />
-        <div
-          className="ui active centered inline loader"
-          style={{ marginTop: "4em" }}
-        >
+        <div className="ui active centered inline loader staticms-app-loader">
         </div>
       </div>
     );

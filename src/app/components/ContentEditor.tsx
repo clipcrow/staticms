@@ -72,58 +72,34 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   }
 
   return (
-    <div
-      className="ui container"
-      style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="ui container staticms-editor-container">
       <Header>
         <div style={{ display: "flex", alignItems: "center" }}>
           <button
             type="button"
-            className="ui blue button"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              padding: 0,
-              border: "none",
-              background: "transparent",
-              boxShadow: "none",
-              cursor: "pointer",
-              color: "#4183c4",
-              marginRight: "0.5em",
-            }}
+            className="ui blue button staticms-editor-back-button"
             onClick={onBack}
           >
             <i className="reply icon"></i>
             <i className="github icon"></i>
-            <span style={{ fontWeight: "bold" }}>
+            <span className="staticms-editor-repo-name">
               {currentContent.owner}/{currentContent.repo}
             </span>
           </button>
           {currentContent.branch && (
-            <span
-              className="ui label mini basic"
-              style={{ marginRight: "0.5em" }}
-            >
+            <span className="ui label mini basic staticms-editor-branch-label">
               <i className="code branch icon"></i>
               {currentContent.branch}
             </span>
           )}
-          <span style={{ margin: "0 0.5em", color: "rgba(0,0,0,0.4)" }}>
+          <span className="staticms-editor-separator">
             /
           </span>
-          <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+          <span className="staticms-editor-file-name">
             {currentContent.name || currentContent.filePath}
           </span>
           {isPrLocked && (
-            <div
-              className="ui label orange mini"
-              style={{ marginLeft: "1em" }}
-            >
+            <div className="ui label orange mini staticms-editor-pr-label">
               <i className="lock icon"></i>
               PR Open
             </div>
@@ -131,19 +107,14 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         </div>
       </Header>
 
-      <div
-        className="ui grid"
-        style={{ flex: 1, overflow: "hidden", marginTop: "1em" }}
-      >
-        <div
-          className="twelve wide column"
-          style={{ display: "flex", flexDirection: "column", height: "100%" }}
-        >
+      <div className="ui grid staticms-editor-grid">
+        <div className="twelve wide column staticms-editor-main-column">
           <div
-            className="ui segment"
-            style={isYaml
-              ? { overflowY: "auto", flex: 1 }
-              : { overflowY: "auto", flexShrink: 0, maxHeight: "40%" }}
+            className={`ui segment staticms-editor-fm-segment ${
+              isYaml
+                ? "staticms-editor-fm-segment-yaml"
+                : "staticms-editor-fm-segment-md"
+            }`}
           >
             <FrontMatterEditor
               frontMatter={frontMatter}
@@ -165,10 +136,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           )}
         </div>
 
-        <div
-          className="four wide column"
-          style={{ height: "100%", overflowY: "auto" }}
-        >
+        <div className="four wide column staticms-editor-sidebar-column">
           <div>
             {prUrl && (
               <div
@@ -187,13 +155,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                     ? "PR Closed"
                     : "PR Open"}
                   {prStatus === "open" && prDetails && (
-                    <span style={{ fontWeight: "normal", marginLeft: "0.5em" }}>
+                    <span className="staticms-editor-pr-number">
                       #{prDetails.number}
                     </span>
                   )}
                 </div>
                 {prStatus === "open" && prDetails?.body && (
-                  <div style={{ marginTop: "0.5em", fontStyle: "italic" }}>
+                  <div className="staticms-editor-pr-body">
                     {prDetails.body}
                   </div>
                 )}
@@ -201,7 +169,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   href={prUrl}
                   target="_blank"
                   rel="noreferrer"
-                  style={{ display: "block", marginTop: "0.5em" }}
+                  className="staticms-editor-view-pr-link"
                 >
                   View Pull Request
                 </a>
@@ -212,9 +180,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               <div className="ui card fluid">
                 <div className="content">
                   <div
-                    className="header"
+                    className="header staticms-editor-draft-header"
                     onClick={() => setIsPrOpen(!isPrOpen)}
-                    style={{ cursor: "pointer" }}
                   >
                     <i
                       className={`circle icon ${
@@ -236,7 +203,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                       : ""}
                   </div>
                   {isPrOpen && (
-                    <div className="description" style={{ marginTop: "1em" }}>
+                    <div className="description staticms-editor-draft-description">
                       {isPrLocked && prDetails
                         ? (
                           <div className="ui feed">
@@ -289,16 +256,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                             </button>
                           </div>
                         )}
-                      <div style={{ marginTop: "0.5em", textAlign: "center" }}>
+                      <div className="staticms-editor-reset-container">
                         <button
                           type="button"
-                          className="ui red button"
-                          style={{
-                            background: "transparent",
-                            border: "none",
-                            boxShadow: "none",
-                            color: "#db2828",
-                          }}
+                          className="ui red button staticms-editor-reset-button"
                           onClick={onReset}
                           disabled={loading || isSaving}
                           title="Reset changes"
