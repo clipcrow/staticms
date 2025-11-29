@@ -857,7 +857,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
 
             <div className="ui feed">
-              {commits.map((commit) => (
+              {commits.slice(0, 10).map((commit) => (
                 <div key={commit.sha} className="event">
                   <div className="content">
                     <div className="summary">
@@ -878,6 +878,23 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   </div>
                 </div>
               ))}
+              {commits.length > 10 && (
+                <div className="event">
+                  <div className="content">
+                    <div className="summary">
+                      <a
+                        href={`https://github.com/${currentContent.owner}/${currentContent.repo}/commits/${
+                          currentContent.branch || "main"
+                        }/${currentContent.filePath}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        More...
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
