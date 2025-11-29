@@ -80,9 +80,10 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
     - `App.tsx` が `closed` ステータスを受け取り、`clearDraft()` と
       `resetContent()` (内部で `loadContent` を呼び出し) を実行して最新化
 
-### B. Server-Sent Events (Real-time)
+### B. Server-Sent Events (Real-time via useSubscription Hook)
 
-- **Trigger**: `EventSource("/api/events")` からのメッセージ
+- **Initialization**: `useSubscription` フックが `EventSource("/api/events")`
+  を監視
 - **Event: `push`**:
   - 現在のファイルが変更されたかチェック
   - ローカルに未保存の変更があるかチェック (`isDirty`)
@@ -118,3 +119,29 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - **Action**: 確認ダイアログ後、対象を除外したリストで `POST /api/config`
      を実行
    - **Update State**: 成功なら `contents` State を更新
+
+## 6. リポジトリ選択 (Repository Selection)
+
+作業対象のリポジトリを選択するフローです。ロジックは `useRepository`
+フックに集約されています。
+
+1. **Initialization**:
+   - `App.tsx` マウント時に `useRepository` が初期化される
+   - `localStorage` から `staticms_repo` を読み込み、`selectedRepo` State
+     にセット
+
+2. **Select Repository**:
+   - **Trigger**: `RepositorySelector` コンポーネントでの選択アクション
+   - **Action**: `selectRepo(repoName)` を実行
+   - **State Update**:
+     - `selectedRepo` State を更新
+     - `localStorage` の `staticms_repo` を更新
+   - **View Transition**: `view` が `content-list` に切り替わる（`App.tsx`
+     側の制御）
+
+3. **Clear Repository (Logout)**:
+   - **Trigger**: ログアウト時 (`handleLogout`)
+   - **Action**: `clearRepo()` を実行
+   - **State Update**:
+     - `selectedRepo` を `null` に設定
+     - `localStorage` から `staticms_repo` を削除
