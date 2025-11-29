@@ -2,9 +2,7 @@
   "lock": false,
   "tasks": {
     "build": "deno run -A build.ts",
-    "serve": "deno run --unstable-kv --allow-net --allow-read --allow-write --allow-env serve.ts",
-    "dev:server": "deno run --watch --unstable-kv --allow-net --allow-read --allow-write --allow-env serve.ts",
-    "dev:client": "deno run -A build.ts --watch"
+    "serve": "deno run --unstable-kv --allow-net --allow-read --allow-write --allow-env serve.ts"
   },
   "compilerOptions": {
     "jsx": "react-jsx",

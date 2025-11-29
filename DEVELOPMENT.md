@@ -98,54 +98,6 @@ deno task serve
 
 ブラウザで `http://localhost:3030` にアクセスしてください。
 
-### 6. Dockerでの開発
-
-Dockerを使用して、環境構築を簡略化することも可能です。
-
-#### 前提条件
-
-- Docker Desktop (または同等のDocker環境)
-
-#### 手順
-
-1. `.env` ファイルを作成し、必要な設定（GitHub App情報など）を記述します。
-   - `NGROK_AUTHTOKEN` も `.env`
-     に追加してください（ngrokのダッシュボードから取得）。
-
-```env
-NGROK_AUTHTOKEN=your_authtoken
-...その他の設定...
-```
-
-2. コンテナを起動します。
-
-```bash
-docker compose up -d --build
-```
-
-3. 起動確認
-   - アプリケーション: `http://localhost:3030`
-   - ngrokステータス: `http://localhost:4040`
-
-ngrokのパブリックURLは `http://localhost:4040`
-のInspector画面、または以下のコマンドで確認できます。
-
-```bash
-curl http://localhost:4040/api/tunnels
-```
-
-4. 終了
-
-```bash
-docker compose down
-```
-
-5. Dangling images（宙ぶらりんのイメージ）の削除
-
-```bash
-docker image prune
-```
-
 ## 開発フロー
 
 1. **GitHub Appのインストール**:
