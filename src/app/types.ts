@@ -25,3 +25,17 @@ export interface Commit {
   modified: string[];
   removed: string[];
 }
+
+export interface PrDetails {
+  state: string;
+  merged: boolean;
+  number: number;
+  title: string;
+  body: string;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  created_at: string;
+  html_url: string;
+}

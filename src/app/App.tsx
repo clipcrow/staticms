@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-import { Commit, Content } from "./types.ts";
+import { Commit, Content, PrDetails } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -237,6 +237,7 @@ function App() {
   const [prStatus, setPrStatus] = useState<"open" | "merged" | "closed" | null>(
     null,
   );
+  const [prDetails, setPrDetails] = useState<PrDetails | null>(null);
 
   // Draft Saving Logic
   useEffect(() => {
@@ -399,12 +400,14 @@ function App() {
         if (data.state === "open") {
           setIsPrLocked(true);
           setPrStatus("open");
+          setPrDetails(data);
           return "open";
         } else {
           setIsPrLocked(false);
           // PR is merged or closed -> Clear PR status and Reset content
           setPrUrl(null);
           setPrStatus(null);
+          setPrDetails(null);
 
           // Also clear the "created" draft from localStorage
           if (currentContent) {
@@ -896,6 +899,9 @@ function App() {
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);
         setInitialFrontMatter(frontMatter);
+
+        // Fetch PR details immediately
+        checkPrStatus();
       } else {
         console.error("Failed to create PR: " + data.error);
       }
@@ -1006,6 +1012,7 @@ function App() {
       prStatus={prStatus}
       onReset={handleReset}
       loading={editorLoading}
+      prDetails={prDetails}
     />
   );
 }

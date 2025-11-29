@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import vscDarkPlus from "prism-style";
 import remarkGfm from "remark-gfm";
-import { Commit, Content } from "../types.ts";
+import { Commit, Content, PrDetails } from "../types.ts";
 import { Header } from "./Header.tsx";
 
 interface ContentEditorProps {
@@ -33,6 +33,7 @@ interface ContentEditorProps {
   onReset: () => void;
   onBack: () => void;
   loading: boolean;
+  prDetails: PrDetails | null;
 }
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -58,6 +59,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   onReset,
   onBack,
   loading,
+  prDetails,
 }) => {
   const [newFieldName, setNewFieldName] = React.useState("");
   const [activeTab, setActiveTab] = React.useState<"write" | "preview">(
@@ -164,26 +166,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         flexDirection: "column",
       }}
     >
-      <Header
-        rightContent={
-          <button
-            type="button"
-            className="ui red button"
-            style={{
-              background: "transparent",
-              border: "none",
-              boxShadow: "none",
-              color: "#db2828",
-            }}
-            onClick={onReset}
-            disabled={loading || isSaving}
-            title="Reset changes"
-          >
-            <i className="undo icon"></i>
-            Reset
-          </button>
-        }
-      >
+      <Header>
         <div style={{ display: "flex", alignItems: "center" }}>
           <button
             type="button"
@@ -746,7 +729,17 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                     : prStatus === "closed"
                     ? "PR Closed"
                     : "PR Open"}
+                  {prStatus === "open" && prDetails && (
+                    <span style={{ fontWeight: "normal", marginLeft: "0.5em" }}>
+                      #{prDetails.number}
+                    </span>
+                  )}
                 </div>
+                {prStatus === "open" && prDetails?.body && (
+                  <div style={{ marginTop: "0.5em", fontStyle: "italic" }}>
+                    {prDetails.body}
+                  </div>
+                )}
                 <a
                   href={prUrl}
                   target="_blank"
@@ -787,26 +780,74 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                   </div>
                   {isPrOpen && (
                     <div className="description" style={{ marginTop: "1em" }}>
-                      <div className="ui form">
-                        <div className="field">
-                          <label>Description</label>
-                          <textarea
-                            rows={3}
-                            value={prDescription}
-                            onChange={(e) =>
-                              setPrDescription(e.target.value)}
-                            placeholder="PR Description..."
-                          />
-                        </div>
+                      {isPrLocked && prDetails
+                        ? (
+                          <div className="ui feed">
+                            <div className="event">
+                              <div className="content">
+                                <div className="summary">
+                                  <a
+                                    href={prDetails.html_url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    PR #{prDetails.number}: {prDetails.title}
+                                  </a>
+                                  <div className="date">
+                                    {new Date(prDetails.created_at)
+                                      .toLocaleDateString()}
+                                  </div>
+                                </div>
+                                <div className="extra text">
+                                  {prDetails.body}
+                                </div>
+                                <div className="meta">
+                                  by {prDetails.user.login}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )
+                        : (
+                          <div className="ui form">
+                            <div className="field">
+                              <label>Description</label>
+                              <textarea
+                                rows={3}
+                                value={prDescription}
+                                onChange={(e) =>
+                                  setPrDescription(e.target.value)}
+                                placeholder="PR Description..."
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              className={`ui primary button fluid ${
+                                isSaving ? "loading" : ""
+                              }`}
+                              onClick={onSaveContent}
+                              disabled={isSaving}
+                            >
+                              Create PR
+                            </button>
+                          </div>
+                        )}
+                      <div style={{ marginTop: "0.5em", textAlign: "center" }}>
                         <button
                           type="button"
-                          className={`ui primary button fluid ${
-                            isSaving ? "loading" : ""
-                          }`}
-                          onClick={onSaveContent}
-                          disabled={isSaving}
+                          className="ui red button"
+                          style={{
+                            background: "transparent",
+                            border: "none",
+                            boxShadow: "none",
+                            color: "#db2828",
+                          }}
+                          onClick={onReset}
+                          disabled={loading || isSaving}
+                          title="Reset changes"
                         >
-                          Create PR
+                          <i className="undo icon"></i>
+                          Reset
                         </button>
                       </div>
                     </div>

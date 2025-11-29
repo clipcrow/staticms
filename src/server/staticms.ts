@@ -761,6 +761,15 @@ router.get("/api/pr-status", async (ctx) => {
     ctx.response.body = {
       state: data.state, // "open" or "closed"
       merged: data.merged, // boolean
+      number: data.number,
+      title: data.title,
+      body: data.body,
+      user: {
+        login: data.user.login,
+        avatar_url: data.user.avatar_url,
+      },
+      created_at: data.created_at,
+      html_url: data.html_url,
     };
   } catch (e) {
     console.error(e);
