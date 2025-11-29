@@ -1,5 +1,6 @@
 import React from "react";
 import { Content } from "../types.ts";
+import { Header } from "./Header.tsx";
 
 interface ContentSettingsProps {
   formData: Content;
@@ -44,17 +45,15 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   };
 
   return (
-    <div className="ui container" style={{ marginTop: "2em" }}>
-      <div className="ui segment">
-        <h2 className="ui header">
-          {editingIndex !== null ? "Edit Content" : "Add Content"}
-          <div className="sub header">
-            {editingIndex !== null
-              ? "Update your content configuration."
-              : "Configure a new content file."}
-          </div>
-        </h2>
-
+    <div className="ui container">
+      <Header>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
+            {editingIndex !== null ? "Edit Content" : "Add Content"}
+          </span>
+        </div>
+      </Header>
+      <div className="ui segment" style={{ marginTop: "2em" }}>
         <form
           onSubmit={onSave}
           className="ui form"
