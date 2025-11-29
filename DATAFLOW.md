@@ -8,18 +8,18 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 
 1. **Trigger**: `ContentList` でアイテムクリック ->
    `App.tsx: handleSelectContent`
-2. **Fetch Content**: `loadContentData` が実行される
+2. **Fetch Content (useRemoteContent Hook)**: `loadContent` が実行される
    - `GET /api/content`: ファイルの生データ、SHA、ブランチ情報を取得
    - `GET /api/commits`: ファイルのコミット履歴を取得
-3. **Parse & State Setup**:
+3. **Parse & State Setup (useRemoteContent Hook)**:
    - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
-   - `useDraft` フック (`localStorage` キー: `draft_...` ※実際は `|` 区切り)
-     を確認
+   - `useDraft` フックのキー生成ロジックを使用して `localStorage` (`draft_...`
+     ※実際は `|` 区切り) を確認
      - ドラフトが存在する場合: ドラフトの内容で State (`body`, `frontMatter`)
        を上書き (ユーザーに復元されたことを示す)
      - ドラフトがない場合: リモートの内容を State にセット
-   - `usePullRequest` フック (`localStorage` キー: `pr_...` ※実際は `|` 区切り)
-     を確認し、`prUrl` State にセット
+   - `usePullRequest` フックのキー生成ロジックを使用して `localStorage`
+     (`pr_...` ※実際は `|` 区切り) を確認し、`prUrl` State にセット
 4. **View Transition**: `view` state を `content-editor`
    に変更し、`ContentEditor` コンポーネントを表示
 
@@ -28,7 +28,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 ユーザーがエディタで変更を加える際のフローです。
 
 1. **User Action**: テキストエリアの変更、Front Matter フィールドの変更
-2. **State Update**: `App.tsx` の `body`, `frontMatter` State が更新される
+2. **State Update**: `useRemoteContent` で管理される `body`, `frontMatter` State
+   が更新される
 3. **Auto Save Draft (useDraft Hook)**:
    - `useDraft` 内の `useEffect` が変更を検知
    - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
@@ -64,7 +65,7 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 外部で PR
 がマージ/クローズされたり、リモートで変更があった場合の同期フローです。
 
-### A. Polling (Status Check via usePullRequest)
+### A. Polling (Status Check via usePullRequest & App.tsx)
 
 - **Trigger**: `App.tsx` の `useEffect` (prUrl 依存)
 - **Action**: `checkPrStatus` (from `usePullRequest`) -> `GET /api/pr-status`
@@ -73,7 +74,7 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
   - `merged` / `closed`:
     - `usePullRequest` が `prUrl`, `prStatus` をクリア
     - `App.tsx` が `closed` ステータスを受け取り、`clearDraft()` と
-      `resetContent()` を実行して最新化
+      `resetContent()` (内部で `loadContent` を呼び出し) を実行して最新化
 
 ### B. Server-Sent Events (Real-time)
 

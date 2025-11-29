@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-import { Commit, Content } from "./types.ts";
+import { Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -11,6 +11,7 @@ import { Header } from "./components/Header.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 import { useDraft } from "./hooks/useDraft.ts";
 import { usePullRequest } from "./hooks/usePullRequest.ts";
+import { useRemoteContent } from "./hooks/useRemoteContent.ts";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -63,7 +64,6 @@ function App() {
   };
 
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editorLoading, setEditorLoading] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -207,21 +207,25 @@ function App() {
     setView("content-settings");
   };
 
-  const [_content, setContent] = useState(""); // Raw file content
-  const [body, setBody] = useState(""); // Markdown body
-  const [initialBody, setInitialBody] = useState("");
-  const [frontMatter, setFrontMatter] = useState<
-    Record<string, unknown> | Record<string, unknown>[]
-  >({}); // Parsed FM
-  const [customFields, setCustomFields] = useState<
-    { id: string; key: string }[]
-  >([]);
-  const [initialFrontMatter, setInitialFrontMatter] = useState<
-    Record<string, unknown> | Record<string, unknown>[]
-  >({});
-  const [sha, setSha] = useState("");
-  const [commits, setCommits] = useState<Commit[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const {
+    body,
+    setBody,
+    frontMatter,
+    setFrontMatter,
+    initialBody,
+    setInitialBody,
+    initialFrontMatter,
+    setInitialFrontMatter,
+    customFields,
+    setCustomFields,
+    sha,
+    commits,
+    editorLoading,
+    loadedBranch,
+    loadContent,
+  } = useRemoteContent();
 
   const {
     prUrl,
@@ -263,83 +267,26 @@ function App() {
 
     clearDraft();
 
-    const params = new URLSearchParams({
-      owner: currentContent.owner,
-      repo: currentContent.repo,
-      filePath: currentContent.filePath,
-      t: Date.now().toString(), // Prevent caching
-    });
-    if (currentContent.branch) {
-      params.append("branch", currentContent.branch);
-    }
-    fetch(`/api/content?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.content) {
-          setContent(data.content);
-          setSha(data.sha);
-
-          // Parse content based on file type
-          const content = data.content;
-          const isYaml = currentContent.filePath.endsWith(".yaml") ||
-            currentContent.filePath.endsWith(".yml");
-          let parsedBody = "";
-          let parsedFM = {};
-
-          if (isYaml) {
-            try {
-              const fm = jsyaml.load(content);
-              parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-              parsedBody = "";
-            } catch (e) {
-              console.error("Error parsing yaml file", e);
-            }
-          } else {
-            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
-            const match = content.match(fmRegex);
-            parsedBody = content;
-
-            if (match) {
-              try {
-                const fm = jsyaml.load(match[1]);
-                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
-              } catch (e) {
-                console.error("Error parsing front matter", e);
-              }
-            }
-          }
-
-          setFrontMatter(parsedFM);
-
-          // Initialize custom fields
-          const configuredKeys = currentContent.fields?.map((f) => f.name) ||
-            [];
-          const customKeys = Object.keys(parsedFM).filter((k) =>
-            !configuredKeys.includes(k)
-          );
-          setCustomFields(
-            customKeys.map((k) => ({ id: crypto.randomUUID(), key: k })),
-          );
-
-          setBody(parsedBody);
-          setInitialBody(parsedBody);
-          setInitialFrontMatter(parsedFM);
-          setPrDescription("");
-        }
-      })
-      .catch(console.error);
-
-    // Fetch commit history
-    fetch(`/api/commits?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.commits) {
-          setCommits(data.commits);
-        }
-      })
-      .catch(console.error);
-  }, [currentContent, clearDraft, setPrDescription]);
+    loadContent(
+      currentContent,
+      getDraftKey,
+      getPrKey,
+      setPrUrl,
+      setHasDraft,
+      setDraftTimestamp,
+      setPrDescription,
+    );
+  }, [
+    currentContent,
+    clearDraft,
+    loadContent,
+    getDraftKey,
+    getPrKey,
+    setPrUrl,
+    setHasDraft,
+    setDraftTimestamp,
+    setPrDescription,
+  ]);
 
   useEffect(() => {
     if (prUrl) {
@@ -369,8 +316,7 @@ function App() {
 
   // Removed checkPrStatus definition from here as it is now in usePullRequest hook
 
-  const [loadedBranch, setLoadedBranch] = useState("");
-
+  // Removed loadedBranch refs and state as they are now in useRemoteContent hook
   // Refs for accessing latest state in SSE callback
   const bodyRef = React.useRef(body);
   const frontMatterRef = React.useRef(frontMatter);
@@ -493,204 +439,23 @@ function App() {
   );
 
   const loadContentData = (content: Content) => {
-    setPrUrl(null); // Reset PR URL state
-    setEditorLoading(true); // Start loading
-    const params = new URLSearchParams({
-      owner: content.owner,
-      repo: content.repo,
-      filePath: content.filePath,
-      t: Date.now().toString(), // Prevent caching
-      allowMissing: "true",
+    loadContent(
+      content,
+      getDraftKey,
+      getPrKey,
+      setPrUrl,
+      setHasDraft,
+      setDraftTimestamp,
+      setPrDescription,
+    ).then(() => {
+      // Transition to editor view after data is loaded
+      setCurrentContent(content);
+      setView("content-editor");
+      setLoadingContentIndex(null);
+    }).catch((e) => {
+      console.error(e);
+      setLoadingContentIndex(null);
     });
-    if (content.branch) {
-      params.append("branch", content.branch);
-    }
-    fetch(`/api/content?${params.toString()}`)
-      .then((res) => {
-        if (res.status === 404) {
-          return { error: "404" };
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data.error === "404") {
-          // New file (e.g. index.md in a folder)
-          setContent("");
-          setSha("");
-          setLoadedBranch(content.branch || ""); // We don't know the branch for sure if it's new, but use config
-
-          setBody("");
-          setInitialBody("");
-          setFrontMatter({});
-          setInitialFrontMatter({});
-          setCustomFields([]);
-          setPrDescription("");
-
-          setCurrentContent(content);
-          setView("content-editor");
-          setLoadingContentIndex(null);
-          setEditorLoading(false);
-          return;
-        }
-
-        if (data.content) {
-          setContent(data.content);
-          setSha(data.sha);
-          setLoadedBranch(data.branch);
-
-          const rawContent = data.content;
-          const isYaml = content.filePath.endsWith(".yaml") ||
-            content.filePath.endsWith(".yml");
-          let parsedBody = "";
-          let parsedFM: Record<string, unknown> | Record<string, unknown>[] =
-            {};
-
-          if (isYaml) {
-            try {
-              const fm = jsyaml.load(rawContent);
-              if (Array.isArray(fm)) {
-                parsedFM = fm as Record<string, unknown>[];
-              } else {
-                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-              }
-              parsedBody = "";
-            } catch (e) {
-              console.error("Error parsing yaml file", e);
-            }
-          } else {
-            const fmRegex = /^---\s*[\r\n]+([\s\S]*?)[\r\n]+---\s*([\s\S]*)$/;
-            const match = rawContent.match(fmRegex);
-            parsedBody = rawContent;
-
-            if (match) {
-              try {
-                const fm = jsyaml.load(match[1]);
-                parsedFM = typeof fm === "object" && fm !== null ? fm : {};
-                parsedBody = match[2] ? match[2].replace(/^[\r\n]+/, "") : ""; // Trim leading newlines from body
-              } catch (e) {
-                console.error("Error parsing front matter", e);
-              }
-            }
-          }
-
-          setInitialBody(parsedBody);
-          setInitialFrontMatter(parsedFM);
-
-          // Check for local draft
-          const key = getDraftKey(content);
-          const savedDraft = localStorage.getItem(key);
-
-          if (savedDraft) {
-            try {
-              const draft = JSON.parse(savedDraft);
-              if (draft.type === "created") {
-                // This draft type is for a PR that was created, but not yet merged/closed
-                // We should not restore content from this draft, but rather the PR URL
-                setPrUrl(draft.prUrl);
-                setHasDraft(true);
-                setDraftTimestamp(draft.timestamp);
-                setPrDescription(draft.description || "");
-                // Continue to parse remote content since we don't have draft content
-                setBody(parsedBody);
-                setFrontMatter(parsedFM);
-
-                // Initialize custom fields from remote content
-                const configuredKeys = content.fields?.map((f) => f.name) || [];
-                let customKeys: string[] = [];
-                if (!Array.isArray(parsedFM)) {
-                  customKeys = Object.keys(parsedFM).filter((k) =>
-                    !configuredKeys.includes(k)
-                  );
-                }
-                setCustomFields(
-                  customKeys.map((k) => ({
-                    id: crypto.randomUUID(),
-                    key: k,
-                  })),
-                );
-              } else {
-                // Restore from draft
-                setBody(draft.body);
-                setFrontMatter(draft.frontMatter);
-                setPrDescription(draft.prDescription);
-                setHasDraft(true);
-                setDraftTimestamp(draft.timestamp);
-
-                // Initialize custom fields from draft
-                const configuredKeys = content.fields?.map((f) => f.name) || [];
-                let customKeys: string[] = [];
-                if (!Array.isArray(draft.frontMatter)) {
-                  customKeys = Object.keys(draft.frontMatter).filter((k) =>
-                    !configuredKeys.includes(k)
-                  );
-                }
-                setCustomFields(
-                  customKeys.map((k) => ({
-                    id: crypto.randomUUID(),
-                    key: k,
-                  })),
-                );
-
-                console.log("Restored draft from local storage");
-              }
-            } catch (e) {
-              console.error("Failed to parse draft", e);
-              // If draft parsing fails, proceed with remote content
-              setBody(parsedBody);
-              setFrontMatter(parsedFM);
-              setHasDraft(false);
-            }
-          } else {
-            setBody(parsedBody);
-            setFrontMatter(parsedFM);
-            setHasDraft(false);
-
-            // Initialize custom fields from remote content (only for object root)
-            if (!Array.isArray(parsedFM)) {
-              const configuredKeys = content.fields?.map((f) => f.name) ||
-                [];
-              const customKeys = Object.keys(parsedFM).filter((k) =>
-                !configuredKeys.includes(k)
-              );
-              setCustomFields(
-                customKeys.map((k) => ({
-                  id: crypto.randomUUID(),
-                  key: k,
-                })),
-              );
-            } else {
-              setCustomFields([]);
-            }
-          }
-
-          // Check for existing PR URL
-          const prKey = getPrKey(content);
-          const savedPrUrl = localStorage.getItem(prKey);
-          if (savedPrUrl) {
-            setPrUrl(savedPrUrl);
-          }
-        }
-
-        // Transition to editor view after data is loaded
-        setCurrentContent(content);
-        setView("content-editor");
-        setLoadingContentIndex(null);
-      })
-      .catch((e) => {
-        console.error(e);
-        setLoadingContentIndex(null);
-      })
-      .finally(() => setEditorLoading(false));
-
-    // Fetch commit history
-    fetch(`/api/commits?${params.toString()}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.commits) {
-          setCommits(data.commits);
-        }
-      })
-      .catch(console.error);
   };
 
   const handleSelectContent = (content: Content, index: number) => {
