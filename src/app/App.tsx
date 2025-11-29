@@ -8,6 +8,7 @@ import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { Header } from "./components/Header.tsx";
+import { useAuth } from "./hooks/useAuth.ts";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -22,7 +23,7 @@ function App() {
     "content-list",
   );
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { isAuthenticated, loading: authLoading, logout } = useAuth();
   const [selectedRepo, setSelectedRepo] = useState<string | null>(
     localStorage.getItem("staticms_repo"),
   );
@@ -65,12 +66,6 @@ function App() {
   useEffect(() => {
     const init = async () => {
       try {
-        // Check auth
-        const userRes = await fetch("/api/user");
-        if (userRes.ok) {
-          setIsAuthenticated(true);
-        }
-
         // Load config
         const configRes = await fetch("/api/config");
         const data = await configRes.json();
@@ -92,8 +87,7 @@ function App() {
   }, []);
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout");
-    setIsAuthenticated(false);
+    await logout();
     setSelectedRepo(null);
     localStorage.removeItem("staticms_repo");
     setView("content-list");
@@ -912,7 +906,7 @@ function App() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="ui container">
         <Header />
