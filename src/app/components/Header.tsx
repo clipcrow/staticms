@@ -6,11 +6,11 @@ interface HeaderProps {
   rightContent?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({
+export const Header = ({
   onLogout,
   children,
   rightContent,
-}) => {
+}: HeaderProps) => {
   return (
     <div
       style={{

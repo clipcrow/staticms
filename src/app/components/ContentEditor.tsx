@@ -168,11 +168,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         rightContent={
           <button
             type="button"
-            className="ui button basic"
+            className="ui red button"
             style={{
               background: "transparent",
               border: "none",
               boxShadow: "none",
+              color: "#db2828",
             }}
             onClick={onReset}
             disabled={loading || isSaving}
@@ -186,7 +187,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div style={{ display: "flex", alignItems: "center" }}>
           <button
             type="button"
-            className="ui button basic"
+            className="ui blue button"
             style={{
               display: "flex",
               alignItems: "center",
@@ -368,7 +369,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                                 >
                                   <button
                                     type="button"
-                                    className="ui icon button"
+                                    className="ui red icon button"
                                     style={{
                                       background: "transparent",
                                       border: "none",
@@ -527,7 +528,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                         >
                           <button
                             type="button"
-                            className="ui icon button"
+                            className="ui red icon button"
                             style={{
                               background: "transparent",
                               border: "none",
