@@ -242,7 +242,7 @@ function App() {
   useEffect(() => {
     if (view === "content-editor" && currentContent) {
       const key =
-        `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+        `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
 
       const isDirty = body !== initialBody ||
         JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
@@ -293,7 +293,7 @@ function App() {
     if (!currentContent) return;
 
     const key =
-      `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+      `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
     localStorage.removeItem(key);
     setHasDraft(false);
     setDraftTimestamp(null);
@@ -409,10 +409,10 @@ function App() {
           // Also clear the "created" draft from localStorage
           if (currentContent) {
             const key =
-              `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+              `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
             localStorage.removeItem(key);
             const prKey =
-              `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+              `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
             localStorage.removeItem(prKey);
           }
 
@@ -527,10 +527,10 @@ function App() {
 
               // Clear local storage
               const key =
-                `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+                `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
               localStorage.removeItem(key);
               const prKey =
-                `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+                `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
               localStorage.removeItem(prKey);
 
               resetContent();
@@ -551,6 +551,7 @@ function App() {
   );
 
   const loadContentData = (content: Content) => {
+    setPrUrl(null); // Reset PR URL state
     setEditorLoading(true); // Start loading
     const params = new URLSearchParams({
       owner: content.owner,
@@ -635,7 +636,7 @@ function App() {
 
           // Check for local draft
           const key =
-            `draft_${content.owner}_${content.repo}_${content.filePath}`;
+            `draft_${content.owner}|${content.repo}|${content.filePath}`;
           const savedDraft = localStorage.getItem(key);
 
           if (savedDraft) {
@@ -723,7 +724,7 @@ function App() {
 
           // Check for existing PR URL
           const prKey =
-            `pr_${content.owner}_${content.repo}_${content.filePath}`;
+            `pr_${content.owner}|${content.repo}|${content.filePath}`;
           const savedPrUrl = localStorage.getItem(prKey);
           if (savedPrUrl) {
             setPrUrl(savedPrUrl);
@@ -880,12 +881,12 @@ function App() {
 
         // Save PR URL to local storage
         const prKey =
-          `pr_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+          `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
         localStorage.setItem(prKey, data.prUrl);
 
         // Clear draft on success
         const key =
-          `draft_${currentContent.owner}_${currentContent.repo}_${currentContent.filePath}`;
+          `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
         localStorage.removeItem(key);
         setHasDraft(false);
         setDraftTimestamp(null);

@@ -13,12 +13,12 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - `GET /api/commits`: ファイルのコミット履歴を取得
 3. **Parse & State Setup**:
    - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
-   - `localStorage` からドラフト (`draft_...`) を確認
+   * `localStorage` からドラフト (`draft_...` ※実際は `|` 区切り) を確認
      - ドラフトが存在する場合: ドラフトの内容で State (`body`, `frontMatter`)
        を上書き (ユーザーに復元されたことを示す)
      - ドラフトがない場合: リモートの内容を State にセット
-   - `localStorage` から既存の PR URL (`pr_...`) を確認し、`prUrl` State
-     にセット
+   * `localStorage` から既存の PR URL (`pr_...` ※実際は `|` 区切り)
+     を確認し、`prUrl` State にセット
 4. **View Transition**: `view` state を `content-editor`
    に変更し、`ContentEditor` コンポーネントを表示
 
@@ -31,8 +31,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 3. **Auto Save Draft**:
    - `App.tsx` の `useEffect` が変更を検知
    - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
-   - 変更がある場合 (`isDirty`):
-     - `localStorage` (`draft_...`) に現在の内容を保存
+   * 変更がある場合 (`isDirty`):
+     - `localStorage` (`draft_...` ※実際は `|` 区切り) に現在の内容を保存
      - `hasDraft` フラグを true に設定
    - 変更がない場合:
      - `localStorage` のドラフトを削除 (ただし `created` タイプのドラフトは維持)
