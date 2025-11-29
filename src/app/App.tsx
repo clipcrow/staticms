@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import jsyaml from "js-yaml";
-import { Commit, Content, PrDetails } from "./types.ts";
+import { Commit, Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -9,6 +9,8 @@ import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { Header } from "./components/Header.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
+import { useDraft } from "./hooks/useDraft.ts";
+import { usePullRequest } from "./hooks/usePullRequest.ts";
 
 function App() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -219,79 +221,47 @@ function App() {
   >({});
   const [sha, setSha] = useState("");
   const [commits, setCommits] = useState<Commit[]>([]);
-  const [prUrl, setPrUrl] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [hasDraft, setHasDraft] = useState(false);
-  const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
-  const [isPrOpen, setIsPrOpen] = useState(false);
 
-  const [prDescription, setPrDescription] = useState("");
+  const {
+    prUrl,
+    setPrUrl,
+    isPrOpen,
+    setIsPrOpen,
+    prDescription,
+    setPrDescription,
+    isPrLocked,
+    setIsPrLocked,
+    prStatus,
+    setPrStatus,
+    prDetails,
+    setPrDetails,
+    checkPrStatus,
+    clearPrState,
+    getPrKey,
+  } = usePullRequest(currentContent);
 
-  const [isPrLocked, setIsPrLocked] = useState(false);
-  const [prStatus, setPrStatus] = useState<"open" | "merged" | "closed" | null>(
-    null,
-  );
-  const [prDetails, setPrDetails] = useState<PrDetails | null>(null);
-
-  // Draft Saving Logic
-  useEffect(() => {
-    if (view === "content-editor" && currentContent) {
-      const key =
-        `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-
-      const isDirty = body !== initialBody ||
-        JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
-        prDescription !== "";
-
-      if (isDirty) {
-        const draft = {
-          body,
-          frontMatter,
-          prDescription,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem(key, JSON.stringify(draft));
-        setHasDraft(true);
-        setDraftTimestamp(draft.timestamp);
-      } else {
-        // Only remove if it's not a "created" status
-        const saved = localStorage.getItem(key);
-        let isCreatedStatus = false;
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (parsed.type === "created") isCreatedStatus = true;
-          } catch {
-            // ignore
-          }
-        }
-
-        if (!isCreatedStatus) {
-          localStorage.removeItem(key);
-          setHasDraft(false);
-          setDraftTimestamp(null);
-        }
-      }
-    }
-  }, [
+  const {
+    hasDraft,
+    draftTimestamp,
+    setHasDraft,
+    setDraftTimestamp,
+    clearDraft,
+    getDraftKey,
+  } = useDraft(
+    currentContent,
+    view,
     body,
     frontMatter,
-    prDescription,
-    view,
-    currentContent,
-    sha,
     initialBody,
     initialFrontMatter,
-  ]);
+    prDescription,
+  );
 
-  const resetContent = () => {
+  const resetContent = useCallback(() => {
     if (!currentContent) return;
 
-    const key =
-      `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-    localStorage.removeItem(key);
-    setHasDraft(false);
-    setDraftTimestamp(null);
+    clearDraft();
 
     const params = new URLSearchParams({
       owner: currentContent.owner,
@@ -369,7 +339,22 @@ function App() {
         }
       })
       .catch(console.error);
-  };
+  }, [currentContent, clearDraft, setPrDescription]);
+
+  useEffect(() => {
+    if (prUrl) {
+      checkPrStatus().then((status) => {
+        if (status === "closed") {
+          clearDraft();
+          resetContent();
+        }
+      });
+    } else {
+      setIsPrLocked(false);
+      setPrStatus(null);
+      setPrDetails(null);
+    }
+  }, [prUrl, checkPrStatus, clearDraft, resetContent]);
 
   const handleReset = () => {
     if (!currentContent) return;
@@ -382,46 +367,7 @@ function App() {
     resetContent();
   };
 
-  // Check PR Status
-  const checkPrStatus = async () => {
-    if (!prUrl) return null;
-    try {
-      const res = await fetch(
-        `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (data.state === "open") {
-          setIsPrLocked(true);
-          setPrStatus("open");
-          setPrDetails(data);
-          return "open";
-        } else {
-          setIsPrLocked(false);
-          // PR is merged or closed -> Clear PR status and Reset content
-          setPrUrl(null);
-          setPrStatus(null);
-          setPrDetails(null);
-
-          // Also clear the "created" draft from localStorage
-          if (currentContent) {
-            const key =
-              `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-            localStorage.removeItem(key);
-            const prKey =
-              `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-            localStorage.removeItem(prKey);
-          }
-
-          resetContent();
-          return "closed";
-        }
-      }
-    } catch (e) {
-      console.error("Failed to check PR status", e);
-    }
-    return null;
-  };
+  // Removed checkPrStatus definition from here as it is now in usePullRequest hook
 
   const [loadedBranch, setLoadedBranch] = useState("");
 
@@ -506,7 +452,10 @@ function App() {
                   if (status === "open") {
                     resetContent();
                   }
-                  // If closed, resetContent is already called in checkPrStatus
+                  if (status === "closed") {
+                    clearDraft();
+                    resetContent();
+                  }
                 });
               } else {
                 resetContent();
@@ -523,12 +472,8 @@ function App() {
               setPrStatus(null);
 
               // Clear local storage
-              const key =
-                `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-              localStorage.removeItem(key);
-              const prKey =
-                `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-              localStorage.removeItem(prKey);
+              clearDraft();
+              clearPrState();
 
               resetContent();
             }
@@ -541,7 +486,7 @@ function App() {
     return () => {
       eventSource.close();
     };
-  }, [currentContent, prUrl]);
+  }, [currentContent, prUrl, clearDraft, clearPrState, resetContent]);
 
   const [loadingContentIndex, setLoadingContentIndex] = useState<number | null>(
     null,
@@ -632,8 +577,7 @@ function App() {
           setInitialFrontMatter(parsedFM);
 
           // Check for local draft
-          const key =
-            `draft_${content.owner}|${content.repo}|${content.filePath}`;
+          const key = getDraftKey(content);
           const savedDraft = localStorage.getItem(key);
 
           if (savedDraft) {
@@ -720,8 +664,7 @@ function App() {
           }
 
           // Check for existing PR URL
-          const prKey =
-            `pr_${content.owner}|${content.repo}|${content.filePath}`;
+          const prKey = getPrKey(content);
           const savedPrUrl = localStorage.getItem(prKey);
           if (savedPrUrl) {
             setPrUrl(savedPrUrl);
@@ -755,14 +698,7 @@ function App() {
     loadContentData(content);
   };
 
-  useEffect(() => {
-    if (prUrl) {
-      checkPrStatus();
-    } else {
-      setIsPrLocked(false);
-      setPrStatus(null);
-    }
-  }, [prUrl, currentContent]);
+  // Removed useEffect for checkPrStatus as it is now in usePullRequest hook
 
   const handleSaveContent = async () => {
     if (!currentContent) return;
@@ -877,16 +813,11 @@ function App() {
         setPrUrl(data.prUrl);
 
         // Save PR URL to local storage
-        const prKey =
-          `pr_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
+        const prKey = getPrKey(currentContent);
         localStorage.setItem(prKey, data.prUrl);
 
         // Clear draft on success
-        const key =
-          `draft_${currentContent.owner}|${currentContent.repo}|${currentContent.filePath}`;
-        localStorage.removeItem(key);
-        setHasDraft(false);
-        setDraftTimestamp(null);
+        clearDraft();
         setIsPrOpen(false);
         setPrDescription("");
 

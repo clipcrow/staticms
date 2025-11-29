@@ -13,11 +13,12 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - `GET /api/commits`: ファイルのコミット履歴を取得
 3. **Parse & State Setup**:
    - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
-   * `localStorage` からドラフト (`draft_...` ※実際は `|` 区切り) を確認
+   - `useDraft` フック (`localStorage` キー: `draft_...` ※実際は `|` 区切り)
+     を確認
      - ドラフトが存在する場合: ドラフトの内容で State (`body`, `frontMatter`)
        を上書き (ユーザーに復元されたことを示す)
      - ドラフトがない場合: リモートの内容を State にセット
-   * `localStorage` から既存の PR URL (`pr_...` ※実際は `|` 区切り)
+   - `usePullRequest` フック (`localStorage` キー: `pr_...` ※実際は `|` 区切り)
      を確認し、`prUrl` State にセット
 4. **View Transition**: `view` state を `content-editor`
    に変更し、`ContentEditor` コンポーネントを表示
@@ -28,10 +29,10 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 
 1. **User Action**: テキストエリアの変更、Front Matter フィールドの変更
 2. **State Update**: `App.tsx` の `body`, `frontMatter` State が更新される
-3. **Auto Save Draft**:
-   - `App.tsx` の `useEffect` が変更を検知
+3. **Auto Save Draft (useDraft Hook)**:
+   - `useDraft` 内の `useEffect` が変更を検知
    - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
-   * 変更がある場合 (`isDirty`):
+   - 変更がある場合 (`isDirty`):
      - `localStorage` (`draft_...` ※実際は `|` 区切り) に現在の内容を保存
      - `hasDraft` フラグを true に設定
    - 変更がない場合:
@@ -52,8 +53,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - Server: GitHub API を使用してブランチ作成、コミット、PR 作成を行う
    - Client: レスポンスから `prUrl` を受け取る
 5. **Post-Save Actions**:
-   - `prUrl` を `localStorage` (`pr_...`) に保存
-   - `localStorage` のドラフト (`draft_...`) を削除
+   - `prUrl` を `usePullRequest` フック経由で `localStorage` (`pr_...`) に保存
+   - `useDraft` フック経由でドラフト (`draft_...`) を削除
    - `initialBody`, `initialFrontMatter` を現在の内容で更新 (Unsaved changes
      状態の解除)
    - `isPrOpen` (Draft UI) を閉じる
@@ -63,16 +64,16 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 外部で PR
 がマージ/クローズされたり、リモートで変更があった場合の同期フローです。
 
-### A. Polling (Status Check)
+### A. Polling (Status Check via usePullRequest)
 
 - **Trigger**: `App.tsx` の `useEffect` (prUrl 依存)
-- **Action**: `checkPrStatus` -> `GET /api/pr-status`
+- **Action**: `checkPrStatus` (from `usePullRequest`) -> `GET /api/pr-status`
 - **Result**:
   - `open`: `isPrLocked` を true に設定 (編集ロック)
   - `merged` / `closed`:
-    - `prUrl`, `prStatus` をクリア
-    - `localStorage` の関連データ (draft, pr) を削除
-    - `resetContent()` を呼び出し、メインブランチの最新データを再取得
+    - `usePullRequest` が `prUrl`, `prStatus` をクリア
+    - `App.tsx` が `closed` ステータスを受け取り、`clearDraft()` と
+      `resetContent()` を実行して最新化
 
 ### B. Server-Sent Events (Real-time)
 
@@ -84,6 +85,4 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
     - Clean: `checkPrStatus` または `resetContent` を実行して最新化
 - **Event: `pull_request`**:
   - `action: closed` かつ現在の PR URL と一致する場合
-  - `isPrLocked` 解除
-  - `localStorage` クリア
-  - `resetContent()` で最新化
+  - `checkPrStatus` を実行し、`closed` であれば `resetContent()` で最新化
