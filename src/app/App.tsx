@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import jsyaml from "js-yaml";
 import { Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
@@ -50,8 +49,6 @@ function App() {
     handleDeleteContent,
   } = useContentConfig(setView);
 
-  const [isSaving, setIsSaving] = useState(false);
-
   const {
     body,
     setBody,
@@ -86,13 +83,16 @@ function App() {
     setDraftTimestamp,
     clearDraft,
     getDraftKey,
+    saveContent,
+    isSaving,
   } = useContentEditor(
     currentContent,
-    view,
     body,
     frontMatter,
     initialBody,
     initialFrontMatter,
+    setInitialBody,
+    setInitialFrontMatter,
   );
 
   const resetContent = useCallback(() => {
@@ -195,142 +195,6 @@ function App() {
 
   // Removed useEffect for checkPrStatus as it is now in usePullRequest hook
 
-  const handleSaveContent = async () => {
-    if (!currentContent) return;
-    setIsSaving(true);
-    setPrUrl(null); // Clear PR URL state temporarily until new PR is created
-
-    // Reconstruct content with Front Matter
-    const isYaml = currentContent.filePath.endsWith(".yaml") ||
-      currentContent.filePath.endsWith(".yml");
-    let finalContent = body;
-
-    if (currentContent.fields && currentContent.fields.length > 0) {
-      // Only include fields that are defined in the config
-      if (Array.isArray(frontMatter)) {
-        // For array, we map over each item and filter/merge fields
-        const newFM = frontMatter.map((item) => {
-          const fmToSave: Record<string, unknown> = {};
-          currentContent.fields.forEach((field) => {
-            fmToSave[field.name] = item[field.name] || "";
-          });
-          return { ...item, ...fmToSave };
-        });
-
-        try {
-          const yamlString = jsyaml.dump(newFM);
-          if (isYaml) {
-            finalContent = yamlString;
-          } else {
-            // Arrays are typically only for pure YAML files, but just in case
-            finalContent = `---\n${yamlString}---\n${body}`;
-          }
-        } catch (e) {
-          console.error("Error dumping yaml", e);
-          finalContent = body;
-        }
-      } else {
-        const fmToSave: Record<string, unknown> = {};
-        currentContent.fields.forEach((field) => {
-          fmToSave[field.name] = frontMatter[field.name] || "";
-        });
-
-        // If there are other existing FM keys not in config, should we keep them?
-        // For now, let's merge existing FM with configured fields to avoid data loss
-        const mergedFM = { ...frontMatter, ...fmToSave };
-
-        if (Object.keys(mergedFM).length > 0) {
-          try {
-            const yamlString = jsyaml.dump(mergedFM);
-            if (isYaml) {
-              finalContent = yamlString;
-            } else {
-              finalContent = `---\n${yamlString}---\n${body}`;
-            }
-          } catch (e) {
-            console.error("Error dumping yaml", e);
-            // Fallback to raw body if YAML fails
-            finalContent = body;
-          }
-        }
-      }
-    } else if (
-      (Array.isArray(frontMatter) && frontMatter.length > 0) ||
-      (!Array.isArray(frontMatter) && Object.keys(frontMatter).length > 0)
-    ) {
-      // If no fields configured but FM exists, preserve it
-      try {
-        const yamlString = jsyaml.dump(frontMatter);
-        if (isYaml) {
-          finalContent = yamlString;
-        } else {
-          finalContent = `---\n${yamlString}---\n${body}`;
-        }
-      } catch (e) {
-        console.error("Error dumping yaml", e);
-        finalContent = body;
-      }
-    } else if (isYaml) {
-      // YAML file with no fields/frontMatter? Should probably be empty object or empty string
-      finalContent = "";
-    }
-
-    try {
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, "0");
-      const dd = String(now.getDate()).padStart(2, "0");
-      const HH = String(now.getHours()).padStart(2, "0");
-      const MM = String(now.getMinutes()).padStart(2, "0");
-      const generatedTitle = `STATICMS ${yyyy}${mm}${dd}${HH}${MM}`;
-
-      console.log(
-        `[handleSaveContent] Sending branch: "${currentContent.branch}"`,
-      );
-
-      const res = await fetch("/api/content", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          owner: currentContent.owner,
-          repo: currentContent.repo,
-          path: currentContent.filePath,
-          branch: currentContent.branch,
-          content: finalContent,
-          message: prDescription || "Update content via Staticms",
-          title: generatedTitle,
-          description: prDescription,
-          sha,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPrUrl(data.prUrl);
-
-        // Save PR URL to local storage
-        const prKey = getPrKey(currentContent);
-        localStorage.setItem(prKey, data.prUrl);
-
-        // Clear draft on success
-        clearDraft();
-        setPrDescription("");
-
-        // Update initial state to prevent "Unsaved Changes" detection
-        setInitialBody(body);
-        setInitialFrontMatter(frontMatter);
-
-        // Fetch PR details immediately
-        checkPrStatus();
-      } else {
-        console.error("Failed to create PR: " + data.error);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (configLoading || authLoading) {
     return (
       <div className="ui container">
@@ -411,7 +275,7 @@ function App() {
       setBody={setBody}
       frontMatter={frontMatter}
       setFrontMatter={setFrontMatter}
-      onSaveContent={handleSaveContent}
+      onSaveContent={() => saveContent(sha)}
       commits={commits}
       prUrl={prUrl}
       isSaving={isSaving}
