@@ -150,6 +150,7 @@ export const useContentConfig = (setView: (view: ViewState) => void) => {
 
   const handleDeleteContent = useCallback(async (index: number) => {
     if (!confirm("Are you sure you want to delete this content?")) return;
+    setIsSavingConfig(true);
     const newContents = contents.filter((_, i) => i !== index);
     try {
       const res = await fetch("/api/config", {
@@ -168,6 +169,8 @@ export const useContentConfig = (setView: (view: ViewState) => void) => {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setIsSavingConfig(false);
     }
   }, [contents, setView]);
 

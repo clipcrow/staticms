@@ -194,7 +194,9 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               <button
                 type="button"
                 onClick={onDelete}
-                className="ui button negative right floated"
+                className={`ui button negative right floated ${
+                  loading ? "loading" : ""
+                }`}
                 disabled={loading}
               >
                 <i className="trash icon"></i>
