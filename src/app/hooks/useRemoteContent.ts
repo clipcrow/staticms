@@ -170,6 +170,7 @@ export const useRemoteContent = () => {
             setBody(parsedBody);
             setFrontMatter(parsedFM);
             setHasDraft(false);
+            setPrDescription("");
 
             // Initialize custom fields from remote
             if (!Array.isArray(parsedFM)) {
