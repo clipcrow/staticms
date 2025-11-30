@@ -12,6 +12,8 @@ interface FrontMatterItemPanelProps {
   onDragEnd?: () => void;
   onUpdateItem: (index: number, newItem: Record<string, unknown>) => void;
   onDeleteItem?: (index: number) => void;
+  editableKeys?: boolean;
+  disableValues?: boolean;
 }
 
 export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
@@ -25,6 +27,8 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
   onDragEnd,
   onUpdateItem,
   onDeleteItem,
+  editableKeys = false,
+  disableValues = false,
 }) => {
   const [newFieldName, setNewFieldName] = useState("");
 
@@ -45,6 +49,19 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
   const handleDeleteField = (key: string) => {
     const newItem = { ...item };
     delete newItem[key];
+    onUpdateItem(itemIndex, newItem);
+  };
+
+  const handleRenameField = (oldKey: string, newKey: string) => {
+    if (oldKey === newKey) return;
+    const newItem: Record<string, unknown> = {};
+    Object.keys(item).forEach((key) => {
+      if (key === oldKey) {
+        newItem[newKey] = item[oldKey];
+      } else {
+        newItem[key] = item[key];
+      }
+    });
     onUpdateItem(itemIndex, newItem);
   };
 
@@ -89,8 +106,8 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                     };
                     onUpdateItem(itemIndex, newItem);
                   }}
-                  readOnly={isPrLocked}
-                  disabled={isPrLocked}
+                  readOnly={isPrLocked || disableValues}
+                  disabled={isPrLocked || disableValues}
                 />
               </div>
             </div>
@@ -104,10 +121,23 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
             className="row staticms-fm-row"
           >
             <div className="four wide column">
-              <strong>{key}</strong>
+              {editableKeys
+                ? (
+                  <div className="ui input fluid">
+                    <input
+                      type="text"
+                      value={key}
+                      onChange={(e) => handleRenameField(key, e.target.value)}
+                      disabled={isPrLocked}
+                    />
+                  </div>
+                )
+                : <strong>{key}</strong>}
             </div>
             <div className="eleven wide column">
-              <div className="ui input fluid">
+              <div
+                className={`ui input fluid ${disableValues ? "disabled" : ""}`}
+              >
                 <input
                   type="text"
                   value={(item[key] as string) || ""}
@@ -118,8 +148,11 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                     };
                     onUpdateItem(itemIndex, newItem);
                   }}
-                  readOnly={isPrLocked}
-                  disabled={isPrLocked}
+                  readOnly={isPrLocked || disableValues}
+                  disabled={isPrLocked || disableValues}
+                  placeholder={disableValues
+                    ? "Value will be set in editor"
+                    : ""}
                 />
               </div>
             </div>
