@@ -14,10 +14,6 @@ interface ContentEditorProps {
   setFrontMatter: (
     fm: Record<string, unknown> | Record<string, unknown>[],
   ) => void;
-  customFields: { id: string; key: string }[];
-  setCustomFields: React.Dispatch<
-    React.SetStateAction<{ id: string; key: string }[]>
-  >;
   isPrLocked: boolean;
   prUrl: string | null;
   hasDraft: boolean;
@@ -41,8 +37,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   setBody,
   frontMatter,
   setFrontMatter,
-  customFields,
-  setCustomFields,
   isPrLocked,
   prUrl,
   hasDraft,
@@ -143,8 +137,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                     ) => void}
                     currentContent={currentContent}
                     isPrLocked={isPrLocked}
-                    customFields={customFields}
-                    setCustomFields={setCustomFields}
                   />
                 )}
             </div>

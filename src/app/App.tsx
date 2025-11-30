@@ -61,8 +61,6 @@ function App() {
     setInitialBody,
     initialFrontMatter,
     setInitialFrontMatter,
-    customFields,
-    setCustomFields,
     sha,
     commits,
     editorLoading,
@@ -416,8 +414,6 @@ function App() {
       setBody={setBody}
       frontMatter={frontMatter}
       setFrontMatter={setFrontMatter}
-      customFields={customFields}
-      setCustomFields={setCustomFields}
       onSaveContent={handleSaveContent}
       commits={commits}
       prUrl={prUrl}

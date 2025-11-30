@@ -7,10 +7,6 @@ interface FrontMatterEditorProps {
   setFrontMatter: (fm: Record<string, unknown>) => void;
   currentContent: Content;
   isPrLocked: boolean;
-  customFields: { id: string; key: string }[];
-  setCustomFields: React.Dispatch<
-    React.SetStateAction<{ id: string; key: string }[]>
-  >;
 }
 
 export const FrontMatterItemEditor: React.FC<FrontMatterEditorProps> = ({
