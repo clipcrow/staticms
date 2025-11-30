@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
 import { Content, PrDetails } from "../types.ts";
+import { getDraftKey, getPrKey } from "./utils.ts";
 
 export const useContentEditor = (
   currentContent: Content | null,
@@ -22,15 +23,6 @@ export const useContentEditor = (
   // Draft State
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
-
-  // Helper Keys
-  const getPrKey = useCallback((content: Content) => {
-    return `pr_${content.owner}|${content.repo}|${content.filePath}`;
-  }, []);
-
-  const getDraftKey = useCallback((content: Content) => {
-    return `draft_${content.owner}|${content.repo}|${content.filePath}`;
-  }, []);
 
   // PR Logic
   const clearPrState = useCallback(() => {

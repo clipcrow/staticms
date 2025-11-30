@@ -149,8 +149,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div className="four wide column staticms-editor-sidebar-column">
           <div>
             {prUrl && (
-              <div className="ui message info">
+              <div className="ui message orange">
                 <div className="header">
+                  <i className="circle icon orange"></i>
                   PR Open
                   {prDetails && (
                     <span className="staticms-editor-pr-number">
@@ -175,16 +176,13 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
 
             {hasDraft && (
-              <div className="ui card fluid">
+              <div className="ui message gray">
                 <div className="content">
                   <div
                     className="header staticms-editor-draft-header"
                     onClick={() => setIsPrOpen(!isPrOpen)}
                   >
-                    <i
-                      className={`circle icon ${prUrl ? "green" : "grey"}`}
-                    >
-                    </i>
+                    <i className="circle icon gray"></i>
                     Draft / PR
                     <i
                       className={`right floated icon ${

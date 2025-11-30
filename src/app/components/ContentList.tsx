@@ -1,6 +1,7 @@
 import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
+import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 
 interface ContentListProps {
   contents: Content[];
@@ -105,6 +106,36 @@ export const ContentList: React.FC<ContentListProps> = ({
                           {item.branch}
                         </span>
                       )}
+                      {(() => {
+                        const prKey = getPrKey(item);
+                        const draftKey = getDraftKey(item);
+                        const hasPr = localStorage.getItem(prKey);
+                        const hasDraft = localStorage.getItem(draftKey);
+
+                        if (hasPr) {
+                          return (
+                            <span
+                              className="ui label orange mini basic"
+                              style={{ marginLeft: "0.5em" }}
+                            >
+                              <i className="lock icon"></i>
+                              PR Open
+                            </span>
+                          );
+                        }
+                        if (hasDraft) {
+                          return (
+                            <span
+                              className="ui label gray mini basic"
+                              style={{ marginLeft: "0.5em" }}
+                            >
+                              <i className="edit icon"></i>
+                              Draft / PR
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 ))}
