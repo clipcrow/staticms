@@ -45,9 +45,11 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 
 ## 3. プルリクエスト作成 (Create PR / Save)
 
-ユーザーが「Save」ボタンを押して変更を保存する際のフローです。
+ユーザーが「Save」ボタンを押して変更を保存する際のフローです。ロジックは
+`useContentEditor` フック内の `saveContent` に集約されています。
 
-1. **Trigger**: `ContentEditor` の Save ボタン -> `App.tsx: handleSaveContent`
+1. **Trigger**: `ContentEditor` の Save ボタン ->
+   `useContentEditor: saveContent`
 2. **Reconstruct Content**:
    - `frontMatter` と `body` を結合し、ファイル形式に合わせて文字列化 (YAML dump
      等)
@@ -58,8 +60,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - Server: GitHub API を使用してブランチ作成、コミット、PR 作成を行う
    - Client: レスポンスから `prUrl` を受け取る
 5. **Post-Save Actions**:
-   - `prUrl` を `useContentEditor` フック経由で `localStorage` (`pr_...`) に保存
-   - `useContentEditor` フック経由でドラフト (`draft_...`) を削除
+   - `prUrl` を `localStorage` (`pr_...`) に保存
+   - ドラフト (`draft_...`) を削除
    - `initialBody`, `initialFrontMatter` を現在の内容で更新 (Unsaved changes
      状態の解除)
    - `isPrOpen` (Draft UI) を閉じる
@@ -116,9 +118,10 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 
 3. **Delete Config**:
    - **Trigger**: `ContentList` 画面での削除ボタン
-   - **Action**: 確認ダイアログ後、対象を除外したリストで `POST /api/config`
-     を実行
-   - **Update State**: 成功なら `contents` State を更新
+   - **Action**: 確認ダイアログ後、`isSavingConfig` を true
+     に設定し、対象を除外したリストで `POST /api/config` を実行
+   - **Update State**: 成功なら `contents` State を更新し、`isSavingConfig` を
+     false に戻す
 
 ## 6. リポジトリ選択 (Repository Selection)
 
