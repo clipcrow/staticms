@@ -18,7 +18,6 @@ interface UseSubscriptionProps {
   clearPrState: () => void;
   setIsPrLocked: (locked: boolean) => void;
   setPrUrl: (url: string | null) => void;
-  setPrStatus: (status: "open" | "merged" | "closed" | null) => void;
 }
 
 export const useSubscription = ({
@@ -36,7 +35,6 @@ export const useSubscription = ({
   clearPrState,
   setIsPrLocked,
   setPrUrl,
-  setPrStatus,
 }: UseSubscriptionProps) => {
   // Refs for accessing latest state in SSE callback
   const bodyRef = useRef(body);
@@ -136,7 +134,6 @@ export const useSubscription = ({
               console.log("PR closed remotely, resetting...");
               setIsPrLocked(false);
               setPrUrl(null);
-              setPrStatus(null);
 
               // Clear local storage
               clearDraft();
@@ -162,6 +159,5 @@ export const useSubscription = ({
     checkPrStatus,
     setIsPrLocked,
     setPrUrl,
-    setPrStatus,
   ]);
 };

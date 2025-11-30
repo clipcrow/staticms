@@ -18,7 +18,6 @@ interface ContentEditorProps {
     React.SetStateAction<{ id: string; key: string }[]>
   >;
   isPrLocked: boolean;
-  prStatus: "open" | "merged" | "closed" | null;
   prUrl: string | null;
   hasDraft: boolean;
   draftTimestamp: number | null;
@@ -44,7 +43,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   customFields,
   setCustomFields,
   isPrLocked,
-  prStatus,
   prUrl,
   hasDraft,
   draftTimestamp,
@@ -139,28 +137,16 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div className="four wide column staticms-editor-sidebar-column">
           <div>
             {prUrl && (
-              <div
-                className={`ui message ${
-                  prStatus === "merged"
-                    ? "positive"
-                    : prStatus === "closed"
-                    ? "negative"
-                    : "info"
-                }`}
-              >
+              <div className="ui message info">
                 <div className="header">
-                  {prStatus === "merged"
-                    ? "PR Merged"
-                    : prStatus === "closed"
-                    ? "PR Closed"
-                    : "PR Open"}
-                  {prStatus === "open" && prDetails && (
+                  PR Open
+                  {prDetails && (
                     <span className="staticms-editor-pr-number">
                       #{prDetails.number}
                     </span>
                   )}
                 </div>
-                {prStatus === "open" && prDetails?.body && (
+                {prDetails?.body && (
                   <div className="staticms-editor-pr-body">
                     {prDetails.body}
                   </div>
@@ -184,9 +170,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                     onClick={() => setIsPrOpen(!isPrOpen)}
                   >
                     <i
-                      className={`circle icon ${
-                        prStatus === "open" || prUrl ? "green" : "grey"
-                      }`}
+                      className={`circle icon ${prUrl ? "green" : "grey"}`}
                     >
                     </i>
                     Draft / PR

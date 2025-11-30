@@ -1,23 +1,75 @@
 import { useCallback, useEffect, useState } from "react";
-import { Content } from "../types.ts";
+import { Content, PrDetails } from "../types.ts";
 
-export const useDraft = (
+export const useContentEditor = (
   currentContent: Content | null,
   view: string,
   body: string,
   frontMatter: Record<string, unknown> | Record<string, unknown>[],
   initialBody: string,
   initialFrontMatter: Record<string, unknown> | Record<string, unknown>[],
-  prDescription: string,
 ) => {
+  // PR State
+  const [prUrl, setPrUrl] = useState<string | null>(null);
+  const [isPrOpen, setIsPrOpen] = useState(false);
+  const [prDescription, setPrDescription] = useState("");
+  const [isPrLocked, setIsPrLocked] = useState(false);
+  const [prStatus, setPrStatus] = useState<"open" | "merged" | "closed" | null>(
+    null,
+  );
+  const [prDetails, setPrDetails] = useState<PrDetails | null>(null);
+
+  // Draft State
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
+
+  // Helper Keys
+  const getPrKey = useCallback((content: Content) => {
+    return `pr_${content.owner}|${content.repo}|${content.filePath}`;
+  }, []);
 
   const getDraftKey = useCallback((content: Content) => {
     return `draft_${content.owner}|${content.repo}|${content.filePath}`;
   }, []);
 
-  // Draft Saving Logic
+  // PR Logic
+  const clearPrState = useCallback(() => {
+    if (!currentContent) return;
+    const prKey = getPrKey(currentContent);
+    localStorage.removeItem(prKey);
+    setPrUrl(null);
+    setPrStatus(null);
+    setPrDetails(null);
+    setIsPrLocked(false);
+  }, [currentContent, getPrKey]);
+
+  const checkPrStatus = useCallback(async () => {
+    if (!prUrl) return null;
+    try {
+      const res = await fetch(
+        `/api/pr-status?prUrl=${encodeURIComponent(prUrl)}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.state === "open") {
+          setIsPrLocked(true);
+          setPrStatus("open");
+          setPrDetails(data);
+          return "open";
+        } else {
+          setIsPrLocked(false);
+          // PR is merged or closed -> Clear PR status
+          clearPrState();
+          return "closed";
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check PR status", e);
+    }
+    return null;
+  }, [prUrl, clearPrState]);
+
+  // Draft Logic
   useEffect(() => {
     if (view === "content-editor" && currentContent) {
       const key = getDraftKey(currentContent);
@@ -76,6 +128,24 @@ export const useDraft = (
   }, [currentContent, getDraftKey]);
 
   return {
+    // PR State & Methods
+    prUrl,
+    setPrUrl,
+    isPrOpen,
+    setIsPrOpen,
+    prDescription,
+    setPrDescription,
+    isPrLocked,
+    setIsPrLocked,
+    prStatus,
+    setPrStatus,
+    prDetails,
+    setPrDetails,
+    checkPrStatus,
+    clearPrState,
+    getPrKey,
+
+    // Draft State & Methods
     hasDraft,
     draftTimestamp,
     setHasDraft,

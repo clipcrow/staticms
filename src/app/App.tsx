@@ -9,8 +9,7 @@ import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { Header } from "./components/Header.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
-import { useDraft } from "./hooks/useDraft.ts";
-import { usePullRequest } from "./hooks/usePullRequest.ts";
+import { useContentEditor } from "./hooks/useContentEditor.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
 import { useContentConfig } from "./hooks/useContentConfig.ts";
 import { useNavigation } from "./hooks/useNavigation.ts";
@@ -80,30 +79,24 @@ function App() {
     setPrDescription,
     isPrLocked,
     setIsPrLocked,
-    prStatus,
-    setPrStatus,
     prDetails,
     setPrDetails,
     checkPrStatus,
     clearPrState,
     getPrKey,
-  } = usePullRequest(currentContent);
-
-  const {
     hasDraft,
     draftTimestamp,
     setHasDraft,
     setDraftTimestamp,
     clearDraft,
     getDraftKey,
-  } = useDraft(
+  } = useContentEditor(
     currentContent,
     view,
     body,
     frontMatter,
     initialBody,
     initialFrontMatter,
-    prDescription,
   );
 
   const resetContent = useCallback(() => {
@@ -142,7 +135,6 @@ function App() {
       });
     } else {
       setIsPrLocked(false);
-      setPrStatus(null);
       setPrDetails(null);
     }
   }, [prUrl, checkPrStatus, clearDraft, resetContent]);
@@ -178,7 +170,6 @@ function App() {
     clearPrState,
     setIsPrLocked,
     setPrUrl,
-    setPrStatus,
   });
 
   const loadContentData = (content: Content) => {
@@ -438,7 +429,6 @@ function App() {
       isPrOpen={isPrOpen}
       setIsPrOpen={setIsPrOpen}
       isPrLocked={isPrLocked}
-      prStatus={prStatus}
       onReset={handleReset}
       loading={editorLoading}
       prDetails={prDetails}
