@@ -71,8 +71,6 @@ function App() {
   const {
     prUrl,
     setPrUrl,
-    isPrOpen,
-    setIsPrOpen,
     prDescription,
     setPrDescription,
     isPrLocked,
@@ -315,7 +313,6 @@ function App() {
 
         // Clear draft on success
         clearDraft();
-        setIsPrOpen(false);
         setPrDescription("");
 
         // Update initial state to prevent "Unsaved Changes" detection
@@ -422,8 +419,6 @@ function App() {
       draftTimestamp={draftTimestamp}
       prDescription={prDescription}
       setPrDescription={setPrDescription}
-      isPrOpen={isPrOpen}
-      setIsPrOpen={setIsPrOpen}
       isPrLocked={isPrLocked}
       onReset={handleReset}
       loading={editorLoading}

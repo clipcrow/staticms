@@ -18,8 +18,6 @@ interface ContentEditorProps {
   prUrl: string | null;
   hasDraft: boolean;
   draftTimestamp: number | null;
-  isPrOpen: boolean;
-  setIsPrOpen: (isOpen: boolean) => void;
   prDescription: string;
   setPrDescription: (desc: string) => void;
   isSaving: boolean;
@@ -41,8 +39,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   prUrl,
   hasDraft,
   draftTimestamp,
-  isPrOpen,
-  setIsPrOpen,
   prDescription,
   setPrDescription,
   isSaving,
@@ -53,6 +49,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   loading,
   prDetails,
 }) => {
+  const [isPrOpen, setIsPrOpen] = React.useState(false);
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
     currentContent.filePath.endsWith(".yml");
 

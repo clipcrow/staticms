@@ -11,12 +11,8 @@ export const useContentEditor = (
 ) => {
   // PR State
   const [prUrl, setPrUrl] = useState<string | null>(null);
-  const [isPrOpen, setIsPrOpen] = useState(false);
   const [prDescription, setPrDescription] = useState("");
   const [isPrLocked, setIsPrLocked] = useState(false);
-  const [prStatus, setPrStatus] = useState<"open" | "merged" | "closed" | null>(
-    null,
-  );
   const [prDetails, setPrDetails] = useState<PrDetails | null>(null);
 
   // Draft State
@@ -38,7 +34,6 @@ export const useContentEditor = (
     const prKey = getPrKey(currentContent);
     localStorage.removeItem(prKey);
     setPrUrl(null);
-    setPrStatus(null);
     setPrDetails(null);
     setIsPrLocked(false);
   }, [currentContent, getPrKey]);
@@ -53,7 +48,6 @@ export const useContentEditor = (
         const data = await res.json();
         if (data.state === "open") {
           setIsPrLocked(true);
-          setPrStatus("open");
           setPrDetails(data);
           return "open";
         } else {
@@ -131,14 +125,10 @@ export const useContentEditor = (
     // PR State & Methods
     prUrl,
     setPrUrl,
-    isPrOpen,
-    setIsPrOpen,
     prDescription,
     setPrDescription,
     isPrLocked,
     setIsPrLocked,
-    prStatus,
-    setPrStatus,
     prDetails,
     setPrDetails,
     checkPrStatus,
