@@ -20,24 +20,14 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   );
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
-  const adjustHeight = React.useCallback(() => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      // Reset to 100% (CSS height) to allow shrinking and measure natural parent height
-      textarea.style.height = "100%";
-
-      // If content overflows the 100% height, expand to fit content
-      if (textarea.scrollHeight > textarea.clientHeight) {
-        textarea.style.height = `${textarea.scrollHeight}px`;
+  React.useLayoutEffect(() => {
+    if (activeTab === "write" && textareaRef.current) {
+      const parent = textareaRef.current.parentElement;
+      if (parent) {
+        textareaRef.current.style.height = `${parent.clientHeight}px`;
       }
     }
-  }, []);
-
-  React.useEffect(() => {
-    if (activeTab === "write") {
-      adjustHeight();
-    }
-  }, [activeTab, body, adjustHeight]);
+  }, [activeTab]);
 
   return (
     <div className="staticms-md-editor-root">
@@ -68,14 +58,10 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                 ref={textareaRef}
                 className="staticms-md-textarea"
                 value={body}
-                onChange={(e) => {
-                  setBody(e.target.value);
-                  adjustHeight();
-                }}
+                onChange={(e) => setBody(e.target.value)}
                 placeholder="Start editing markdown body..."
                 readOnly={isPrLocked}
                 disabled={isPrLocked}
-                style={{ overflow: "hidden" }}
               />
             </div>
           )

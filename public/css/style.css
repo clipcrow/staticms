@@ -283,27 +283,26 @@
   margin-top: 0 !important;
   padding: 0 !important;
   border-top: none !important;
+  height: 100%;
 }
 
 .staticms-md-write-container {
   flex: 1;
-  display: flex !important;
-  flex-direction: column;
+  display: block;
   min-height: 300px;
+  height: 100%;
 }
 
 .staticms-md-textarea {
-  flex: 1;
   width: 100%;
-  resize: none !important;
+  resize: vertical !important;
   font-family: monospace !important;
   border: none !important;
   outline: none !important;
   border-radius: 0 !important;
   padding: 1em !important;
   display: block;
-  height: 100%;
-  min-height: 100%;
+  box-sizing: border-box;
 }
 
 .staticms-md-preview-container {
