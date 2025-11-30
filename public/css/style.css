@@ -108,7 +108,7 @@
 }
 
 .staticms-editor-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
@@ -149,10 +149,8 @@
 
 .staticms-editor-grid {
   flex: 1;
-  overflow: hidden;
   margin: 2em 0 0 0 !important;
   width: 100% !important;
-  height: 100%;
   display: flex !important;
   flex-wrap: nowrap !important;
   align-items: stretch;
@@ -161,7 +159,6 @@
 .staticms-editor-main-column {
   display: flex;
   flex-direction: column;
-  height: 100%;
   padding: 0 1em !important; /* Keep horizontal padding */
 }
 
@@ -176,18 +173,14 @@
 
 .staticms-editor-fm-segment-yaml {
   flex: 1;
-  height: 100%; /* Force height */
 }
 
 .staticms-editor-fm-segment-md {
   flex-shrink: 0;
-  height: 40%; /* Use fixed height instead of max-height to ensure container has size */
-  max-height: 40%;
 }
 
 .staticms-editor-sidebar-column {
-  height: 100%;
-  overflow-y: auto;
+  padding-bottom: 2em !important;
 }
 
 .staticms-editor-pr-number {
@@ -271,9 +264,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
+  min-height: 500px;
 }
 
 .staticms-md-tab-menu {
@@ -291,7 +282,6 @@
   flex-direction: column;
   margin-top: 0 !important;
   padding: 0 !important;
-  overflow: hidden;
   border-top: none !important;
 }
 
@@ -299,7 +289,7 @@
   flex: 1;
   display: flex !important;
   flex-direction: column;
-  min-height: 0;
+  min-height: 300px;
 }
 
 .staticms-md-textarea {
@@ -312,12 +302,13 @@
   border-radius: 0 !important;
   padding: 1em !important;
   display: block;
+  height: 100%;
+  min-height: 100%;
 }
 
 .staticms-md-preview-container {
-  overflow-y: auto;
-  height: 100%;
   padding: 1em !important;
+  min-height: 300px;
 }
 
 .staticms-repo-selector-container {

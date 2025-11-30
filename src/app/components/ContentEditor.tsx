@@ -109,9 +109,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <div
               style={{
                 flex: 1,
-                overflowY: "auto",
                 minHeight: 0,
-                height: "100%",
                 padding: "1em",
               }}
             >
