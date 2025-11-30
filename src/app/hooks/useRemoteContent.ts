@@ -18,6 +18,7 @@ export const useRemoteContent = () => {
   const [commits, setCommits] = useState<Commit[]>([]);
   const [editorLoading, setEditorLoading] = useState(false);
   const [loadedBranch, setLoadedBranch] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
 
   const loadContent = useCallback(
     async (
@@ -28,8 +29,13 @@ export const useRemoteContent = () => {
       setHasDraft: (has: boolean) => void,
       setDraftTimestamp: (ts: number | null) => void,
       setPrDescription: (desc: string) => void,
+      isReset: boolean = false,
     ) => {
-      setEditorLoading(true);
+      if (isReset) {
+        setIsResetting(true);
+      } else {
+        setEditorLoading(true);
+      }
       setPrUrl(null); // Reset PR URL state
 
       const params = new URLSearchParams({
@@ -62,7 +68,11 @@ export const useRemoteContent = () => {
           setSha("");
           setLoadedBranch(content.branch || "");
           setPrDescription("");
-          setEditorLoading(false);
+          if (isReset) {
+            setIsResetting(false);
+          } else {
+            setEditorLoading(false);
+          }
           return;
         }
 
@@ -170,6 +180,7 @@ export const useRemoteContent = () => {
             setBody(parsedBody);
             setFrontMatter(parsedFM);
             setHasDraft(false);
+            setDraftTimestamp(null);
             setPrDescription("");
 
             // Initialize custom fields from remote
@@ -199,7 +210,11 @@ export const useRemoteContent = () => {
       } catch (e) {
         console.error(e);
       } finally {
-        setEditorLoading(false);
+        if (isReset) {
+          setIsResetting(false);
+        } else {
+          setEditorLoading(false);
+        }
       }
 
       // Fetch commit history
@@ -233,6 +248,7 @@ export const useRemoteContent = () => {
     setCommits,
     editorLoading,
     setEditorLoading,
+    isResetting,
     loadedBranch,
     setLoadedBranch,
     loadContent,

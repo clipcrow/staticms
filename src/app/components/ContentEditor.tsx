@@ -27,6 +27,7 @@ interface ContentEditorProps {
   onBack: () => void;
   loading: boolean;
   prDetails: PrDetails | null;
+  isResetting?: boolean;
 }
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -48,6 +49,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   onBack,
   loading,
   prDetails,
+  isResetting = false,
 }) => {
   const [isPrOpen, setIsPrOpen] = React.useState(false);
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
@@ -253,9 +255,11 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                       <div className="staticms-editor-reset-container">
                         <button
                           type="button"
-                          className="ui red button staticms-editor-reset-button"
+                          className={`ui red button staticms-editor-reset-button ${
+                            isResetting ? "loading" : ""
+                          }`}
                           onClick={onReset}
-                          disabled={loading || isSaving}
+                          disabled={loading || isSaving || isResetting}
                           title="Reset changes"
                         >
                           <i className="undo icon"></i>

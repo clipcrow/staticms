@@ -63,6 +63,7 @@ function App() {
     editorLoading,
     loadedBranch,
     loadContent,
+    isResetting,
   } = useRemoteContent();
 
   const {
@@ -98,7 +99,10 @@ function App() {
   const resetContent = useCallback(() => {
     if (!currentContent) return;
 
-    clearDraft();
+    // Manually remove from local storage to ensure loadContent doesn't pick it up
+    // but keep hasDraft state true so the UI doesn't flicker/hide immediately
+    const key = getDraftKey(currentContent);
+    localStorage.removeItem(key);
 
     loadContent(
       currentContent,
@@ -108,6 +112,7 @@ function App() {
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
+      true,
     );
   }, [
     currentContent,
@@ -286,6 +291,7 @@ function App() {
       isPrLocked={isPrLocked}
       onReset={handleReset}
       loading={editorLoading}
+      isResetting={isResetting}
       prDetails={prDetails}
     />
   );
