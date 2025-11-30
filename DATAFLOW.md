@@ -14,12 +14,12 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - `GET /api/commits`: ファイルのコミット履歴を取得
 4. **Parse & State Setup (useRemoteContent Hook)**:
    - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
-   - `useDraft` フックのキー生成ロジックを使用して `localStorage` (`draft_...`
-     ※実際は `|` 区切り) を確認
+   - `useContentEditor` フックのキー生成ロジックを使用して `localStorage`
+     (`draft_...` ※実際は `|` 区切り) を確認
      - ドラフトが存在する場合: ドラフトの内容で State (`body`, `frontMatter`)
        を上書き (ユーザーに復元されたことを示す)
      - ドラフトがない場合: リモートの内容を State にセット
-   - `usePullRequest` フックのキー生成ロジックを使用して `localStorage`
+   - `useContentEditor` フックのキー生成ロジックを使用して `localStorage`
      (`pr_...` ※実際は `|` 区切り) を確認し、`prUrl` State にセット
 5. **View Transition (useNavigation Hook)**:
    - `currentContent` を更新
@@ -34,8 +34,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 1. **User Action**: テキストエリアの変更、Front Matter フィールドの変更
 2. **State Update**: `useRemoteContent` で管理される `body`, `frontMatter` State
    が更新される
-3. **Auto Save Draft (useDraft Hook)**:
-   - `useDraft` 内の `useEffect` が変更を検知
+3. **Auto Save Draft (useContentEditor Hook)**:
+   - `useContentEditor` 内の `useEffect` が変更を検知
    - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
    - 変更がある場合 (`isDirty`):
      - `localStorage` (`draft_...` ※実際は `|` 区切り) に現在の内容を保存
@@ -58,8 +58,8 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
    - Server: GitHub API を使用してブランチ作成、コミット、PR 作成を行う
    - Client: レスポンスから `prUrl` を受け取る
 5. **Post-Save Actions**:
-   - `prUrl` を `usePullRequest` フック経由で `localStorage` (`pr_...`) に保存
-   - `useDraft` フック経由でドラフト (`draft_...`) を削除
+   - `prUrl` を `useContentEditor` フック経由で `localStorage` (`pr_...`) に保存
+   - `useContentEditor` フック経由でドラフト (`draft_...`) を削除
    - `initialBody`, `initialFrontMatter` を現在の内容で更新 (Unsaved changes
      状態の解除)
    - `isPrOpen` (Draft UI) を閉じる
@@ -69,14 +69,14 @@ ContentEditor画面におけるファイル操作のデータフローとイベ�
 外部で PR
 がマージ/クローズされたり、リモートで変更があった場合の同期フローです。
 
-### A. Polling (Status Check via usePullRequest & App.tsx)
+### A. Polling (Status Check via useContentEditor & App.tsx)
 
 - **Trigger**: `App.tsx` の `useEffect` (prUrl 依存)
-- **Action**: `checkPrStatus` (from `usePullRequest`) -> `GET /api/pr-status`
+- **Action**: `checkPrStatus` (from `useContentEditor`) -> `GET /api/pr-status`
 - **Result**:
   - `open`: `isPrLocked` を true に設定 (編集ロック)
   - `merged` / `closed`:
-    - `usePullRequest` が `prUrl`, `prStatus` をクリア
+    - `useContentEditor` が `prUrl`, `prStatus` をクリア
     - `App.tsx` が `closed` ステータスを受け取り、`clearDraft()` と
       `resetContent()` (内部で `loadContent` を呼び出し) を実行して最新化
 
