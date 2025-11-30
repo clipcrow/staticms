@@ -2,13 +2,13 @@
   margin-top: 2em;
   flex-shrink: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
 }
 
 .staticms-header-left {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
 }
 
 .staticms-header-title {
@@ -18,7 +18,7 @@
 
 .staticms-header-children {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   border-left: 1px solid rgba(34, 36, 38, 0.15);
   padding-left: 1em;
 }
@@ -150,7 +150,7 @@
 .staticms-editor-grid {
   flex: 1;
   overflow: hidden;
-  margin: 0 !important;
+  margin: 2em 0 0 0 !important;
   width: 100% !important;
   height: 100%;
   display: flex !important;
