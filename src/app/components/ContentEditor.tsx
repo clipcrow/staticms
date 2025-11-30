@@ -100,7 +100,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
       <div className="ui grid staticms-editor-grid">
         <div className="twelve wide column staticms-editor-main-column">
           <div
-            className={`ui segment staticms-editor-fm-segment ${
+            className={`staticms-editor-fm-segment ${
               isYaml
                 ? "staticms-editor-fm-segment-yaml"
                 : "staticms-editor-fm-segment-md"
@@ -110,7 +110,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               style={{
                 flex: 1,
                 minHeight: 0,
-                padding: "1em",
               }}
             >
               {Array.isArray(frontMatter)
