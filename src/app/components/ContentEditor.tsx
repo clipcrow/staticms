@@ -2,7 +2,8 @@ import React from "react";
 import { Commit, Content, PrDetails } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { ContentHistory } from "./ContentHistory.tsx";
-import { FrontMatterEditor } from "./FrontMatterEditor.tsx";
+import { FrontMatterItemEditor } from "./FrontMatterItemEditor.tsx";
+import { FrontMatterListEditor } from "./FrontMatterListEditor.tsx";
 import { MarkdownEditor } from "./MarkdownEditor.tsx";
 
 interface ContentEditorProps {
@@ -114,14 +115,39 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 : "staticms-editor-fm-segment-md"
             }`}
           >
-            <FrontMatterEditor
-              frontMatter={frontMatter}
-              setFrontMatter={setFrontMatter}
-              currentContent={currentContent}
-              isPrLocked={isPrLocked}
-              customFields={customFields}
-              setCustomFields={setCustomFields}
-            />
+            <div
+              style={{
+                flex: 1,
+                overflowY: "auto",
+                minHeight: 0,
+                height: "100%",
+                padding: "1em",
+              }}
+            >
+              {Array.isArray(frontMatter)
+                ? (
+                  <FrontMatterListEditor
+                    frontMatter={frontMatter}
+                    setFrontMatter={setFrontMatter as (
+                      fm: Record<string, unknown>[],
+                    ) => void}
+                    currentContent={currentContent}
+                    isPrLocked={isPrLocked}
+                  />
+                )
+                : (
+                  <FrontMatterItemEditor
+                    frontMatter={frontMatter as Record<string, unknown>}
+                    setFrontMatter={setFrontMatter as (
+                      fm: Record<string, unknown>,
+                    ) => void}
+                    currentContent={currentContent}
+                    isPrLocked={isPrLocked}
+                    customFields={customFields}
+                    setCustomFields={setCustomFields}
+                  />
+                )}
+            </div>
           </div>
 
           {/* Tab Menu */}

@@ -166,15 +166,22 @@
 }
 
 .staticms-editor-fm-segment {
-  overflow-y: auto;
+  min-height: 0;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 0
+    !important; /* Remove padding from segment to let inner div scroll fully */
+  border: none !important; /* Optional: remove border if it interferes */
 }
 
 .staticms-editor-fm-segment-yaml {
   flex: 1;
+  height: 100%; /* Force height */
 }
 
 .staticms-editor-fm-segment-md {
   flex-shrink: 0;
+  height: 40%; /* Use fixed height instead of max-height to ensure container has size */
   max-height: 40%;
 }
 

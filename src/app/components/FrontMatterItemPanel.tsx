@@ -6,12 +6,12 @@ interface FrontMatterItemPanelProps {
   itemIndex: number;
   currentContent: Content;
   isPrLocked: boolean;
-  draggedItemIndex: number | null;
-  onDragStart: (index: number) => void;
-  onDragOver: (index: number) => void;
-  onDragEnd: () => void;
+  draggedItemIndex?: number | null;
+  onDragStart?: (index: number) => void;
+  onDragOver?: (index: number) => void;
+  onDragEnd?: () => void;
   onUpdateItem: (index: number, newItem: Record<string, unknown>) => void;
-  onDeleteItem: (index: number) => void;
+  onDeleteItem?: (index: number) => void;
 }
 
 export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
@@ -48,18 +48,22 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
     onUpdateItem(itemIndex, newItem);
   };
 
+  const isDraggable = Boolean(
+    !isPrLocked && onDragStart && onDragOver && onDragEnd,
+  );
+
   return (
     <div
       className="ui segment staticms-fm-item-segment"
       style={{
         opacity: draggedItemIndex === itemIndex ? 0.5 : 1,
-        cursor: isPrLocked ? "default" : "grab",
+        cursor: isDraggable ? "grab" : "default",
       }}
-      draggable={!isPrLocked}
-      onDragStart={() => onDragStart(itemIndex)}
+      draggable={isDraggable}
+      onDragStart={() => onDragStart && onDragStart(itemIndex)}
       onDragOver={(e) => {
         e.preventDefault();
-        onDragOver(itemIndex);
+        onDragOver && onDragOver(itemIndex);
       }}
       onDragEnd={onDragEnd}
     >
@@ -157,18 +161,20 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
               Add Field
             </button>
           </div>
-          <div className="four wide column right aligned">
-            <button
-              type="button"
-              className="ui button negative mini"
-              onClick={() => onDeleteItem(itemIndex)}
-              disabled={isPrLocked}
-              title="Delete Item"
-            >
-              <i className="trash icon"></i>
-              Delete Item
-            </button>
-          </div>
+          {onDeleteItem && (
+            <div className="four wide column right aligned">
+              <button
+                type="button"
+                className="ui button negative mini"
+                onClick={() => onDeleteItem(itemIndex)}
+                disabled={isPrLocked}
+                title="Delete Item"
+              >
+                <i className="trash icon"></i>
+                Delete Item
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
