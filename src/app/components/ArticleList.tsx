@@ -1,85 +1,40 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
-import { useArticleList } from "../hooks/useArticleList.ts";
+import { FileItem } from "../hooks/useArticleList.ts";
 
 interface ArticleListProps {
   contentConfig: Content;
   onBack: () => void;
   onSelectArticle: (path: string) => void;
+  files: FileItem[];
+  loading: boolean;
+  error: string | null;
+  createArticle: (name: string) => Promise<string | undefined>;
+  isCreating: boolean;
 }
 
 export const ArticleList: React.FC<ArticleListProps> = ({
   contentConfig,
   onBack,
   onSelectArticle,
+  files,
+  loading,
+  error,
+  createArticle,
+  isCreating,
 }) => {
-  const { files, loading, error, fetchFiles } = useArticleList(contentConfig);
   const [newArticleName, setNewArticleName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
 
-  useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
-
-  const handleCreateArticle = () => {
-    if (!newArticleName.trim()) return;
-    // Basic validation for file/folder name
-    if (!/^[a-zA-Z0-9-_]+$/.test(newArticleName)) {
-      alert(
-        "Article name can only contain letters, numbers, hyphens, and underscores.",
-      );
-      return;
-    }
-
-    // Check for duplicates
-    const duplicate = files.some((f) => {
-      if (contentConfig.type === "collection-files") {
-        return f.name === `${newArticleName}.md`;
-      } else if (contentConfig.type === "collection-dirs") {
-        return f.name === newArticleName;
-      }
-      return false;
-    });
-
-    if (duplicate) {
-      alert("An article with this name already exists.");
-      return;
-    }
-
-    setIsCreating(true);
+  const handleCreateArticle = async () => {
     try {
-      let path = "";
-      if (contentConfig.type === "collection-files") {
-        path = `${contentConfig.filePath}/${newArticleName}.md`;
-      } else if (contentConfig.type === "collection-dirs") {
-        path = `${contentConfig.filePath}/${newArticleName}/index.md`;
-      } else {
-        throw new Error("Invalid content type for article creation");
+      const path = await createArticle(newArticleName);
+      if (path) {
+        onSelectArticle(path);
       }
-
-      // Create draft in localStorage instead of creating file on GitHub
-      const draftKey = `draft_${contentConfig.owner}|${contentConfig.repo}|${
-        contentConfig.branch || ""
-      }|${path}`;
-
-      const draftData = {
-        body: "",
-        frontMatter: {},
-        prDescription: `Create article ${newArticleName}`,
-        timestamp: Date.now(),
-        type: "created", // Mark as new creation
-      };
-
-      localStorage.setItem(draftKey, JSON.stringify(draftData));
-
-      // Navigate to editor
-      onSelectArticle(path);
     } catch (e) {
       console.error(e);
       alert((e as Error).message);
-    } finally {
-      setIsCreating(false);
     }
   };
 

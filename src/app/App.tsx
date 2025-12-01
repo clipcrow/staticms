@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
@@ -12,6 +13,7 @@ import { useContentConfig } from "./hooks/useContentConfig.ts";
 import { useNavigation } from "./hooks/useNavigation.ts";
 import { useRepository } from "./hooks/useRepository.ts";
 import { useSubscription } from "./hooks/useSubscription.ts";
+import { useArticleList } from "./hooks/useArticleList.ts";
 
 function App() {
   const {
@@ -100,6 +102,21 @@ function App() {
     setLoadingContentIndex,
   );
 
+  const {
+    files: articleFiles,
+    loading: articleLoading,
+    error: articleError,
+    fetchFiles: fetchArticles,
+    createArticle,
+    isCreating: isCreatingArticle,
+  } = useArticleList(currentContent);
+
+  useEffect(() => {
+    if (view === "article-list" && currentContent) {
+      fetchArticles();
+    }
+  }, [view, currentContent, fetchArticles]);
+
   useSubscription({
     currentContent,
     prUrl,
@@ -174,6 +191,11 @@ function App() {
             -1,
           );
         }}
+        files={articleFiles}
+        loading={articleLoading}
+        error={articleError}
+        createArticle={createArticle}
+        isCreating={isCreatingArticle}
       />
     );
   }
