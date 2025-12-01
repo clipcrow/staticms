@@ -585,7 +585,7 @@ router.get("/api/content", async (ctx) => {
       ctx.response.body = {
         type: "dir",
         branch: targetBranch,
-        files: data.map((item: any) => ({
+        files: data.map((item) => ({
           name: item.name,
           path: item.path,
           type: item.type,
@@ -768,6 +768,55 @@ router.post("/api/content", async (ctx) => {
     );
 
     ctx.response.body = { success: true, prUrl: prData.html_url };
+  } catch (e) {
+    console.error(e);
+    ctx.response.status = 500;
+    ctx.response.body = { error: (e as Error).message };
+  }
+});
+
+router.post("/api/create-file", async (ctx) => {
+  const token = await getSessionToken(ctx);
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
+
+  try {
+    const body = await ctx.request.body.json();
+    const { content = "", message, owner, repo, path, branch } = body;
+
+    if (!owner || !repo || !path) {
+      ctx.throw(400, "Missing owner, repo, or path in body");
+    }
+
+    // Determine branch
+    let targetBranch = branch;
+    if (!targetBranch) {
+      const repoData = await githubRequest(
+        `https://api.github.com/repos/${owner}/${repo}`,
+        {},
+        token,
+      );
+      targetBranch = repoData.default_branch;
+    }
+
+    // Create file directly on the branch
+    const res = await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          message: message || `Create ${path} via Staticms`,
+          content: btoa(unescape(encodeURIComponent(content))),
+          branch: targetBranch,
+        }),
+      },
+      token,
+    );
+
+    ctx.response.body = { success: true, content: res.content };
   } catch (e) {
     console.error(e);
     ctx.response.status = 500;

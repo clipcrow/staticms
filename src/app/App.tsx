@@ -164,13 +164,15 @@ function App() {
           setView("content-list");
         }}
         onSelectArticle={(path: string) => {
-          setCurrentContent({
-            ...currentContent,
-            filePath: path,
-            name: undefined,
-            type: "singleton",
-          });
-          setView("content-editor");
+          handleSelectContent(
+            {
+              ...currentContent,
+              filePath: path,
+              name: undefined,
+              type: "singleton",
+            },
+            -1,
+          );
         }}
       />
     );
