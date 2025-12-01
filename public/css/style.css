@@ -272,49 +272,6 @@
   min-height: 500px;
 }
 
-.staticms-md-tab-menu {
-  margin-top: 1em !important;
-  flex-shrink: 0;
-}
-
-.staticms-md-tab-item {
-  cursor: pointer !important;
-}
-
-.staticms-md-bottom-segment {
-  flex: 1;
-  display: flex !important;
-  flex-direction: column;
-  margin-top: 0 !important;
-  padding: 0 !important;
-  border-top: none !important;
-  height: 100%;
-}
-
-.staticms-md-write-container {
-  flex: 1;
-  display: block;
-  min-height: 300px;
-  height: 100%;
-}
-
-.staticms-md-textarea {
-  width: 100%;
-  resize: vertical !important;
-  font-family: monospace !important;
-  border: none !important;
-  outline: none !important;
-  border-radius: 0 !important;
-  padding: 1em !important;
-  display: block;
-  box-sizing: border-box;
-}
-
-.staticms-md-preview-container {
-  padding: 1em !important;
-  min-height: 300px;
-}
-
 .staticms-repo-selector-container {
   height: 100vh;
   display: flex;
