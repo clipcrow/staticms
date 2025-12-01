@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
+import { useArticleList } from "../hooks/useArticleList.ts";
 
 interface ArticleListProps {
   contentConfig: Content;
@@ -8,55 +9,14 @@ interface ArticleListProps {
   onSelectArticle: (path: string) => void;
 }
 
-interface FileItem {
-  name: string;
-  path: string;
-  type: "file" | "dir";
-  sha: string;
-}
-
 export const ArticleList: React.FC<ArticleListProps> = ({
   contentConfig,
   onBack,
   onSelectArticle,
 }) => {
-  const [files, setFiles] = useState<FileItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { files, loading, error, fetchFiles } = useArticleList(contentConfig);
   const [newArticleName, setNewArticleName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
-
-  const fetchFiles = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        owner: contentConfig.owner,
-        repo: contentConfig.repo,
-        filePath: contentConfig.filePath,
-      });
-      if (contentConfig.branch) {
-        params.append("branch", contentConfig.branch);
-      }
-
-      const res = await fetch(`/api/content?${params.toString()}`);
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to fetch files");
-      }
-      const data = await res.json();
-
-      if (data.type === "dir" && Array.isArray(data.files)) {
-        setFiles(data.files);
-      } else {
-        setError("Not a directory or empty");
-      }
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [contentConfig]);
 
   useEffect(() => {
     fetchFiles();
