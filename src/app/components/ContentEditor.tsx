@@ -87,9 +87,30 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           <span className="staticms-editor-separator">
             /
           </span>
-          <span className="staticms-editor-file-name">
-            {currentContent.name || currentContent.filePath}
-          </span>
+          {currentContent.collectionName
+            ? (
+              <>
+                <span
+                  className="staticms-editor-collection-name"
+                  onClick={onBack}
+                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                >
+                  {currentContent.collectionName}
+                </span>
+                <span className="staticms-editor-separator">
+                  /
+                </span>
+                <span className="staticms-editor-file-name">
+                  {currentContent.name ||
+                    currentContent.filePath.split("/").pop()}
+                </span>
+              </>
+            )
+            : (
+              <span className="staticms-editor-file-name">
+                {currentContent.name || currentContent.filePath}
+              </span>
+            )}
           {isPrLocked && (
             <div className="ui label orange mini staticms-editor-pr-label">
               <i className="lock icon"></i>

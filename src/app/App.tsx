@@ -187,6 +187,7 @@ function App() {
               filePath: path,
               name: undefined,
               type: "singleton",
+              collectionName: currentContent.name || currentContent.filePath,
             },
             -1,
           );

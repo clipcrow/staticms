@@ -10,6 +10,7 @@ export interface Content {
   name?: string;
   type?: "singleton" | "collection-files" | "collection-dirs";
   fields: Field[];
+  collectionName?: string;
 }
 
 export interface Config {
