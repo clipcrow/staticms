@@ -8,7 +8,14 @@ export interface FileItem {
   sha: string;
 }
 
-export const useArticleList = (contentConfig: Content | null) => {
+export const useArticleList = (contentConfig: Content | null): {
+  files: FileItem[];
+  loading: boolean;
+  error: string | null;
+  fetchFiles: () => Promise<void>;
+  createArticle: (name: string) => string | undefined;
+  isCreating: boolean;
+} => {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

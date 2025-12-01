@@ -118,6 +118,18 @@
   margin-right: 0.5em !important;
 }
 
+.staticms-editor-collection-button {
+  display: inline-flex !important;
+  align-items: center;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer;
+  color: #4183c4 !important;
+  margin: 0 0.5em !important;
+}
+
 .staticms-editor-repo-name {
   font-weight: bold !important;
 }

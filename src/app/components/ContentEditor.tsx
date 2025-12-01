@@ -28,6 +28,7 @@ interface ContentEditorProps {
   loading: boolean;
   prDetails: PrDetails | null;
   isResetting?: boolean;
+  onBackToCollection?: () => void;
 }
 
 export const ContentEditor: React.FC<ContentEditorProps> = ({
@@ -50,6 +51,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   loading,
   prDetails,
   isResetting = false,
+  onBackToCollection,
 }) => {
   const [isPrOpen, setIsPrOpen] = React.useState(false);
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
@@ -72,7 +74,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             className="ui blue button staticms-editor-back-button"
             onClick={onBack}
           >
-            <i className="reply icon"></i>
             <i className="github icon"></i>
             <span className="staticms-editor-repo-name">
               {currentContent.owner}/{currentContent.repo}
@@ -92,9 +93,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               <>
                 <button
                   type="button"
-                  className="ui basic button staticms-editor-collection-button"
-                  onClick={onBack}
-                  style={{ marginLeft: "5px", marginRight: "5px" }}
+                  className="ui blue button staticms-editor-collection-button"
+                  onClick={onBackToCollection || onBack}
                 >
                   <i className="folder open icon"></i>
                   {currentContent.collectionName}

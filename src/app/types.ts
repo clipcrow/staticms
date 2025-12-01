@@ -11,6 +11,8 @@ export interface Content {
   type?: "singleton" | "collection-files" | "collection-dirs";
   fields: Field[];
   collectionName?: string;
+  collectionPath?: string;
+  collectionType?: "singleton" | "collection-files" | "collection-dirs";
 }
 
 export interface Config {

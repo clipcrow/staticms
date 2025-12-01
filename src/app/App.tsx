@@ -188,6 +188,8 @@ function App() {
               name: undefined,
               type: "singleton",
               collectionName: currentContent.name || currentContent.filePath,
+              collectionPath: currentContent.filePath,
+              collectionType: currentContent.type,
             },
             -1,
           );
@@ -242,6 +244,23 @@ function App() {
       loading={editorLoading}
       isResetting={isResetting}
       prDetails={prDetails}
+      onBackToCollection={() => {
+        if (currentContent?.collectionPath) {
+          setCurrentContent({
+            ...currentContent,
+            filePath: currentContent.collectionPath,
+            type: currentContent.collectionType as
+              | "singleton"
+              | "collection-files"
+              | "collection-dirs",
+            name: currentContent.collectionName,
+            collectionName: undefined,
+            collectionPath: undefined,
+            collectionType: undefined,
+          });
+          setView("article-list");
+        }
+      }}
     />
   );
 }

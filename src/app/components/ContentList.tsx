@@ -2,6 +2,7 @@ import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { getDraftKey, getPrKey } from "../hooks/utils.ts";
+import { ContentListItem } from "./ContentListItem.tsx";
 
 interface ContentListProps {
   contents: Content[];
@@ -60,11 +61,19 @@ export const ContentList: React.FC<ContentListProps> = ({
             : (
               <div className="ui relaxed divided list">
                 {contents.map((item, index) => (
-                  <div
+                  <ContentListItem
                     key={index}
-                    className="item staticms-content-list-item"
-                  >
-                    <div className="right floated content">
+                    title={item.name || item.filePath}
+                    icon={<i className="file outline icon"></i>}
+                    loading={loadingItemIndex === index}
+                    disabled={loadingItemIndex !== null &&
+                      loadingItemIndex !== index}
+                    onClick={() => {
+                      if (loadingItemIndex === null) {
+                        onSelectContent(item, index);
+                      }
+                    }}
+                    actions={
                       <button
                         type="button"
                         onClick={(e) => {
@@ -77,74 +86,48 @@ export const ContentList: React.FC<ContentListProps> = ({
                       >
                         <i className="edit icon"></i>
                       </button>
-                    </div>
-                    <div
-                      className="content staticms-content-list-clickable"
-                      onClick={() => {
-                        if (loadingItemIndex === null) {
-                          onSelectContent(item, index);
-                        }
-                      }}
-                      style={{
-                        cursor: loadingItemIndex === null
-                          ? "pointer"
-                          : "default",
-                        opacity: loadingItemIndex !== null &&
-                            loadingItemIndex !== index
-                          ? 0.5
-                          : 1,
-                      }}
-                    >
-                      {loadingItemIndex === index
-                        ? (
-                          <div className="ui active mini inline loader staticms-content-list-loader">
-                          </div>
-                        )
-                        : (
-                          <i className="file outline icon staticms-content-list-icon">
-                          </i>
+                    }
+                    labels={
+                      <>
+                        {item.branch && (
+                          <span className="ui label mini basic staticms-content-list-branch">
+                            <i className="code branch icon"></i>
+                            {item.branch}
+                          </span>
                         )}
-                      <span className="header staticms-content-list-header">
-                        {item.name || item.filePath}
-                      </span>
-                      {item.branch && (
-                        <span className="ui label mini basic staticms-content-list-branch">
-                          <i className="code branch icon"></i>
-                          {item.branch}
-                        </span>
-                      )}
-                      {(() => {
-                        const prKey = getPrKey(item);
-                        const draftKey = getDraftKey(item);
-                        const hasPr = localStorage.getItem(prKey);
-                        const hasDraft = localStorage.getItem(draftKey);
+                        {(() => {
+                          const prKey = getPrKey(item);
+                          const draftKey = getDraftKey(item);
+                          const hasPr = localStorage.getItem(prKey);
+                          const hasDraft = localStorage.getItem(draftKey);
 
-                        if (hasPr) {
-                          return (
-                            <span
-                              className="ui label orange mini basic"
-                              style={{ marginLeft: "0.5em" }}
-                            >
-                              <i className="lock icon"></i>
-                              PR Open
-                            </span>
-                          );
-                        }
-                        if (hasDraft) {
-                          return (
-                            <span
-                              className="ui label gray mini basic"
-                              style={{ marginLeft: "0.5em" }}
-                            >
-                              <i className="edit icon"></i>
-                              Draft / PR
-                            </span>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  </div>
+                          if (hasPr) {
+                            return (
+                              <span
+                                className="ui label orange mini basic"
+                                style={{ marginLeft: "0.5em" }}
+                              >
+                                <i className="lock icon"></i>
+                                PR Open
+                              </span>
+                            );
+                          }
+                          if (hasDraft) {
+                            return (
+                              <span
+                                className="ui label gray mini basic"
+                                style={{ marginLeft: "0.5em" }}
+                              >
+                                <i className="edit icon"></i>
+                                Draft / PR
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </>
+                    }
+                  />
                 ))}
               </div>
             )}

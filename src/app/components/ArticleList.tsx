@@ -2,15 +2,16 @@ import React, { useState } from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { FileItem } from "../hooks/useArticleList.ts";
+import { ContentListItem } from "./ContentListItem.tsx";
 
-interface ArticleListProps {
+export interface ArticleListProps {
   contentConfig: Content;
   onBack: () => void;
   onSelectArticle: (path: string) => void;
   files: FileItem[];
   loading: boolean;
   error: string | null;
-  createArticle: (name: string) => Promise<string | undefined>;
+  createArticle: (name: string) => string | undefined;
   isCreating: boolean;
 }
 
@@ -26,9 +27,9 @@ export const ArticleList: React.FC<ArticleListProps> = ({
 }) => {
   const [newArticleName, setNewArticleName] = useState("");
 
-  const handleCreateArticle = async () => {
+  const handleCreateArticle = () => {
     try {
-      const path = await createArticle(newArticleName);
+      const path = createArticle(newArticleName);
       if (path) {
         onSelectArticle(path);
       }
@@ -47,7 +48,6 @@ export const ArticleList: React.FC<ArticleListProps> = ({
             className="ui blue button staticms-editor-back-button"
             onClick={onBack}
           >
-            <i className="reply icon"></i>
             <i className="github icon"></i>
             <span className="staticms-editor-repo-name">
               {contentConfig.owner}/{contentConfig.repo}
@@ -108,9 +108,16 @@ export const ArticleList: React.FC<ArticleListProps> = ({
           <div className="ui relaxed divided list">
             {files.length === 0 && <div className="item">No files found.</div>}
             {files.map((file) => (
-              <div
+              <ContentListItem
                 key={file.sha}
-                className="item"
+                title={file.name}
+                icon={
+                  <i
+                    className={`icon ${
+                      file.type === "dir" ? "folder" : "file outline"
+                    }`}
+                  />
+                }
                 onClick={() => {
                   if (
                     contentConfig.type === "collection-dirs" &&
@@ -122,19 +129,21 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                   }
                 }}
                 style={{ cursor: "pointer", padding: "10px" }}
-              >
-                <i
-                  className={`icon ${
-                    file.type === "dir" ? "folder" : "file outline"
-                  }`}
-                />
-                <div
-                  className="content"
-                  style={{ display: "inline-block", marginLeft: "10px" }}
-                >
-                  <div className="header">{file.name}</div>
-                </div>
-              </div>
+                actions={
+                  <button
+                    type="button"
+                    className="ui icon button mini basic"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Implement delete functionality
+                      alert("Delete functionality not implemented yet");
+                    }}
+                    title="Delete Article"
+                  >
+                    <i className="trash icon red"></i>
+                  </button>
+                }
+              />
             ))}
           </div>
         )}
