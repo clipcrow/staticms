@@ -90,13 +90,15 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           {currentContent.collectionName
             ? (
               <>
-                <span
-                  className="staticms-editor-collection-name"
+                <button
+                  type="button"
+                  className="ui basic button staticms-editor-collection-button"
                   onClick={onBack}
-                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                  style={{ marginLeft: "5px", marginRight: "5px" }}
                 >
+                  <i className="folder open icon"></i>
                   {currentContent.collectionName}
-                </span>
+                </button>
                 <span className="staticms-editor-separator">
                   /
                 </span>
