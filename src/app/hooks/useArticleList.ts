@@ -155,11 +155,25 @@ export const useArticleList = (contentConfig: Content | null): {
 
     setIsCreating(true);
     try {
+      let basePath = contentConfig.filePath;
+      // Remove leading slash
+      if (basePath.startsWith("/")) {
+        basePath = basePath.substring(1);
+      }
+      // Remove trailing slash
+      if (basePath.endsWith("/")) {
+        basePath = basePath.substring(0, basePath.length - 1);
+      }
+
       let path = "";
       if (contentConfig.type === "collection-files") {
-        path = `${contentConfig.filePath}/${newArticleName}.md`;
+        path = basePath
+          ? `${basePath}/${newArticleName}.md`
+          : `${newArticleName}.md`;
       } else if (contentConfig.type === "collection-dirs") {
-        path = `${contentConfig.filePath}/${newArticleName}/index.md`;
+        path = basePath
+          ? `${basePath}/${newArticleName}/index.md`
+          : `${newArticleName}/index.md`;
       } else {
         throw new Error("Invalid content type for article creation");
       }

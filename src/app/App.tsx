@@ -181,7 +181,7 @@ function App() {
           setView("content-list");
         }}
         onSelectArticle={(path: string) => {
-          handleSelectContent(
+          return handleSelectContent(
             {
               ...currentContent,
               filePath: path,

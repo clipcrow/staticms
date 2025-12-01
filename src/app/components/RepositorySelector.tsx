@@ -82,11 +82,12 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                           className="item"
                           onClick={() => onSelect(repo.full_name)}
                         >
-                          <i
-                            className={`large middle aligned icon ${
-                              repo.private ? "lock" : "github"
-                            }`}
-                          />
+                          {repo.private && (
+                            <div className="right floated content">
+                              <i className="large middle aligned icon lock" />
+                            </div>
+                          )}
+                          <i className="large middle aligned icon github" />
                           <div className="content">
                             <div className="header">{repo.full_name}</div>
                             <div className="description">

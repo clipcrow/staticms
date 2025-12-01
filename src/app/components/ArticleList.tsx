@@ -3,11 +3,12 @@ import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { FileItem } from "../hooks/useArticleList.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
+import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 
 export interface ArticleListProps {
   contentConfig: Content;
   onBack: () => void;
-  onSelectArticle: (path: string) => void;
+  onSelectArticle: (path: string) => Promise<void>;
   files: FileItem[];
   loading: boolean;
   error: string | null;
@@ -26,6 +27,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
   isCreating,
 }) => {
   const [newArticleName, setNewArticleName] = useState("");
+  const [loadingPath, setLoadingPath] = useState<string | null>(null);
 
   const handleCreateArticle = () => {
     try {
@@ -111,6 +113,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
               <ContentListItem
                 key={file.sha}
                 title={file.name}
+                loading={loadingPath === file.path}
                 icon={
                   <i
                     className={`icon ${
@@ -118,17 +121,69 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     }`}
                   />
                 }
-                onClick={() => {
-                  if (
-                    contentConfig.type === "collection-dirs" &&
-                    file.type === "dir"
-                  ) {
-                    onSelectArticle(`${file.path}/index.md`);
-                  } else {
-                    onSelectArticle(file.path);
+                onClick={async () => {
+                  setLoadingPath(file.path);
+                  try {
+                    if (
+                      contentConfig.type === "collection-dirs" &&
+                      file.type === "dir"
+                    ) {
+                      await onSelectArticle(`${file.path}/index.md`);
+                    } else {
+                      await onSelectArticle(file.path);
+                    }
+                  } finally {
+                    setLoadingPath(null);
                   }
                 }}
                 style={{ cursor: "pointer", padding: "10px" }}
+                labels={
+                  <>
+                    {(() => {
+                      let targetPath = file.path;
+                      if (
+                        contentConfig.type === "collection-dirs" &&
+                        file.type === "dir"
+                      ) {
+                        targetPath = `${file.path}/index.md`;
+                      }
+
+                      const itemForKeys = {
+                        ...contentConfig,
+                        filePath: targetPath,
+                      };
+
+                      const prKey = getPrKey(itemForKeys);
+                      const draftKey = getDraftKey(itemForKeys);
+                      const hasPr = localStorage.getItem(prKey);
+                      const hasDraft = localStorage.getItem(draftKey);
+
+                      if (hasPr) {
+                        return (
+                          <span
+                            className="ui label orange mini basic"
+                            style={{ marginLeft: "0.5em" }}
+                          >
+                            <i className="lock icon"></i>
+                            PR Open
+                          </span>
+                        );
+                      }
+                      if (hasDraft) {
+                        return (
+                          <span
+                            className="ui label gray mini basic"
+                            style={{ marginLeft: "0.5em" }}
+                          >
+                            <i className="edit icon"></i>
+                            Draft / PR
+                          </span>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </>
+                }
                 actions={
                   <button
                     type="button"

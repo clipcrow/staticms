@@ -64,7 +64,16 @@ export const ContentList: React.FC<ContentListProps> = ({
                   <ContentListItem
                     key={index}
                     title={item.name || item.filePath}
-                    icon={<i className="file outline icon"></i>}
+                    icon={
+                      <i
+                        className={`${
+                          item.type?.startsWith("collection")
+                            ? "folder"
+                            : "file outline"
+                        } icon`}
+                      >
+                      </i>
+                    }
                     loading={loadingItemIndex === index}
                     disabled={loadingItemIndex !== null &&
                       loadingItemIndex !== index}

@@ -645,6 +645,13 @@ router.post("/api/content", async (ctx) => {
       ctx.throw(400, "Missing owner, repo, or path in body");
     }
 
+    // Normalize path to remove leading slash
+    if (path.startsWith("/")) {
+      // deno-lint-ignore no-explicit-any
+      (body as any).path = path.substring(1);
+    }
+    const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+
     // 1. Determine base branch
     let baseBranch = branch;
     if (!baseBranch) {
@@ -738,16 +745,20 @@ router.post("/api/content", async (ctx) => {
     );
 
     // 4. Update file in new branch
+    const fileUpdateBody: Record<string, string> = {
+      message: description || `Update ${normalizedPath} via Staticms`,
+      content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
+      branch: newBranchName,
+    };
+    if (sha) {
+      fileUpdateBody.sha = sha;
+    }
+
     await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${normalizedPath}`,
       {
         method: "PUT",
-        body: JSON.stringify({
-          message: description || `Update ${path} via Staticms`,
-          content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
-          branch: newBranchName,
-          sha: sha, // Original file SHA
-        }),
+        body: JSON.stringify(fileUpdateBody),
       },
       token,
     );
@@ -758,7 +769,7 @@ router.post("/api/content", async (ctx) => {
       {
         method: "POST",
         body: JSON.stringify({
-          title: title || `Update ${path}`,
+          title: title || `Update ${normalizedPath}`,
           body: description || "Update content via Staticms",
           head: newBranchName,
           base: baseBranch,

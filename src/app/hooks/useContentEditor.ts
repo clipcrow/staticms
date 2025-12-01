@@ -337,11 +337,11 @@ export const useContentEditor = (
     ) {
       setCurrentContent(content);
       setView("article-list");
-      return;
+      return Promise.resolve();
     }
 
     setLoadingContentIndex(index);
-    loadContent(
+    return loadContent(
       content,
       getDraftKey,
       getPrKey,
