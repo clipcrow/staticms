@@ -582,7 +582,16 @@ router.get("/api/content", async (ctx) => {
 
     // Check if data is an array (directory) or object (file)
     if (Array.isArray(data)) {
-      ctx.response.body = { type: "dir", branch: targetBranch };
+      ctx.response.body = {
+        type: "dir",
+        branch: targetBranch,
+        files: data.map((item: any) => ({
+          name: item.name,
+          path: item.path,
+          type: item.type,
+          sha: item.sha,
+        })),
+      };
     } else {
       // Content is base64 encoded
       const rawContent = atob(data.content.replace(/\n/g, ""));

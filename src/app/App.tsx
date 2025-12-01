@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
+import { ArticleList } from "./components/ArticleList.tsx";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
@@ -150,6 +151,27 @@ function App() {
         }}
         repoInfo={targetRepo!}
         loading={isSavingConfig}
+      />
+    );
+  }
+
+  if (view === "article-list" && currentContent) {
+    return (
+      <ArticleList
+        contentConfig={currentContent}
+        onBack={() => {
+          setCurrentContent(null);
+          setView("content-list");
+        }}
+        onSelectArticle={(path: string) => {
+          setCurrentContent({
+            ...currentContent,
+            filePath: path,
+            name: undefined,
+            type: "singleton",
+          });
+          setView("content-editor");
+        }}
       />
     );
   }

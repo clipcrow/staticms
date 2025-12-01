@@ -321,6 +321,15 @@ export const useContentEditor = (
   }, [prUrl, checkPrStatus, clearDraft, resetContent]);
 
   const handleSelectContent = (content: Content, index: number) => {
+    if (
+      content.type === "collection-files" ||
+      content.type === "collection-dirs"
+    ) {
+      setCurrentContent(content);
+      setView("article-list");
+      return;
+    }
+
     setLoadingContentIndex(index);
     loadContent(
       content,

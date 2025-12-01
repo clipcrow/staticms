@@ -117,7 +117,7 @@ export const useContentConfig = (
         // Or strictly, if it's singleton, file MUST exist or be creatable.
         // If it's collection, dir MUST exist?
         // Let's keep simple: warn if 404.
-        if (formData.type === "singleton") {
+        if (formData.type === "singleton" || !formData.type) {
           alert("Content path not found in the repository.");
           setIsSavingConfig(false);
           return;
@@ -132,7 +132,10 @@ export const useContentConfig = (
       }
       if (checkRes.ok) {
         const data = await checkRes.json();
-        if (data.type === "dir" && formData.type === "singleton") {
+        if (
+          data.type === "dir" &&
+          (formData.type === "singleton" || !formData.type)
+        ) {
           // If it's a directory and type is singleton, append index.md
           const newFilePath = formData.filePath.endsWith("/")
             ? `${formData.filePath}index.md`
@@ -145,7 +148,11 @@ export const useContentConfig = (
           } else {
             newContents[newContents.length - 1] = updatedFormData;
           }
-        } else if (data.type === "file" && formData.type === "collection") {
+        } else if (
+          data.type === "file" &&
+          (formData.type === "collection-files" ||
+            formData.type === "collection-dirs")
+        ) {
           alert("Path points to a file, but type is Collection.");
           setIsSavingConfig(false);
           return;

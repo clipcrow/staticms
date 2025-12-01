@@ -8,7 +8,7 @@ export interface Content {
   branch?: string;
   filePath: string;
   name?: string;
-  type?: "singleton" | "collection";
+  type?: "singleton" | "collection-files" | "collection-dirs";
   fields: Field[];
 }
 
@@ -45,4 +45,5 @@ export type ViewState =
   | "content-list"
   | "content-editor"
   | "content-settings"
-  | "repository-settings";
+  | "repository-settings"
+  | "article-list";

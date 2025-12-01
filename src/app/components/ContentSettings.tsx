@@ -32,7 +32,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           </span>
         </div>
       </Header>
-      <div className="ui segment staticms-settings-segment">
+      <div className="ui segment">
         <form
           onSubmit={onSave}
           className="ui form staticms-settings-form"
@@ -61,7 +61,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                   <input
                     type="radio"
                     name="contentType"
-                    checked={formData.type !== "collection"}
+                    checked={formData.type === "singleton" || !formData.type}
                     onChange={() =>
                       setFormData({ ...formData, type: "singleton" })}
                     disabled={loading}
@@ -74,12 +74,25 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                   <input
                     type="radio"
                     name="contentType"
-                    checked={formData.type === "collection"}
+                    checked={formData.type === "collection-files"}
                     onChange={() =>
-                      setFormData({ ...formData, type: "collection" })}
+                      setFormData({ ...formData, type: "collection-files" })}
                     disabled={loading}
                   />
                   <label>Collection (Multiple Files)</label>
+                </div>
+              </div>
+              <div className="field">
+                <div className="ui radio checkbox">
+                  <input
+                    type="radio"
+                    name="contentType"
+                    checked={formData.type === "collection-dirs"}
+                    onChange={() =>
+                      setFormData({ ...formData, type: "collection-dirs" })}
+                    disabled={loading}
+                  />
+                  <label>Collection (Multiple Directories)</label>
                 </div>
               </div>
             </div>
@@ -87,15 +100,15 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
           <div className="field">
             <label>
-              {formData.type === "collection"
-                ? "Collection Directory Path"
-                : "Content File Path"}
+              {formData.type === "singleton" || !formData.type
+                ? "Content File Path"
+                : "Collection Directory Path"}
             </label>
             <input
               type="text"
-              placeholder={formData.type === "collection"
-                ? "e.g. content/blog"
-                : "e.g. content/blog/post.md"}
+              placeholder={formData.type === "singleton" || !formData.type
+                ? "e.g. content/blog/post.md"
+                : "e.g. content/blog"}
               value={formData.filePath}
               onChange={(e) =>
                 setFormData({ ...formData, filePath: e.target.value })}

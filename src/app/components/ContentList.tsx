@@ -35,7 +35,7 @@ export const ContentList: React.FC<ContentListProps> = ({
         }
       />
 
-      <div className="ui card fluid staticms-content-list-card">
+      <div className="ui card fluid">
         <div className="content">
           <div className="header">
             <i className="github icon"></i>

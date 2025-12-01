@@ -1,5 +1,6 @@
 .staticms-header-container {
   margin-top: 2em;
+  margin-bottom: 2em;
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
@@ -21,10 +22,6 @@
   align-items: flex-end;
   border-left: 1px solid rgba(34, 36, 38, 0.15);
   padding-left: 1em;
-}
-
-.staticms-content-list-card {
-  margin-top: 2em !important;
 }
 
 .staticms-content-list-item {
@@ -61,10 +58,6 @@
 .staticms-settings-header-title {
   font-weight: bold !important;
   font-size: 1.2em !important;
-}
-
-.staticms-settings-segment {
-  margin-top: 2em !important;
 }
 
 .staticms-settings-form {
@@ -149,7 +142,7 @@
 
 .staticms-editor-grid {
   flex: 1;
-  margin: 2em 0 0 0 !important;
+  margin: 0 !important;
   width: 100% !important;
   display: flex !important;
   flex-wrap: nowrap !important;
