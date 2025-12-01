@@ -11,6 +11,7 @@ export const useContentConfig = (
     owner: "",
     repo: "",
     filePath: "",
+    type: "singleton",
     fields: [],
   });
   const [targetRepo, setTargetRepo] = useState<
@@ -34,6 +35,7 @@ export const useContentConfig = (
           const contentsWithFields = data.contents.map((c: Content) => ({
             ...c,
             fields: c.fields || [],
+            type: c.type || "singleton",
           }));
           setContents(contentsWithFields);
         }
@@ -63,6 +65,7 @@ export const useContentConfig = (
       repo,
       branch,
       filePath: "",
+      type: "singleton",
       fields: [],
     });
     setEditingIndex(null);
@@ -79,6 +82,7 @@ export const useContentConfig = (
     setFormData({
       ...content,
       fields: content.fields || [],
+      type: content.type || "singleton",
     });
     setEditingIndex(index);
     setView("content-settings");
@@ -108,14 +112,28 @@ export const useContentConfig = (
       }
       const checkRes = await fetch(`/api/content?${params.toString()}`);
       if (checkRes.status === 404) {
-        alert("Content path not found in the repository.");
-        setIsSavingConfig(false);
-        return;
+        // For collection, 404 might be acceptable if creating new dir, but usually we want to check if it exists or parent exists.
+        // For now, let's warn but allow saving if it's a collection (maybe user wants to create it later or it's empty)
+        // Or strictly, if it's singleton, file MUST exist or be creatable.
+        // If it's collection, dir MUST exist?
+        // Let's keep simple: warn if 404.
+        if (formData.type === "singleton") {
+          alert("Content path not found in the repository.");
+          setIsSavingConfig(false);
+          return;
+        } else {
+          // Collection: warn but allow? Or maybe just alert?
+          // If collection path doesn't exist, we probably can't list files.
+          // Let's alert for now.
+          alert("Collection path not found in the repository.");
+          setIsSavingConfig(false);
+          return;
+        }
       }
       if (checkRes.ok) {
         const data = await checkRes.json();
-        if (data.type === "dir") {
-          // If it's a directory, append index.md
+        if (data.type === "dir" && formData.type === "singleton") {
+          // If it's a directory and type is singleton, append index.md
           const newFilePath = formData.filePath.endsWith("/")
             ? `${formData.filePath}index.md`
             : `${formData.filePath}/index.md`;
@@ -127,6 +145,10 @@ export const useContentConfig = (
           } else {
             newContents[newContents.length - 1] = updatedFormData;
           }
+        } else if (data.type === "file" && formData.type === "collection") {
+          alert("Path points to a file, but type is Collection.");
+          setIsSavingConfig(false);
+          return;
         }
       } else {
         console.error("Failed to validate file path");

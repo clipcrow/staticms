@@ -8,6 +8,7 @@ export interface Content {
   branch?: string;
   filePath: string;
   name?: string;
+  type?: "singleton" | "collection";
   fields: Field[];
 }
 
