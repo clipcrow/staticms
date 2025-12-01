@@ -25,11 +25,9 @@ export const useAuth = (
 
   const login = useCallback(() => {
     setIsLoggingIn(true);
-    // Add a small delay to allow the loading spinner to render/animate
-    // before the browser starts the navigation/unload process.
     setTimeout(() => {
       globalThis.location.href = "/api/auth/login";
-    }, 500);
+    }, 0);
   }, []);
 
   const logout = useCallback(async () => {
