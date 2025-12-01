@@ -36,13 +36,13 @@ export const useAuth = (
     setIsLoggingOut(true);
     try {
       await fetch("/api/auth/logout");
+      setIsAuthenticated(false);
+      clearRepo();
+      setView("content-list");
     } catch (e) {
       console.error("Logout failed", e);
     } finally {
       setIsLoggingOut(false);
-      setIsAuthenticated(false);
-      clearRepo();
-      setView("content-list");
     }
   }, [clearRepo, setView]);
 
