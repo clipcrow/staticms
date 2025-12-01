@@ -7,6 +7,7 @@ export const useAuth = (
 ) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -25,12 +26,13 @@ export const useAuth = (
   }, []);
 
   const logout = useCallback(async () => {
-    setAuthLoading(true);
+    setIsLoggingOut(true);
     try {
       await fetch("/api/auth/logout");
     } catch (e) {
       console.error("Logout failed", e);
     } finally {
+      setIsLoggingOut(false);
       setAuthLoading(false);
       setIsAuthenticated(false);
       clearRepo();
@@ -41,6 +43,7 @@ export const useAuth = (
   return {
     isAuthenticated,
     authLoading,
+    isLoggingOut,
     logout,
   };
 };

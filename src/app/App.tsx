@@ -33,6 +33,7 @@ function App() {
     isAuthenticated,
     authLoading,
     logout,
+    isLoggingOut,
   } = useAuth(clearRepo, setView);
 
   const {
@@ -138,6 +139,7 @@ function App() {
           selectRepo(repoFullName);
         }}
         onLogout={logout}
+        isLoggingOut={isLoggingOut}
       />
     );
   }
@@ -179,6 +181,7 @@ function App() {
         onAddNewContentToRepo={handleAddNewContentToRepo}
         loadingItemIndex={loadingContentIndex}
         onLogout={logout}
+        isLoggingOut={isLoggingOut}
       />
     );
   }

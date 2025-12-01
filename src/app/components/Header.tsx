@@ -4,12 +4,14 @@ interface HeaderProps {
   onLogout?: () => void;
   children?: React.ReactNode;
   rightContent?: React.ReactNode;
+  loading?: boolean;
 }
 
 export const Header = ({
   onLogout,
   children,
   rightContent,
+  loading,
 }: HeaderProps) => {
   return (
     <div className="staticms-header-container">
@@ -30,14 +32,17 @@ export const Header = ({
         )}
       </div>
       <div>
-        {rightContent
-          ? rightContent
-          : onLogout && (
-            <button type="button" className="ui button" onClick={onLogout}>
-              <i className="sign out icon"></i>
-              Logout
-            </button>
-          )}
+        {rightContent ? rightContent : onLogout && (
+          <button
+            type="button"
+            className={`ui button ${loading ? "loading" : ""}`}
+            onClick={onLogout}
+            disabled={loading}
+          >
+            <i className="sign out icon"></i>
+            Logout
+          </button>
+        )}
       </div>
     </div>
   );

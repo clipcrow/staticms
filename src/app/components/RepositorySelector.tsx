@@ -4,6 +4,7 @@ import { Header } from "./Header.tsx";
 interface RepositorySelectorProps {
   onSelect: (repoFullName: string) => void;
   onLogout: () => void;
+  isLoggingOut?: boolean;
 }
 
 interface Repository {
@@ -21,6 +22,7 @@ interface Repository {
 export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   onSelect,
   onLogout,
+  isLoggingOut,
 }) => {
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +47,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
 
   return (
     <div className="ui container staticms-repo-selector-container">
-      <Header onLogout={onLogout} />
+      <Header onLogout={onLogout} loading={isLoggingOut} />
 
       <div className="staticms-repo-selector-content">
         <div className="staticms-repo-selector-inner">
