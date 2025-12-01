@@ -1,6 +1,4 @@
-import { useCallback, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Content } from "./types.ts";
 import { ContentList } from "./components/ContentList.tsx";
 import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
@@ -25,14 +23,17 @@ function App() {
     setLoadingContentIndex,
   } = useNavigation();
 
-  const { isAuthenticated, loading: authLoading, logout } = useAuth();
-  const { selectedRepo, selectRepo, clearRepo } = useRepository();
+  const {
+    currentRepo,
+    selectRepo,
+    clearRepo,
+  } = useRepository();
 
-  const handleLogout = async () => {
-    await logout();
-    clearRepo();
-    setView("content-list");
-  };
+  const {
+    isAuthenticated,
+    authLoading,
+    logout,
+  } = useAuth(clearRepo, setView);
 
   const {
     contents,
@@ -74,18 +75,16 @@ function App() {
     isPrLocked,
     setIsPrLocked,
     prDetails,
-    setPrDetails,
     checkPrStatus,
     clearPrState,
-    getPrKey,
     hasDraft,
     draftTimestamp,
-    setHasDraft,
-    setDraftTimestamp,
     clearDraft,
-    getDraftKey,
     saveContent,
     isSaving,
+    handleReset,
+    resetContent,
+    handleSelectContent,
   } = useContentEditor(
     currentContent,
     body,
@@ -94,68 +93,12 @@ function App() {
     initialFrontMatter,
     setInitialBody,
     setInitialFrontMatter,
+    loadContent,
+    setCurrentContent,
+    setView,
+    setLoadingContentIndex,
   );
 
-  const resetContent = useCallback(() => {
-    if (!currentContent) return;
-
-    // Manually remove from local storage to ensure loadContent doesn't pick it up
-    // but keep hasDraft state true so the UI doesn't flicker/hide immediately
-    const key = getDraftKey(currentContent);
-    localStorage.removeItem(key);
-
-    loadContent(
-      currentContent,
-      getDraftKey,
-      getPrKey,
-      setPrUrl,
-      setHasDraft,
-      setDraftTimestamp,
-      setPrDescription,
-      true,
-    );
-  }, [
-    currentContent,
-    clearDraft,
-    loadContent,
-    getDraftKey,
-    getPrKey,
-    setPrUrl,
-    setHasDraft,
-    setDraftTimestamp,
-    setPrDescription,
-  ]);
-
-  useEffect(() => {
-    if (prUrl) {
-      checkPrStatus().then((status) => {
-        if (status === "closed") {
-          clearDraft();
-          resetContent();
-        }
-      });
-    } else {
-      setIsPrLocked(false);
-      setPrDetails(null);
-    }
-  }, [prUrl, checkPrStatus, clearDraft, resetContent]);
-
-  const handleReset = () => {
-    if (!currentContent) return;
-    if (
-      !confirm(
-        "Are you sure you want to discard your local changes and reset to the remote content?",
-      )
-    ) return;
-
-    resetContent();
-  };
-
-  // Removed checkPrStatus definition from here as it is now in usePullRequest hook
-
-  // Removed loadedBranch refs and state as they are now in useRemoteContent hook
-  // Refs for accessing latest state in SSE callback
-  // SSE Subscription
   useSubscription({
     currentContent,
     prUrl,
@@ -173,33 +116,7 @@ function App() {
     setPrUrl,
   });
 
-  const loadContentData = (content: Content) => {
-    loadContent(
-      content,
-      getDraftKey,
-      getPrKey,
-      setPrUrl,
-      setHasDraft,
-      setDraftTimestamp,
-      setPrDescription,
-    ).then(() => {
-      // Transition to editor view after data is loaded
-      setCurrentContent(content);
-      setView("content-editor");
-      setLoadingContentIndex(null);
-    }).catch((e) => {
-      console.error(e);
-      setLoadingContentIndex(null);
-    });
-  };
-
-  const handleSelectContent = (content: Content, index: number) => {
-    setLoadingContentIndex(index);
-    loadContentData(content);
-  };
-
-  // Removed useEffect for checkPrStatus as it is now in usePullRequest hook
-
+  // fallback loading state
   if (configLoading || authLoading) {
     return (
       <div className="ui container">
@@ -214,18 +131,18 @@ function App() {
     return <Login />;
   }
 
-  if (!selectedRepo) {
+  if (!currentRepo) {
     return (
       <RepositorySelector
         onSelect={(repoFullName) => {
           selectRepo(repoFullName);
         }}
-        onLogout={handleLogout}
+        onLogout={logout}
       />
     );
   }
 
-  const [selectedRepoOwner, selectedRepoName] = selectedRepo.split("/");
+  const [selectedRepoOwner, selectedRepoName] = currentRepo.split("/");
   const filteredContents = contents.filter((c) =>
     c.owner === selectedRepoOwner && c.repo === selectedRepoName
   );
@@ -256,12 +173,12 @@ function App() {
     return (
       <ContentList
         contents={filteredContents}
-        selectedRepo={selectedRepo}
+        selectedRepo={currentRepo}
         onEditContentConfig={handleEditContentConfig}
         onSelectContent={handleSelectContent}
         onAddNewContentToRepo={handleAddNewContentToRepo}
         loadingItemIndex={loadingContentIndex}
-        onLogout={handleLogout}
+        onLogout={logout}
       />
     );
   }

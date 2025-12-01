@@ -1,22 +1,22 @@
 import { useCallback, useState } from "react";
 
 export const useRepository = () => {
-  const [selectedRepo, setSelectedRepoState] = useState<string | null>(
+  const [currentRepo, setCurrentRepo] = useState<string | null>(
     localStorage.getItem("staticms_repo"),
   );
 
   const selectRepo = useCallback((repo: string) => {
-    setSelectedRepoState(repo);
+    setCurrentRepo(repo);
     localStorage.setItem("staticms_repo", repo);
   }, []);
 
   const clearRepo = useCallback(() => {
-    setSelectedRepoState(null);
+    setCurrentRepo(null);
     localStorage.removeItem("staticms_repo");
   }, []);
 
   return {
-    selectedRepo,
+    currentRepo,
     selectRepo,
     clearRepo,
   };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
-import { Content, PrDetails } from "../types.ts";
+import { Content, PrDetails, ViewState } from "../types.ts";
 import { getDraftKey, getPrKey } from "./utils.ts";
 
 export const useContentEditor = (
@@ -13,6 +13,19 @@ export const useContentEditor = (
   setInitialFrontMatter: (
     fm: Record<string, unknown> | Record<string, unknown>[],
   ) => void,
+  loadContent: (
+    content: Content,
+    getDraftKey: (c: Content) => string,
+    getPrKey: (c: Content) => string,
+    setPrUrl: (url: string | null) => void,
+    setHasDraft: (has: boolean) => void,
+    setDraftTimestamp: (ts: number | null) => void,
+    setPrDescription: (desc: string) => void,
+    isReset?: boolean,
+  ) => Promise<void>,
+  setCurrentContent: (content: Content | null) => void,
+  setView: (view: ViewState) => void,
+  setLoadingContentIndex: (index: number | null) => void,
 ) => {
   // PR State
   const [prUrl, setPrUrl] = useState<string | null>(null);
@@ -33,7 +46,7 @@ export const useContentEditor = (
     setPrDescription("");
     setPrDetails(null);
     setIsPrLocked(false);
-  }, [currentContent, getPrKey]);
+  }, [currentContent]);
 
   const checkPrStatus = useCallback(async () => {
     if (!prUrl) return null;
@@ -105,7 +118,6 @@ export const useContentEditor = (
     currentContent,
     initialBody,
     initialFrontMatter,
-    getDraftKey,
   ]);
 
   const clearDraft = useCallback(() => {
@@ -114,7 +126,7 @@ export const useContentEditor = (
     localStorage.removeItem(key);
     setHasDraft(false);
     setDraftTimestamp(null);
-  }, [currentContent, getDraftKey]);
+  }, [currentContent]);
 
   const [isSaving, setIsSaving] = useState(false);
 
@@ -254,6 +266,80 @@ export const useContentEditor = (
     }
   };
 
+  const resetContent = useCallback(() => {
+    if (!currentContent) return;
+
+    // Manually remove from local storage to ensure loadContent doesn't pick it up
+    // but keep hasDraft state true so the UI doesn't flicker/hide immediately
+    const key = getDraftKey(currentContent);
+    localStorage.removeItem(key);
+
+    loadContent(
+      currentContent,
+      getDraftKey,
+      getPrKey,
+      setPrUrl,
+      setHasDraft,
+      setDraftTimestamp,
+      setPrDescription,
+      true,
+    );
+  }, [
+    currentContent,
+    loadContent,
+    setPrUrl,
+    setHasDraft,
+    setDraftTimestamp,
+    setPrDescription,
+  ]);
+
+  const handleReset = useCallback(() => {
+    if (!currentContent) return;
+    if (
+      !confirm(
+        "Are you sure you want to discard your local changes and reset to the remote content?",
+      )
+    ) return;
+
+    resetContent();
+  }, [currentContent, resetContent]);
+
+  // Check PR Status Effect
+  useEffect(() => {
+    if (prUrl) {
+      checkPrStatus().then((status) => {
+        if (status === "closed") {
+          clearDraft();
+          resetContent();
+        }
+      });
+    } else {
+      setIsPrLocked(false);
+      setPrDetails(null);
+    }
+  }, [prUrl, checkPrStatus, clearDraft, resetContent]);
+
+  const handleSelectContent = (content: Content, index: number) => {
+    setLoadingContentIndex(index);
+    loadContent(
+      content,
+      getDraftKey,
+      getPrKey,
+      setPrUrl,
+      setHasDraft,
+      setDraftTimestamp,
+      setPrDescription,
+    ).then(() => {
+      // Transition to editor view after data is loaded
+      setCurrentContent(content);
+      setView("content-editor");
+      setLoadingContentIndex(null);
+    }).catch((e) => {
+      console.error(e);
+      setLoadingContentIndex(null);
+    });
+  };
+
   return {
     // PR State & Methods
     prUrl,
@@ -277,5 +363,8 @@ export const useContentEditor = (
     getDraftKey,
     saveContent,
     isSaving,
+    resetContent,
+    handleReset,
+    handleSelectContent,
   };
 };
