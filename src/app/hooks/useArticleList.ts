@@ -37,11 +37,83 @@ export const useArticleList = (contentConfig: Content | null) => {
       }
       const data = await res.json();
 
+      let fetchedFiles: FileItem[] = [];
       if (data.type === "dir" && Array.isArray(data.files)) {
-        setFiles(data.files);
+        fetchedFiles = data.files;
       } else {
         setError("Not a directory or empty");
       }
+
+      // Merge with drafts from localStorage
+      const draftPrefix = `draft_${contentConfig.owner}|${contentConfig.repo}|${
+        contentConfig.branch || ""
+      }|`;
+      const draftFiles: FileItem[] = [];
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(draftPrefix)) {
+          const path = key.substring(draftPrefix.length);
+
+          // Check if path belongs to this collection
+          if (!path.startsWith(contentConfig.filePath)) continue;
+
+          // Determine if it's a direct child (for collection-files) or a subdir index (for collection-dirs)
+          let name = "";
+          let type: "file" | "dir" = "file";
+          let isValidDraft = false;
+
+          const relativePath = path.substring(contentConfig.filePath.length)
+            .replace(/^\//, "");
+
+          if (contentConfig.type === "collection-files") {
+            // Expecting "filename.md"
+            if (!relativePath.includes("/")) {
+              name = relativePath;
+              type = "file";
+              isValidDraft = true;
+            }
+          } else if (contentConfig.type === "collection-dirs") {
+            // Expecting "dirname/index.md"
+            const parts = relativePath.split("/");
+            if (parts.length === 2 && parts[1] === "index.md") {
+              name = parts[0];
+              type = "dir";
+              isValidDraft = true;
+            }
+          }
+
+          if (isValidDraft) {
+            // Check if already exists in fetchedFiles
+            const exists = fetchedFiles.some((f) => {
+              if (contentConfig.type === "collection-files") {
+                return f.path === path;
+              }
+              if (contentConfig.type === "collection-dirs") {
+                return f.path === path.replace("/index.md", ""); // API returns dir path for dirs
+              }
+              return false;
+            });
+
+            if (!exists) {
+              // Check if we already added this draft (unlikely with unique keys but good practice)
+              const alreadyAdded = draftFiles.some((f) => f.name === name);
+              if (!alreadyAdded) {
+                draftFiles.push({
+                  name,
+                  path: contentConfig.type === "collection-dirs"
+                    ? path.replace("/index.md", "")
+                    : path,
+                  type,
+                  sha: `draft-${path}`,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      setFiles([...fetchedFiles, ...draftFiles]);
     } catch (e) {
       setError((e as Error).message);
     } finally {

@@ -111,6 +111,16 @@ export const useContentEditor = (
           localStorage.removeItem(key);
           setHasDraft(false);
           setDraftTimestamp(null);
+        } else {
+          setHasDraft(true);
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              setDraftTimestamp(parsed.timestamp);
+            } catch {
+              // ignore
+            }
+          }
         }
       }
     }
