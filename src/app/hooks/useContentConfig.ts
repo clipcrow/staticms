@@ -1,7 +1,10 @@
 import { Content, ViewState } from "../types.ts";
 import { useCallback, useEffect, useState } from "react";
 
-export const useContentConfig = (setView: (view: ViewState) => void) => {
+export const useContentConfig = (
+  setView: (view: ViewState) => void,
+  currentRepo: string | null,
+) => {
   const [contents, setContents] = useState<Content[]>([]);
   const [configLoading, setConfigLoading] = useState(true);
   const [formData, setFormData] = useState<Content>({
@@ -42,6 +45,12 @@ export const useContentConfig = (setView: (view: ViewState) => void) => {
     };
     init();
   }, []);
+
+  const filteredContents = contents.filter((c) => {
+    if (!currentRepo) return false;
+    const [owner, repo] = currentRepo.split("/");
+    return c.owner === owner && c.repo === repo;
+  });
 
   const handleAddNewContentToRepo = useCallback((
     owner: string,
@@ -176,6 +185,7 @@ export const useContentConfig = (setView: (view: ViewState) => void) => {
 
   return {
     contents,
+    filteredContents,
     configLoading,
     formData,
     setFormData,

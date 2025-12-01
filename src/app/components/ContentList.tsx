@@ -10,8 +10,7 @@ interface ContentListProps {
   onSelectContent: (content: Content, index: number) => void;
   onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
   loadingItemIndex: number | null;
-  onLogout: () => void;
-  isLoggingOut?: boolean;
+  onChangeRepo: () => void;
 }
 
 export const ContentList: React.FC<ContentListProps> = ({
@@ -21,14 +20,20 @@ export const ContentList: React.FC<ContentListProps> = ({
   onSelectContent,
   onAddNewContentToRepo,
   loadingItemIndex,
-  onLogout,
-  isLoggingOut,
+  onChangeRepo,
 }) => {
   const [owner, repo] = selectedRepo.split("/");
 
   return (
     <div className="ui container">
-      <Header onLogout={onLogout} loading={isLoggingOut} />
+      <Header
+        rightContent={
+          <button type="button" className="ui button" onClick={onChangeRepo}>
+            <i className="exchange icon"></i>
+            Change Repo
+          </button>
+        }
+      />
 
       <div className="ui card fluid staticms-content-list-card">
         <div className="content">

@@ -37,7 +37,7 @@ function App() {
   } = useAuth(clearRepo, setView);
 
   const {
-    contents,
+    filteredContents,
     formData,
     setFormData,
     targetRepo,
@@ -48,7 +48,7 @@ function App() {
     handleEditContentConfig,
     handleSaveContentConfig,
     handleDeleteContent,
-  } = useContentConfig(setView);
+  } = useContentConfig(setView, currentRepo);
 
   const {
     body,
@@ -132,11 +132,6 @@ function App() {
     );
   }
 
-  const [selectedRepoOwner, selectedRepoName] = currentRepo.split("/");
-  const filteredContents = contents.filter((c) =>
-    c.owner === selectedRepoOwner && c.repo === selectedRepoName
-  );
-
   if (view === "content-settings") {
     return (
       <ContentSettings
@@ -168,8 +163,7 @@ function App() {
         onSelectContent={handleSelectContent}
         onAddNewContentToRepo={handleAddNewContentToRepo}
         loadingItemIndex={loadingContentIndex}
-        onLogout={logout}
-        isLoggingOut={isLoggingOut}
+        onChangeRepo={clearRepo}
       />
     );
   }
