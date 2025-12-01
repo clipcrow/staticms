@@ -37,6 +37,9 @@ export const useContentEditor = (
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
 
+  // for Loading Indicators
+  const [isSaving, setIsSaving] = useState(false);
+
   // PR Logic
   const clearPrState = useCallback(() => {
     if (!currentContent) return;
@@ -127,8 +130,6 @@ export const useContentEditor = (
     setHasDraft(false);
     setDraftTimestamp(null);
   }, [currentContent]);
-
-  const [isSaving, setIsSaving] = useState(false);
 
   const saveContent = async (sha: string) => {
     if (!currentContent) return;
