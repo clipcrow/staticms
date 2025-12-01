@@ -6,8 +6,8 @@ export const useAuth = (
   setView: (view: ViewState) => void,
 ) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,11 +18,18 @@ export const useAuth = (
         }
       } catch (e) {
         console.error("Auth check failed", e);
-      } finally {
-        setAuthLoading(false);
       }
     };
     checkAuth();
+  }, []);
+
+  const login = useCallback(() => {
+    setIsLoggingIn(true);
+    // Add a small delay to allow the loading spinner to render/animate
+    // before the browser starts the navigation/unload process.
+    setTimeout(() => {
+      globalThis.location.href = "/api/auth/login";
+    }, 500);
   }, []);
 
   const logout = useCallback(async () => {
@@ -33,7 +40,6 @@ export const useAuth = (
       console.error("Logout failed", e);
     } finally {
       setIsLoggingOut(false);
-      setAuthLoading(false);
       setIsAuthenticated(false);
       clearRepo();
       setView("content-list");
@@ -42,8 +48,9 @@ export const useAuth = (
 
   return {
     isAuthenticated,
-    authLoading,
     isLoggingOut,
+    isLoggingIn,
+    login,
     logout,
   };
 };

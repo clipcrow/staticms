@@ -4,7 +4,6 @@ import { ContentSettings } from "./components/ContentSettings.tsx";
 import { ContentEditor } from "./components/ContentEditor.tsx";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
-import { Header } from "./components/Header.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 import { useContentEditor } from "./hooks/useContentEditor.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
@@ -31,14 +30,14 @@ function App() {
 
   const {
     isAuthenticated,
-    authLoading,
     logout,
     isLoggingOut,
+    login,
+    isLoggingIn,
   } = useAuth(clearRepo, setView);
 
   const {
     contents,
-    configLoading,
     formData,
     setFormData,
     targetRepo,
@@ -117,19 +116,8 @@ function App() {
     setPrUrl,
   });
 
-  // fallback loading state
-  if (configLoading || authLoading) {
-    return (
-      <div className="ui container">
-        <Header />
-        <div className="ui active centered inline loader staticms-app-loader">
-        </div>
-      </div>
-    );
-  }
-
   if (!isAuthenticated) {
-    return <Login />;
+    return <Login onLogin={login} isLoggingIn={isLoggingIn} />;
   }
 
   if (!currentRepo) {

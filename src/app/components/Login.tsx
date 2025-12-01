@@ -1,6 +1,12 @@
+import React from "react";
 import { Header } from "./Header.tsx";
 
-export const Login: React.FC = () => {
+interface LoginProps {
+  onLogin: () => void;
+  isLoggingIn: boolean;
+}
+
+export const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
   return (
     <div className="ui container staticms-login-container">
       <Header />
@@ -15,13 +21,17 @@ export const Login: React.FC = () => {
               <div className="field">
                 <p>Please sign in with your GitHub account to continue.</p>
               </div>
-              <a
-                href="/api/auth/login"
-                className="ui fluid large teal submit button"
+              <button
+                type="button"
+                onClick={onLogin}
+                className={`ui fluid large teal submit button ${
+                  isLoggingIn ? "loading" : ""
+                }`}
+                disabled={isLoggingIn}
               >
                 <i className="github icon"></i>
                 Login with GitHub
-              </a>
+              </button>
             </div>
           </div>
         </div>
