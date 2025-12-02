@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import { Content, FileItem } from "../types.ts";
+import { getUsername } from "./utils.ts";
 
 export const useCollection = (contentConfig: Content | null): {
   files: FileItem[];
@@ -45,9 +46,11 @@ export const useCollection = (contentConfig: Content | null): {
       }
 
       // Merge with drafts from localStorage
-      const draftPrefix = `draft_${contentConfig.owner}|${contentConfig.repo}|${
-        contentConfig.branch || ""
-      }|`;
+      const user = getUsername();
+      const draftPrefix =
+        `draft_${user}|${contentConfig.owner}|${contentConfig.repo}|${
+          contentConfig.branch || ""
+        }|`;
       const draftFiles: FileItem[] = [];
 
       for (let i = 0; i < localStorage.length; i++) {
@@ -172,9 +175,11 @@ export const useCollection = (contentConfig: Content | null): {
       }
 
       // Create draft in localStorage instead of creating file on GitHub
-      const draftKey = `draft_${contentConfig.owner}|${contentConfig.repo}|${
-        contentConfig.branch || ""
-      }|${path}`;
+      const user = getUsername();
+      const draftKey =
+        `draft_${user}|${contentConfig.owner}|${contentConfig.repo}|${
+          contentConfig.branch || ""
+        }|${path}`;
 
       const draftData = {
         body: "",

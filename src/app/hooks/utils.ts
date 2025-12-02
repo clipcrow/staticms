@@ -1,7 +1,7 @@
 import { Content } from "../types.ts";
 
 // Retrieve the logged‑in username saved by useAuth (or empty string if not set)
-const getUsername = (): string => {
+export const getUsername = (): string => {
   return localStorage.getItem("staticms_user") ?? "";
 };
 
