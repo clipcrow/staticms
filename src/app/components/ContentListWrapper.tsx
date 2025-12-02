@@ -8,6 +8,9 @@ export const ContentListWrapper: React.FC = () => {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
   const navigate = useNavigate();
   const { contents, configLoading } = useContentConfig();
+  const [loadingItemIndex, setLoadingItemIndex] = React.useState<number | null>(
+    null,
+  );
 
   const filteredContents = useMemo(() => {
     if (!owner || !repo) return [];
@@ -22,15 +25,39 @@ export const ContentListWrapper: React.FC = () => {
     }
   };
 
-  const handleSelectContent = (content: Content) => {
-    const encodedPath = encodeURIComponent(content.filePath);
-    if (
-      content.type === "collection-files" ||
-      content.type === "collection-dirs"
-    ) {
-      navigate(`/${owner}/${repo}/collection/${encodedPath}`);
-    } else {
-      navigate(`/${owner}/${repo}/singleton/${encodedPath}`);
+  const handleSelectContent = async (content: Content, index: number) => {
+    setLoadingItemIndex(index);
+    try {
+      const encodedPath = encodeURIComponent(content.filePath);
+      const branch = content.branch || "";
+
+      const res = await fetch(
+        `/api/content?owner=${content.owner}&repo=${content.repo}&filePath=${encodedPath}&branch=${branch}`,
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch content");
+      }
+
+      const data = await res.json();
+
+      if (
+        content.type === "collection-files" ||
+        content.type === "collection-dirs"
+      ) {
+        navigate(`/${owner}/${repo}/collection/${encodedPath}`, {
+          state: { initialData: data },
+        });
+      } else {
+        navigate(`/${owner}/${repo}/singleton/${encodedPath}`, {
+          state: { initialData: data },
+        });
+      }
+    } catch (e) {
+      console.error("Error fetching content:", e);
+      alert("Failed to load content. Please try again.");
+    } finally {
+      setLoadingItemIndex(null);
     }
   };
 
@@ -57,7 +84,7 @@ export const ContentListWrapper: React.FC = () => {
       onEditContentConfig={handleEditContentConfig}
       onSelectContent={handleSelectContent}
       onAddNewContentToRepo={handleAddNewContentToRepo}
-      loadingItemIndex={null} // We don't track loading index here anymore, or we could add local state
+      loadingItemIndex={loadingItemIndex}
       onChangeRepo={handleChangeRepo}
     />
   );

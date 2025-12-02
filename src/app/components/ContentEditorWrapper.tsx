@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Content } from "../types.ts";
 import { useRemoteContent } from "../hooks/useRemoteContent.ts";
 import { useDraft } from "../hooks/useDraft.ts";
@@ -15,6 +15,9 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
   content,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // deno-lint-ignore no-explicit-any
+  const initialData = (location.state as { initialData?: any })?.initialData;
 
   const {
     body,
@@ -89,6 +92,8 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
+      false,
+      initialData,
     );
   }, [
     content,
@@ -97,6 +102,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     setHasDraft,
     setDraftTimestamp,
     setPrDescription,
+    initialData,
   ]);
 
   const handleBack = () => {

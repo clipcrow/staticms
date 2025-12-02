@@ -5,13 +5,19 @@ export const useAuth = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [username, setUsername] = useState<string | null>(null);
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const userRes = await fetch("/api/user");
         if (userRes.ok) {
+          const data = await userRes.json();
           setIsAuthenticated(true);
+          const login = data.login || data.username || "";
+          setUsername(login);
+          if (login) {
+            localStorage.setItem("staticms_user", login);
+          }
         }
       } catch (e) {
         console.error("Auth check failed", e);

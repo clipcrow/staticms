@@ -29,15 +29,36 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
     navigate(`/${content.owner}/${content.repo}`);
   };
 
-  const handleSelectArticle = (path: string) => {
-    // Navigate to article editor
-    // We use the full path as the ID, encoded
-    // The URL structure: /:owner/:repo/:collectionId/:articleId
+  const handleSelectArticle = async (path: string) => {
+    // Encode collection and article IDs
     const encodedCollectionId = encodeURIComponent(content.filePath);
     const encodedArticleId = encodeURIComponent(path);
-    navigate(
-      `/${content.owner}/${content.repo}/collection/${encodedCollectionId}/${encodedArticleId}`,
-    );
+    // Build API request for the article content
+    const params = new URLSearchParams({
+      owner: content.owner,
+      repo: content.repo,
+      filePath: encodedArticleId,
+      allowMissing: "true",
+    });
+    if (content.branch) {
+      params.append("branch", content.branch);
+    }
+    try {
+      const res = await fetch(`/api/content?${params.toString()}`);
+      let data;
+      if (res.status === 404) {
+        data = { error: "404" };
+      } else {
+        data = await res.json();
+      }
+      navigate(
+        `/${content.owner}/${content.repo}/collection/${encodedCollectionId}/${encodedArticleId}`,
+        { state: { initialData: data } },
+      );
+    } catch (e) {
+      console.error("Error fetching article content:", e);
+      alert("Failed to load article. Please try again.");
+    }
   };
 
   return (

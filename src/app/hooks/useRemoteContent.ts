@@ -30,10 +30,12 @@ export const useRemoteContent = () => {
       setDraftTimestamp: (ts: number | null) => void,
       setPrDescription: (desc: string) => void,
       isReset: boolean = false,
+      // deno-lint-ignore no-explicit-any
+      initialData?: any,
     ) => {
       if (isReset) {
         setIsResetting(true);
-      } else {
+      } else if (!initialData) {
         setEditorLoading(true);
       }
       setPrUrl(null); // Reset PR URL state
@@ -50,12 +52,16 @@ export const useRemoteContent = () => {
       }
 
       try {
-        const res = await fetch(`/api/content?${params.toString()}`);
         let data;
-        if (res.status === 404) {
-          data = { error: "404" };
+        if (initialData) {
+          data = initialData;
         } else {
-          data = await res.json();
+          const res = await fetch(`/api/content?${params.toString()}`);
+          if (res.status === 404) {
+            data = { error: "404" };
+          } else {
+            data = await res.json();
+          }
         }
 
         let rawContent = "";
