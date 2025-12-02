@@ -29,6 +29,7 @@
     "esbuild": "https://deno.land/x/esbuild@v0.20.2/mod.js",
     "esbuild_deno_loader": "jsr:@luca/esbuild-deno-loader@^0.10.3",
     "djwt": "https://deno.land/x/djwt@v3.0.1/mod.ts",
-    "@uiw/react-md-editor": "npm:@uiw/react-md-editor@^4.0.4"
+    "@uiw/react-md-editor": "npm:@uiw/react-md-editor@^4.0.4",
+    "react-router-dom": "npm:react-router-dom@^6.22.3"
   }
 }
