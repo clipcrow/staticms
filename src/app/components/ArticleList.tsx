@@ -42,7 +42,16 @@ export const ArticleList: React.FC<ArticleListProps> = ({
 
   return (
     <div className="ui container">
-      <Header>
+      <Header />
+
+      <div
+        className="ui top attached segment"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center" }}>
           <button
             type="button"
@@ -67,27 +76,26 @@ export const ArticleList: React.FC<ArticleListProps> = ({
             {contentConfig.name || contentConfig.filePath}
           </span>
         </div>
-      </Header>
 
-      <div className="ui segment">
-        <div className="ui form">
-          <div className="inline fields">
-            <div className="field">
-              <label>New Article Name</label>
-              <input
-                type="text"
-                placeholder="article-name"
-                value={newArticleName}
-                onChange={(e) => setNewArticleName(e.target.value)}
-                disabled={isCreating}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleCreateArticle();
-                  }
-                }}
-              />
+        <div className="ui form" style={{ margin: 0 }}>
+          <div className="inline fields" style={{ margin: 0 }}>
+            <div className="field" style={{ padding: 0 }}>
+              <div className="ui input">
+                <input
+                  type="text"
+                  placeholder="New article name..."
+                  value={newArticleName}
+                  onChange={(e) => setNewArticleName(e.target.value)}
+                  disabled={isCreating}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleCreateArticle();
+                    }
+                  }}
+                />
+              </div>
             </div>
-            <div className="field">
+            <div className="field" style={{ padding: 0, paddingLeft: "0.5em" }}>
               <button
                 type="button"
                 className={`ui green button ${isCreating ? "loading" : ""}`}
@@ -102,7 +110,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
         </div>
       </div>
 
-      <div className="ui segment">
+      <div className="ui bottom attached segment">
         {loading && <div className="ui active centered inline loader"></div>}
         {error && <div className="ui negative message">{error}</div>}
         {!loading && !error && (

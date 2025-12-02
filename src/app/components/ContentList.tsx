@@ -43,11 +43,11 @@ export const ContentList: React.FC<ContentListProps> = ({
             {selectedRepo}
             <button
               type="button"
-              className="ui mini button primary icon right floated"
+              className="ui green button right floated"
               onClick={() => onAddNewContentToRepo(owner, repo)}
-              title="Add Content"
             >
               <i className="plus icon"></i>
+              Add New Content
             </button>
           </div>
         </div>
