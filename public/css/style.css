@@ -319,3 +319,14 @@
 .staticms-app-loader {
   margin-top: 4em !important;
 }
+
+/* Increase markdown editor toolbar button size */
+.staticms-md-editor-root .w-md-editor-toolbar li > button {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.staticms-md-editor-root .w-md-editor-toolbar li > button svg {
+  width: 18px !important;
+  height: 18px !important;
+}
