@@ -134,38 +134,40 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                 )
                 : <strong>{key}</strong>}
             </div>
-            <div className="eleven wide column">
-              <div
-                className={`ui input fluid ${disableValues ? "disabled" : ""}`}
-              >
-                <input
-                  type="text"
-                  value={(item[key] as string) || ""}
-                  onChange={(e) => {
-                    const newItem = {
-                      ...item,
-                      [key]: e.target.value,
-                    };
-                    onUpdateItem(itemIndex, newItem);
-                  }}
-                  readOnly={isPrLocked || disableValues}
-                  disabled={isPrLocked || disableValues}
-                  placeholder={disableValues
-                    ? "Value will be set in editor"
-                    : ""}
-                />
+            <div className="twelve wide column">
+              <div className="staticms-fm-value-wrapper">
+                <div
+                  className={`ui input fluid ${
+                    disableValues ? "disabled" : ""
+                  }`}
+                >
+                  <input
+                    type="text"
+                    value={(item[key] as string) || ""}
+                    onChange={(e) => {
+                      const newItem = {
+                        ...item,
+                        [key]: e.target.value,
+                      };
+                      onUpdateItem(itemIndex, newItem);
+                    }}
+                    readOnly={isPrLocked || disableValues}
+                    disabled={isPrLocked || disableValues}
+                    placeholder={disableValues
+                      ? "Value will be set in editor"
+                      : ""}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="ui red icon button staticms-fm-delete-button-inline"
+                  onClick={() => handleDeleteField(key)}
+                  disabled={isPrLocked}
+                  title="Delete Field"
+                >
+                  <i className="trash icon staticms-fm-trash-icon"></i>
+                </button>
               </div>
-            </div>
-            <div className="one wide column staticms-fm-delete-container">
-              <button
-                type="button"
-                className="ui red icon button staticms-fm-delete-button"
-                onClick={() => handleDeleteField(key)}
-                disabled={isPrLocked}
-                title="Delete Field"
-              >
-                <i className="trash icon staticms-fm-trash-icon"></i>
-              </button>
             </div>
           </div>
         ))}
