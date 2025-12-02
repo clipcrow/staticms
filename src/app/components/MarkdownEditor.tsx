@@ -1,5 +1,7 @@
 import React from "react";
-import MDEditor from "@uiw/react-md-editor";
+import MDEditor from "react-md-editor";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 
 interface MarkdownEditorProps {
   body: string;
@@ -20,6 +22,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         onChange={(val: string | undefined) =>
           !isPrLocked && setBody(val || "")}
         preview={isPrLocked ? "preview" : "edit"}
+        previewOptions={{
+          rehypePlugins: [[rehypeHighlight, {
+            detect: true,
+            ignoreMissing: true,
+          }]],
+        }}
         height={600}
         visibleDragbar={!isPrLocked}
         hideToolbar={isPrLocked}
