@@ -178,45 +178,62 @@ function AppContent() {
     return <Login onLogin={login} isLoggingIn={isLoggingIn} />;
   }
 
-  if (!currentRepo) {
-    return (
-      <RepositorySelector
-        onSelect={(repoFullName) => {
-          selectRepo(repoFullName);
-        }}
-        onLogout={logout}
-        isLoggingOut={isLoggingOut}
-      />
-    );
-  }
-
   return (
     <Routes>
       <Route
-        path="/settings"
+        path="/repo-selector"
         element={
-          <ContentSettings
-            formData={formData}
-            setFormData={setFormData}
-            editingIndex={editingIndex}
-            onSave={handleSaveContentConfig}
-            onCancel={() => {
-              setTargetRepo(null);
-              setView("content-list");
+          <RepositorySelector
+            onSelect={(repoFullName) => {
+              selectRepo(repoFullName);
+              navigate("/");
             }}
-            onDelete={() => {
-              if (editingIndex !== null) {
-                handleDeleteContent(editingIndex);
-              }
-            }}
-            repoInfo={targetRepo!}
-            loading={isSavingConfig}
+            onLogout={logout}
+            isLoggingOut={isLoggingOut}
           />
         }
       />
       <Route
+        path="/settings"
+        element={!currentRepo
+          ? (
+            <RepositorySelector
+              onSelect={selectRepo}
+              onLogout={logout}
+              isLoggingOut={isLoggingOut}
+            />
+          )
+          : (
+            <ContentSettings
+              formData={formData}
+              setFormData={setFormData}
+              editingIndex={editingIndex}
+              onSave={handleSaveContentConfig}
+              onCancel={() => {
+                setTargetRepo(null);
+                setView("content-list");
+              }}
+              onDelete={() => {
+                if (editingIndex !== null) {
+                  handleDeleteContent(editingIndex);
+                }
+              }}
+              repoInfo={targetRepo!}
+              loading={isSavingConfig}
+            />
+          )}
+      />
+      <Route
         path="/articles"
-        element={currentContent
+        element={!currentRepo
+          ? (
+            <RepositorySelector
+              onSelect={selectRepo}
+              onLogout={logout}
+              isLoggingOut={isLoggingOut}
+            />
+          )
+          : currentContent
           ? (
             <ArticleList
               contentConfig={currentContent}
@@ -250,7 +267,15 @@ function AppContent() {
       />
       <Route
         path="/editor"
-        element={currentContent
+        element={!currentRepo
+          ? (
+            <RepositorySelector
+              onSelect={selectRepo}
+              onLogout={logout}
+              isLoggingOut={isLoggingOut}
+            />
+          )
+          : currentContent
           ? (
             <ContentEditor
               currentContent={currentContent}
@@ -298,17 +323,27 @@ function AppContent() {
       />
       <Route
         path="/"
-        element={
-          <ContentList
-            contents={filteredContents}
-            selectedRepo={currentRepo}
-            onEditContentConfig={handleEditContentConfig}
-            onSelectContent={handleSelectContent}
-            onAddNewContentToRepo={handleAddNewContentToRepo}
-            loadingItemIndex={loadingContentIndex}
-            onChangeRepo={clearRepo}
-          />
-        }
+        element={!currentRepo
+          ? (
+            <RepositorySelector
+              onSelect={(repoFullName) => {
+                selectRepo(repoFullName);
+              }}
+              onLogout={logout}
+              isLoggingOut={isLoggingOut}
+            />
+          )
+          : (
+            <ContentList
+              contents={filteredContents}
+              selectedRepo={currentRepo}
+              onEditContentConfig={handleEditContentConfig}
+              onSelectContent={handleSelectContent}
+              onAddNewContentToRepo={handleAddNewContentToRepo}
+              loadingItemIndex={loadingContentIndex}
+              onChangeRepo={clearRepo}
+            />
+          )}
       />
     </Routes>
   );
