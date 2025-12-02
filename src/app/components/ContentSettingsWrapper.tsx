@@ -7,7 +7,9 @@ import { Content } from "../types.ts";
 export const ContentSettingsWrapper: React.FC = () => {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
   const [searchParams] = useSearchParams();
-  const filePath = searchParams.get("filePath");
+  const pathParam = searchParams.get("path");
+  // Use pathParam as filePath for consistency in the rest of the file
+  const filePath = pathParam;
   const navigate = useNavigate();
   const {
     contents,

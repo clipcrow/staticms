@@ -1,11 +1,15 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "../hooks/useContentConfig.ts";
 import { ContentEditorWrapper } from "./ContentEditorWrapper.tsx";
 import { ArticleListWrapper } from "./ArticleListWrapper.tsx";
 import { Content } from "../types.ts";
 
-export const ContentDispatcher: React.FC = () => {
+interface ContentRouteProps {
+  mode: "collection-list" | "singleton-editor" | "article-editor";
+}
+
+export const ContentRoute: React.FC<ContentRouteProps> = ({ mode }) => {
   const { owner, repo, contentId, articleId } = useParams<{
     owner: string;
     repo: string;
@@ -26,13 +30,6 @@ export const ContentDispatcher: React.FC = () => {
       (c) => c.owner === owner && c.repo === repo && c.filePath === decodedPath,
     ) || null;
   }, [contents, owner, repo, decodedPath]);
-
-  useEffect(() => {
-    if (!configLoading && !currentContent && contents.length > 0) {
-      // Content not found
-      // Maybe show 404 or redirect?
-    }
-  }, [configLoading, currentContent, contents]);
 
   if (configLoading) {
     return <div className="ui active centered inline loader"></div>;
@@ -59,8 +56,7 @@ export const ContentDispatcher: React.FC = () => {
     );
   }
 
-  // If articleId is present, we are editing an article in a collection
-  if (articleId) {
+  if (mode === "article-editor" && articleId) {
     const decodedArticlePath = decodeURIComponent(articleId);
 
     // Construct a virtual content object for the article
@@ -79,14 +75,13 @@ export const ContentDispatcher: React.FC = () => {
     return <ContentEditorWrapper content={articleContent} />;
   }
 
-  // If it's a collection and no articleId, show Article List
-  if (
-    currentContent.type === "collection-files" ||
-    currentContent.type === "collection-dirs"
-  ) {
+  if (mode === "collection-list") {
     return <ArticleListWrapper content={currentContent} />;
   }
 
-  // If it's a singleton, show Editor
-  return <ContentEditorWrapper content={currentContent} />;
+  if (mode === "singleton-editor") {
+    return <ContentEditorWrapper content={currentContent} />;
+  }
+
+  return <div>Invalid Route Configuration</div>;
 };

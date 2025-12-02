@@ -36,7 +36,7 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
     const encodedCollectionId = encodeURIComponent(content.filePath);
     const encodedArticleId = encodeURIComponent(path);
     navigate(
-      `/${content.owner}/${content.repo}/${encodedCollectionId}/${encodedArticleId}`,
+      `/${content.owner}/${content.repo}/collection/${encodedCollectionId}/${encodedArticleId}`,
     );
   };
 

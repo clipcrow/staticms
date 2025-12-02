@@ -18,17 +18,24 @@ export const ContentListWrapper: React.FC = () => {
     const content = filteredContents[index];
     if (content) {
       const encodedPath = encodeURIComponent(content.filePath);
-      navigate(`/${owner}/${repo}/settings?filePath=${encodedPath}`);
+      navigate(`/${owner}/${repo}/edit?path=${encodedPath}`);
     }
   };
 
   const handleSelectContent = (content: Content) => {
     const encodedPath = encodeURIComponent(content.filePath);
-    navigate(`/${owner}/${repo}/${encodedPath}`);
+    if (
+      content.type === "collection-files" ||
+      content.type === "collection-dirs"
+    ) {
+      navigate(`/${owner}/${repo}/collection/${encodedPath}`);
+    } else {
+      navigate(`/${owner}/${repo}/singleton/${encodedPath}`);
+    }
   };
 
   const handleAddNewContentToRepo = () => {
-    navigate(`/${owner}/${repo}/settings`);
+    navigate(`/${owner}/${repo}/add`);
   };
 
   const handleChangeRepo = () => {
