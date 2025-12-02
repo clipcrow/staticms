@@ -10,22 +10,60 @@ import { useAuth } from "./hooks/useAuth.ts";
 import { useDraft } from "./hooks/useDraft.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
 import { useContentConfig } from "./hooks/useContentConfig.ts";
-import { useNavigation } from "./hooks/useNavigation.ts";
 import { useRepository } from "./hooks/useRepository.ts";
 import { useSubscription } from "./hooks/useSubscription.ts";
 import { useCollection } from "./hooks/useCollection.ts";
-
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+import { useState } from "react";
+import { Content, ViewState } from "./types.ts";
 
 function AppContent() {
-  const {
-    view,
-    setView,
-    currentContent,
-    setCurrentContent,
-    loadingContentIndex,
-    setLoadingContentIndex,
-  } = useNavigation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loadingContentIndex, setLoadingContentIndex] = useState<number | null>(
+    null,
+  );
+
+  const currentContent = (location.state as { currentContent?: Content })
+    ?.currentContent || null;
+
+  const setCurrentContent = (content: Content | null) => {
+    navigate(location.pathname, {
+      state: { ...location.state, currentContent: content },
+      replace: true,
+    });
+  };
+
+  const setView = (view: ViewState) => {
+    let path = "/";
+    switch (view) {
+      case "content-settings":
+        path = "/settings";
+        break;
+      case "article-list":
+        path = "/articles";
+        break;
+      case "content-editor":
+        path = "/editor";
+        break;
+      case "content-list":
+      default:
+        path = "/";
+        break;
+    }
+    navigate(path, { state: { currentContent } });
+  };
+
+  let view: ViewState = "content-list";
+  if (location.pathname.startsWith("/settings")) view = "content-settings";
+  else if (location.pathname.startsWith("/articles")) view = "article-list";
+  else if (location.pathname.startsWith("/editor")) view = "content-editor";
 
   const {
     currentRepo,
