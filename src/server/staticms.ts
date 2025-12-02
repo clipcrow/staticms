@@ -209,9 +209,13 @@ async function getSessionToken(ctx: Context): Promise<string | null> {
 
 async function deleteSession(ctx: Context) {
   const sessionId = await ctx.cookies.get("session_id");
+  console.log(`[deleteSession] Logout requested. Session ID: ${sessionId}`);
   if (sessionId) {
     await kv.delete(["sessions", sessionId]);
-    await ctx.cookies.delete("session_id");
+    console.log(`[deleteSession] Deleted session from KV: ${sessionId}`);
+    await ctx.cookies.delete("session_id", { path: "/" });
+  } else {
+    console.log("[deleteSession] No session ID found in cookies");
   }
 }
 
@@ -308,6 +312,7 @@ router.get("/api/auth/callback", async (ctx) => {
 
 router.get("/api/auth/logout", async (ctx) => {
   await deleteSession(ctx);
+  ctx.response.headers.set("Cache-Control", "no-store");
   ctx.response.body = { success: true };
 });
 
