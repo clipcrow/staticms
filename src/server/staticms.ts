@@ -637,20 +637,20 @@ router.post("/api/content", async (ctx) => {
     const { content, sha, description, title, owner, repo, path, branch } =
       body;
 
-    console.log(
-      `[POST /api/content] branch param: "${branch}" (type: ${typeof branch})`,
-    );
+    console.log(`[POST /api/content] Received path: "${path}"`);
 
     if (!owner || !repo || !path) {
       ctx.throw(400, "Missing owner, repo, or path in body");
     }
 
-    // Normalize path to remove leading slash
-    if (path.startsWith("/")) {
-      // deno-lint-ignore no-explicit-any
-      (body as any).path = path.substring(1);
-    }
-    const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+    // Normalize path: remove leading slashes, remove duplicate slashes
+    const normalizedPath = path.replace(/^\/+/, "").replace(/\/+/g, "/");
+    console.log(`[POST /api/content] Normalized path: "${normalizedPath}"`);
+
+    // Encode path for URL (preserve slashes)
+    const encodedPath = normalizedPath.split("/").map(encodeURIComponent).join(
+      "/",
+    );
 
     // 1. Determine base branch
     let baseBranch = branch;
@@ -755,7 +755,7 @@ router.post("/api/content", async (ctx) => {
     }
 
     await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${normalizedPath}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`,
       {
         method: "PUT",
         body: JSON.stringify(fileUpdateBody),
@@ -802,6 +802,9 @@ router.post("/api/create-file", async (ctx) => {
       ctx.throw(400, "Missing owner, repo, or path in body");
     }
 
+    // Normalize path to remove leading slash
+    const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+
     // Determine branch
     let targetBranch = branch;
     if (!targetBranch) {
@@ -815,11 +818,11 @@ router.post("/api/create-file", async (ctx) => {
 
     // Create file directly on the branch
     const res = await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${normalizedPath}`,
       {
         method: "PUT",
         body: JSON.stringify({
-          message: message || `Create ${path} via Staticms`,
+          message: message || `Create ${normalizedPath} via Staticms`,
           content: btoa(unescape(encodeURIComponent(content))),
           branch: targetBranch,
         }),
