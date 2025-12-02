@@ -5,6 +5,7 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
   useNavigate,
 } from "react-router-dom";
 import { Login } from "./components/Login.tsx";
@@ -16,8 +17,9 @@ import { NotFound } from "./components/NotFound.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 
 function RequireAuth({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const location = useLocation();
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
   return <Outlet />;
 }

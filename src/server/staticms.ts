@@ -216,11 +216,22 @@ async function deleteSession(ctx: Context) {
 }
 
 // Auth Routes
-router.get("/api/auth/login", (ctx) => {
+router.get("/api/auth/login", async (ctx) => {
   if (!GITHUB_CLIENT_ID) {
     ctx.throw(500, "GITHUB_CLIENT_ID not configured");
     return;
   }
+
+  const returnTo = ctx.request.url.searchParams.get("returnTo");
+  if (returnTo) {
+    await ctx.cookies.set("auth_return_to", returnTo, {
+      httpOnly: true,
+      secure: false, // Set to true in production
+      sameSite: "lax",
+      maxAge: 300, // 5 minutes
+    });
+  }
+
   const redirectUrl =
     `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,read:org`;
   ctx.response.redirect(redirectUrl);
@@ -283,7 +294,12 @@ router.get("/api/auth/callback", async (ctx) => {
     });
     console.log("Session created, redirecting...");
 
-    ctx.response.redirect("/");
+    const returnTo = await ctx.cookies.get("auth_return_to");
+    if (returnTo) {
+      await ctx.cookies.delete("auth_return_to");
+    }
+
+    ctx.response.redirect(returnTo || "/");
   } catch (e) {
     console.error("Auth error details:", e);
     ctx.throw(500, "Authentication failed");
@@ -964,6 +980,12 @@ staticms.use(async (ctx) => {
   );
   ctx.response.headers.set("Pragma", "no-cache");
   ctx.response.headers.set("Expires", "0");
+
+  if (ctx.request.url.pathname.startsWith("/api/")) {
+    ctx.response.status = 404;
+    ctx.response.body = { error: "Not Found" };
+    return;
+  }
 
   try {
     await send(ctx, ctx.request.url.pathname, {

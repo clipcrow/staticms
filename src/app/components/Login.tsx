@@ -1,12 +1,18 @@
 import React from "react";
 import { Header } from "./Header.tsx";
+import { useLocation } from "react-router-dom";
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: (returnTo?: string) => void;
   isLoggingIn: boolean;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
+  const location = useLocation();
+  const from =
+    (location.state as { from?: { pathname: string; search: string } })?.from;
+  const returnTo = from ? `${from.pathname}${from.search}` : "/";
+
   return (
     <div className="ui container staticms-login-container">
       <Header />
@@ -23,7 +29,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
               </div>
               <button
                 type="button"
-                onClick={onLogin}
+                onClick={() => onLogin(returnTo)}
                 className={`ui fluid large teal submit button ${
                   isLoggingIn ? "loading" : ""
                 }`}

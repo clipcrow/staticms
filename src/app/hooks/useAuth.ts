@@ -22,10 +22,13 @@ export const useAuth = () => {
     checkAuth();
   }, []);
 
-  const login = useCallback(() => {
+  const login = useCallback((returnTo?: string) => {
     setIsLoggingIn(true);
     setTimeout(() => {
-      globalThis.location.href = "/api/auth/login";
+      const url = returnTo
+        ? `/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`
+        : "/api/auth/login";
+      globalThis.location.href = url;
     }, 0);
   }, []);
 
