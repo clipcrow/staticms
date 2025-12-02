@@ -8,6 +8,7 @@ import {
 import { load } from "@std/dotenv";
 import { create, getNumericDate } from "djwt";
 import { createPrivateKey } from "node:crypto";
+import { normalize } from "@std/path/posix";
 
 await load({ export: true });
 
@@ -644,7 +645,10 @@ router.post("/api/content", async (ctx) => {
     }
 
     // Normalize path: remove leading slashes, remove duplicate slashes
-    const normalizedPath = path.replace(/^\/+/, "").replace(/\/+/g, "/");
+    const normalized = normalize(path);
+    const normalizedPath = normalized.startsWith("/")
+      ? normalized.substring(1)
+      : normalized;
     console.log(`[POST /api/content] Normalized path: "${normalizedPath}"`);
 
     // Encode path for URL (preserve slashes)
@@ -803,7 +807,15 @@ router.post("/api/create-file", async (ctx) => {
     }
 
     // Normalize path to remove leading slash
-    const normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+    const normalized = normalize(path);
+    const normalizedPath = normalized.startsWith("/")
+      ? normalized.substring(1)
+      : normalized;
+
+    // Encode path for URL (preserve slashes)
+    const encodedPath = normalizedPath.split("/").map(encodeURIComponent).join(
+      "/",
+    );
 
     // Determine branch
     let targetBranch = branch;
@@ -818,7 +830,7 @@ router.post("/api/create-file", async (ctx) => {
 
     // Create file directly on the branch
     const res = await githubRequest(
-      `https://api.github.com/repos/${owner}/${repo}/contents/${normalizedPath}`,
+      `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}`,
       {
         method: "PUT",
         body: JSON.stringify({
