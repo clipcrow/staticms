@@ -44,7 +44,9 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     checkPrStatus,
     clearPrState,
     hasDraft,
+    setHasDraft,
     draftTimestamp,
+    setDraftTimestamp,
     clearDraft,
     saveContent,
     isSaving,
@@ -84,16 +86,16 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       getDraftKey,
       getPrKey,
       setPrUrl,
-      hasDraft,
+      setHasDraft,
       setDraftTimestamp,
       setPrDescription,
     );
   }, [
     content,
     loadContent,
-    prUrl,
-    hasDraft,
-    draftTimestamp,
+    setPrUrl,
+    setHasDraft,
+    setDraftTimestamp,
     setPrDescription,
   ]);
 
