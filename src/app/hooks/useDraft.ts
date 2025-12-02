@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
-import { Content, PrDetails, ViewState } from "../types.ts";
+import { Content, PrDetails } from "../types.ts";
 import { getDraftKey, getPrKey } from "./utils.ts";
 
 export const useDraft = (
@@ -23,9 +23,6 @@ export const useDraft = (
     setPrDescription: (desc: string) => void,
     isReset?: boolean,
   ) => Promise<void>,
-  setCurrentContent: (content: Content | null) => void,
-  setView: (view: ViewState) => void,
-  setLoadingContentIndex: (index: number | null) => void,
 ) => {
   // PR State
   const [prUrl, setPrUrl] = useState<string | null>(null);
@@ -330,36 +327,6 @@ export const useDraft = (
     }
   }, [prUrl, checkPrStatus, clearDraft, resetContent]);
 
-  const handleSelectContent = (content: Content, index: number) => {
-    if (
-      content.type === "collection-files" ||
-      content.type === "collection-dirs"
-    ) {
-      setCurrentContent(content);
-      setView("article-list");
-      return Promise.resolve();
-    }
-
-    setLoadingContentIndex(index);
-    return loadContent(
-      content,
-      getDraftKey,
-      getPrKey,
-      setPrUrl,
-      setHasDraft,
-      setDraftTimestamp,
-      setPrDescription,
-    ).then(() => {
-      // Transition to editor view after data is loaded
-      setCurrentContent(content);
-      setView("content-editor");
-      setLoadingContentIndex(null);
-    }).catch((e) => {
-      console.error(e);
-      setLoadingContentIndex(null);
-    });
-  };
-
   return {
     // PR State & Methods
     prUrl,
@@ -385,6 +352,5 @@ export const useDraft = (
     isSaving,
     resetContent,
     handleReset,
-    handleSelectContent,
   };
 };

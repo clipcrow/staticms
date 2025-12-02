@@ -1,13 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { ViewState } from "../types.ts";
 
-export const useAuth = (
-  clearRepo: () => void,
-  setView: (view: ViewState) => void,
-) => {
+export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -18,6 +15,8 @@ export const useAuth = (
         }
       } catch (e) {
         console.error("Auth check failed", e);
+      } finally {
+        setLoading(false);
       }
     };
     checkAuth();
@@ -35,19 +34,19 @@ export const useAuth = (
     try {
       await fetch("/api/auth/logout");
       setIsAuthenticated(false);
-      clearRepo();
-      setView("content-list");
+      // Navigation to login will happen automatically because isAuthenticated becomes false
     } catch (e) {
       console.error("Logout failed", e);
     } finally {
       setIsLoggingOut(false);
     }
-  }, [clearRepo, setView]);
+  }, []);
 
   return {
     isAuthenticated,
     isLoggingOut,
     isLoggingIn,
+    loading,
     login,
     logout,
   };

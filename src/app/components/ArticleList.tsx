@@ -7,7 +7,7 @@ import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 export interface ArticleListProps {
   contentConfig: Content;
   onBack: () => void;
-  onSelectArticle: (path: string) => Promise<void>;
+  onSelectArticle: (path: string) => void;
   files: FileItem[];
   loading: boolean;
   error: string | null;

@@ -1,27 +1,9 @@
-import { Content, ViewState } from "../types.ts";
+import { Content } from "../types.ts";
 import { useCallback, useEffect, useState } from "react";
 
-export const useContentConfig = (
-  setView: (view: ViewState) => void,
-  currentRepo: string | null,
-) => {
+export const useContentConfig = () => {
   const [contents, setContents] = useState<Content[]>([]);
   const [configLoading, setConfigLoading] = useState(true);
-  const [formData, setFormData] = useState<Content>({
-    owner: "",
-    repo: "",
-    filePath: "",
-    type: "singleton",
-    fields: [],
-  });
-  const [targetRepo, setTargetRepo] = useState<
-    {
-      owner: string;
-      repo: string;
-      branch?: string;
-    } | null
-  >(null);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
   // Load config
@@ -48,184 +30,136 @@ export const useContentConfig = (
     init();
   }, []);
 
-  const filteredContents = contents.filter((c) => {
-    if (!currentRepo) return false;
-    const [owner, repo] = currentRepo.split("/");
-    return c.owner === owner && c.repo === repo;
-  });
+  const saveContentConfig = useCallback(
+    async (newContent: Content, originalFilePath?: string) => {
+      setIsSavingConfig(true);
+      let newContents = [...contents];
 
-  const handleAddNewContentToRepo = useCallback((
-    owner: string,
-    repo: string,
-    branch?: string,
-  ) => {
-    setTargetRepo({ owner, repo, branch });
-    setFormData({
-      owner,
-      repo,
-      branch,
-      filePath: "",
-      type: "singleton",
-      fields: [],
-    });
-    setEditingIndex(null);
-    setView("content-settings");
-  }, [setView]);
+      const existingIndex = originalFilePath
+        ? contents.findIndex((c) =>
+          c.owner === newContent.owner && c.repo === newContent.repo &&
+          c.filePath === originalFilePath
+        )
+        : -1;
 
-  const handleEditContentConfig = useCallback((index: number) => {
-    const content = contents[index];
-    setTargetRepo({
-      owner: content.owner,
-      repo: content.repo,
-      branch: content.branch,
-    });
-    setFormData({
-      ...content,
-      fields: content.fields || [],
-      type: content.type || "singleton",
-    });
-    setEditingIndex(index);
-    setView("content-settings");
-  }, [contents, setView]);
-
-  const handleSaveContentConfig = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingConfig(true);
-    let newContents = [...contents];
-    if (editingIndex !== null) {
-      newContents[editingIndex] = formData;
-    } else {
-      newContents = [...contents, formData];
-    }
-
-    // Validate file existence
-    try {
-      const params = new URLSearchParams({
-        owner: formData.owner,
-        repo: formData.repo,
-        filePath: formData.filePath,
-        t: Date.now().toString(),
-        validate: "true",
-      });
-      if (formData.branch) {
-        params.append("branch", formData.branch);
-      }
-      const checkRes = await fetch(`/api/content?${params.toString()}`);
-      if (checkRes.status === 404) {
-        // For collection, 404 might be acceptable if creating new dir, but usually we want to check if it exists or parent exists.
-        // For now, let's warn but allow saving if it's a collection (maybe user wants to create it later or it's empty)
-        // Or strictly, if it's singleton, file MUST exist or be creatable.
-        // If it's collection, dir MUST exist?
-        // Let's keep simple: warn if 404.
-        if (formData.type === "singleton" || !formData.type) {
-          alert("Content path not found in the repository.");
-          setIsSavingConfig(false);
-          return;
-        } else {
-          // Collection: warn but allow? Or maybe just alert?
-          // If collection path doesn't exist, we probably can't list files.
-          // Let's alert for now.
-          alert("Collection path not found in the repository.");
-          setIsSavingConfig(false);
-          return;
+      // Validate file existence
+      try {
+        const params = new URLSearchParams({
+          owner: newContent.owner,
+          repo: newContent.repo,
+          filePath: newContent.filePath,
+          t: Date.now().toString(),
+          validate: "true",
+        });
+        if (newContent.branch) {
+          params.append("branch", newContent.branch);
         }
-      }
-      if (checkRes.ok) {
-        const data = await checkRes.json();
-        if (
-          data.type === "dir" &&
-          (formData.type === "singleton" || !formData.type)
-        ) {
-          // If it's a directory and type is singleton, append index.md
-          const newFilePath = formData.filePath.endsWith("/")
-            ? `${formData.filePath}index.md`
-            : `${formData.filePath}/index.md`;
-
-          const updatedFormData = { ...formData, filePath: newFilePath };
-
-          if (editingIndex !== null) {
-            newContents[editingIndex] = updatedFormData;
+        const checkRes = await fetch(`/api/content?${params.toString()}`);
+        if (checkRes.status === 404) {
+          if (newContent.type === "singleton" || !newContent.type) {
+            alert("Content path not found in the repository.");
+            setIsSavingConfig(false);
+            return false;
           } else {
-            newContents[newContents.length - 1] = updatedFormData;
+            alert("Collection path not found in the repository.");
+            setIsSavingConfig(false);
+            return false;
           }
-        } else if (
-          data.type === "file" &&
-          (formData.type === "collection-files" ||
-            formData.type === "collection-dirs")
-        ) {
-          alert("Path points to a file, but type is Collection.");
-          setIsSavingConfig(false);
-          return;
         }
-      } else {
-        console.error("Failed to validate file path");
-      }
-    } catch (e) {
-      console.error("Error validating file path", e);
-    }
+        if (checkRes.ok) {
+          const data = await checkRes.json();
+          if (
+            data.type === "dir" &&
+            (newContent.type === "singleton" || !newContent.type)
+          ) {
+            // If it's a directory and type is singleton, append index.md
+            const newFilePath = newContent.filePath.endsWith("/")
+              ? `${newContent.filePath}index.md`
+              : `${newContent.filePath}/index.md`;
 
-    try {
-      const res = await fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: newContents }),
-      });
-      if (res.ok) {
-        setContents(newContents);
-        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-        setEditingIndex(null);
-        setTargetRepo(null);
-        setView("content-list");
-      } else {
-        console.error("Failed to save configuration");
+            newContent = { ...newContent, filePath: newFilePath };
+          } else if (
+            data.type === "file" &&
+            (newContent.type === "collection-files" ||
+              newContent.type === "collection-dirs")
+          ) {
+            alert("Path points to a file, but type is Collection.");
+            setIsSavingConfig(false);
+            return false;
+          }
+        } else {
+          console.error("Failed to validate file path");
+        }
+      } catch (e) {
+        console.error("Error validating file path", e);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSavingConfig(false);
-    }
-  }, [contents, editingIndex, formData, setView]);
 
-  const handleDeleteContent = useCallback(async (index: number) => {
-    if (!confirm("Are you sure you want to delete this content?")) return;
-    setIsSavingConfig(true);
-    const newContents = contents.filter((_, i) => i !== index);
-    try {
-      const res = await fetch("/api/config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: newContents }),
-      });
-      if (res.ok) {
-        setContents(newContents);
-        setFormData({ owner: "", repo: "", filePath: "", fields: [] });
-        setEditingIndex(null);
-        setTargetRepo(null);
-        setView("content-list");
+      if (existingIndex !== -1) {
+        newContents[existingIndex] = newContent;
       } else {
-        console.error("Failed to delete content");
+        newContents = [...contents, newContent];
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsSavingConfig(false);
-    }
-  }, [contents, setView]);
+
+      try {
+        const res = await fetch("/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: newContents }),
+        });
+        if (res.ok) {
+          setContents(newContents);
+          return true;
+        } else {
+          console.error("Failed to save configuration");
+          return false;
+        }
+      } catch (e) {
+        console.error(e);
+        return false;
+      } finally {
+        setIsSavingConfig(false);
+      }
+    },
+    [contents],
+  );
+
+  const deleteContent = useCallback(
+    async (owner: string, repo: string, filePath: string) => {
+      if (!confirm("Are you sure you want to delete this content?")) {
+        return false;
+      }
+      setIsSavingConfig(true);
+      const newContents = contents.filter((c) =>
+        !(c.owner === owner && c.repo === repo && c.filePath === filePath)
+      );
+      try {
+        const res = await fetch("/api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ contents: newContents }),
+        });
+        if (res.ok) {
+          setContents(newContents);
+          return true;
+        } else {
+          console.error("Failed to delete content");
+          return false;
+        }
+      } catch (e) {
+        console.error(e);
+        return false;
+      } finally {
+        setIsSavingConfig(false);
+      }
+    },
+    [contents],
+  );
 
   return {
     contents,
-    filteredContents,
     configLoading,
-    formData,
-    setFormData,
-    targetRepo,
-    setTargetRepo,
-    editingIndex,
-    setEditingIndex,
     isSavingConfig,
-    handleAddNewContentToRepo,
-    handleEditContentConfig,
-    handleSaveContentConfig,
-    handleDeleteContent,
+    saveContentConfig,
+    deleteContent,
   };
 };
