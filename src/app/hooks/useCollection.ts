@@ -1,14 +1,7 @@
 import { useCallback, useState } from "react";
-import { Content } from "../types.ts";
+import { Content, FileItem } from "../types.ts";
 
-export interface FileItem {
-  name: string;
-  path: string;
-  type: "file" | "dir";
-  sha: string;
-}
-
-export const useArticleList = (contentConfig: Content | null): {
+export const useCollection = (contentConfig: Content | null): {
   files: FileItem[];
   loading: boolean;
   error: string | null;

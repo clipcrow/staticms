@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { Content } from "../types.ts";
+import { Content, FileItem } from "../types.ts";
 import { Header } from "./Header.tsx";
-import { FileItem } from "../hooks/useArticleList.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 

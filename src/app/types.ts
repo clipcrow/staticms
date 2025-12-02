@@ -50,3 +50,10 @@ export type ViewState =
   | "content-settings"
   | "repository-settings"
   | "article-list";
+
+export interface FileItem {
+  name: string;
+  path: string;
+  type: "file" | "dir";
+  sha: string;
+}

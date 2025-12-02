@@ -3,7 +3,7 @@ import jsyaml from "js-yaml";
 import { Content, PrDetails, ViewState } from "../types.ts";
 import { getDraftKey, getPrKey } from "./utils.ts";
 
-export const useContentEditor = (
+export const useDraft = (
   currentContent: Content | null,
   body: string,
   frontMatter: Record<string, unknown> | Record<string, unknown>[],

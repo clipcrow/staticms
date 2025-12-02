@@ -7,13 +7,13 @@ import { ArticleList } from "./components/ArticleList.tsx";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
-import { useContentEditor } from "./hooks/useContentEditor.ts";
+import { useDraft } from "./hooks/useDraft.ts";
 import { useRemoteContent } from "./hooks/useRemoteContent.ts";
 import { useContentConfig } from "./hooks/useContentConfig.ts";
 import { useNavigation } from "./hooks/useNavigation.ts";
 import { useRepository } from "./hooks/useRepository.ts";
 import { useSubscription } from "./hooks/useSubscription.ts";
-import { useArticleList } from "./hooks/useArticleList.ts";
+import { useCollection } from "./hooks/useCollection.ts";
 
 function App() {
   const {
@@ -88,7 +88,7 @@ function App() {
     handleReset,
     resetContent,
     handleSelectContent,
-  } = useContentEditor(
+  } = useDraft(
     currentContent,
     body,
     frontMatter,
@@ -109,7 +109,7 @@ function App() {
     fetchFiles: fetchArticles,
     createArticle,
     isCreating: isCreatingArticle,
-  } = useArticleList(currentContent);
+  } = useCollection(currentContent);
 
   useEffect(() => {
     if (view === "article-list" && currentContent) {
