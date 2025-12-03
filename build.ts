@@ -8,7 +8,7 @@ const ctx = await esbuild.context({
     configPath: path.resolve(Deno.cwd(), "deno.json"),
   })],
   entryPoints: ["./src/app/App.tsx"],
-  outfile: "./public/js/bundle.js",
+  outfile: "./public/dist/bundle.js",
   bundle: true,
   format: "esm",
   sourcemap: true,
