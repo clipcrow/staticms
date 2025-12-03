@@ -1,150 +1,159 @@
-# ContentEditor Data Flow
+# Staticms Data Flow
 
-ContentEditor画面におけるファイル操作のデータフローとイベント処理について記述します。
+Staticms
+アプリケーションにおけるデータフロー、状態管理、およびイベント処理について記述します。
 
-## 1. 画面表示 (Initialization)
+## 1. 認証 (Authentication)
 
-ユーザーがコンテンツリストからファイルを選択した際のフローです。
+ユーザー認証とセッション管理のフローです。
 
-1. **Trigger**: `ContentList` でアイテムクリック ->
-   `App.tsx: handleSelectContent`
-2. **State Update (useNavigation Hook)**: `loadingContentIndex` をセット
-3. **Fetch Content (useRemoteContent Hook)**: `loadContent` が実行される
-   - `GET /api/content`: ファイルの生データ、SHA、ブランチ情報を取得
-   - `GET /api/commits`: ファイルのコミット履歴を取得
-4. **Parse & State Setup (useRemoteContent Hook)**:
-   - ファイル拡張子 (.md, .yaml) に応じて Front Matter と Body をパース
-   - `useContentEditor` フックのキー生成ロジックを使用して `localStorage`
-     (`draft_...` ※実際は `|` 区切り) を確認
-     - ドラフトが存在する場合: ドラフトの内容で State (`body`, `frontMatter`)
-       を上書き (ユーザーに復元されたことを示す)
-     - ドラフトがない場合: リモートの内容を State にセット
-   - `useContentEditor` フックのキー生成ロジックを使用して `localStorage`
-     (`pr_...` ※実際は `|` 区切り) を確認し、`prUrl` State にセット
-5. **View Transition (useNavigation Hook)**:
-   - `currentContent` を更新
-   - `view` state を `content-editor` に変更し、`ContentEditor`
-     コンポーネントを表示
-   - `loadingContentIndex` をリセット
+### 1.1 ログイン (Login)
 
-## 2. 編集 (Editing)
+- **Trigger**: ユーザーが「Login with GitHub」ボタンをクリック ->
+  `useAuth: login`
+- **Client**: `/api/auth/login` へリダイレクト（`returnTo`
+  パラメータで遷移元を保持）
+- **Server**:
+  - GitHub OAuth 認証フローを開始
+  - コールバック (`/api/auth/callback`) で Authorization Code を受け取る
+  - GitHub API で Access Token と交換
+  - `Deno.Kv` にセッションを作成 (`sessions/<sessionId>` -> `accessToken`)
+  - `session_id` Cookie (HttpOnly) を設定してクライアントへリダイレクト
+- **Client**:
+  - アプリケーションがリロードされる
+  - `useAuth` フックがマウント時に `/api/user` をコール
+  - 認証成功時:
+    - `isAuthenticated` state を true に設定
+    - ユーザー名 (`login`) を取得し、`localStorage` の `staticms_user` に保存
+      (ドラフト分離用)
 
-ユーザーがエディタで変更を加える際のフローです。
+### 1.2 ログアウト (Logout)
 
-1. **User Action**: テキストエリアの変更、Front Matter フィールドの変更
-2. **State Update**: `useRemoteContent` で管理される `body`, `frontMatter` State
-   が更新される
-3. **Auto Save Draft (useContentEditor Hook)**:
-   - `useContentEditor` 内の `useEffect` が変更を検知
-   - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
-   - 変更がある場合 (`isDirty`):
-     - `localStorage` (`draft_...` ※実際は `|` 区切り) に現在の内容を保存
-     - `hasDraft` フラグを true に設定
-   - 変更がない場合:
-     - `localStorage` のドラフトを削除 (ただし `created` タイプのドラフトは維持)
+- **Trigger**: ユーザーがログアウトボタンをクリック -> `useAuth: logout`
+- **Client**: `/api/auth/logout` をコール
+- **Server**:
+  - Cookie から `session_id` を取得
+  - `Deno.Kv` から該当セッションを削除
+  - `session_id` Cookie を削除
+- **Client**:
+  - `isAuthenticated` state を false に設定
+  - ログイン画面へ遷移
 
-## 3. プルリクエスト作成 (Create PR / Save)
+## 2. コンテンツ閲覧 (Content Viewing)
 
-ユーザーが「Save」ボタンを押して変更を保存する際のフローです。ロジックは
-`useContentEditor` フック内の `saveContent` に集約されています。
+### 2.1 コンテンツリスト (Content List)
 
-1. **Trigger**: `ContentEditor` の Save ボタン ->
-   `useContentEditor: saveContent`
-2. **Reconstruct Content**:
-   - `frontMatter` と `body` を結合し、ファイル形式に合わせて文字列化 (YAML dump
-     等)
-3. **API Call**:
-   - `POST /api/content`
-   - Payload: `owner`, `repo`, `path`, `branch`, `content`, `message`, `title`
-4. **Response Handling**:
-   - Server: GitHub API を使用してブランチ作成、コミット、PR 作成を行う
-   - Client: レスポンスから `prUrl` を受け取る
-5. **Post-Save Actions**:
-   - `prUrl` を `localStorage` (`pr_...`) に保存
-   - ドラフト (`draft_...`) を削除
-   - `initialBody`, `initialFrontMatter` を現在の内容で更新 (Unsaved changes
-     状態の解除)
-   - `isPrOpen` (Draft UI) を閉じる
+- **Trigger**: リポジトリ選択後、または URL 直接アクセス
+- **State**: `useContentConfig` フックが `/api/config` から設定をロード
+- **View**: 設定されたファイル/ディレクトリの一覧を表示
 
-## 4. プルリクエストのクローズ検知 (Detect PR Close & Remote Changes)
+### 2.2 コレクション/記事一覧 (Collection / Article List)
 
-外部で PR
-がマージ/クローズされたり、リモートで変更があった場合の同期フローです。
+- **Trigger**: `ContentList` でディレクトリタイプのコンテンツを選択
+- **Hook**: `useCollection`
+- **Fetch**:
+  - `GET /api/content`: ディレクトリ内のファイル一覧を取得
+  - `localStorage` からドラフト (`draft_<user>|<owner>|<repo>|<branch>|<path>`)
+    を検索し、一覧にマージ
+    - _Note_: ユーザー名が含まれるため、他ユーザーのドラフトは表示されない
+- **View**:
+  リモートファイルとローカルドラフト（新規作成中含む）の統合リストを表示
 
-### A. Polling (Status Check via useContentEditor & App.tsx)
+### 2.3 コンテンツエディタ (Content Editor)
 
-- **Trigger**: `App.tsx` の `useEffect` (prUrl 依存)
-- **Action**: `checkPrStatus` (from `useContentEditor`) -> `GET /api/pr-status`
-- **Result**:
-  - `open`: `isPrLocked` を true に設定 (編集ロック)
+- **Trigger**: ファイル選択 -> `App.tsx: handleSelectContent`
+- **Hook**: `useRemoteContent`
+- **Fetch**:
+  - `GET /api/content`: ファイル内容、SHA、ブランチ情報を取得
+  - `GET /api/commits`: コミット履歴を取得
+- **Draft Restoration**:
+  - `useDraft` フックが `localStorage` をチェック
+  - キー形式: `draft_<user>|<owner>|<repo>|<branch>|<filePath>`
+  - ドラフト存在時: リモート内容をドラフト内容で上書きし、`hasDraft` フラグを
+    true に設定
+- **PR Restoration**:
+  - `localStorage` (`pr_<user>|...`) をチェックし、既存の PR URL を復元
+
+## 3. 編集と保存 (Editing & Saving)
+
+### 3.1 ドラフト自動保存 (Auto Save Draft)
+
+- **Hook**: `useDraft`
+- **Trigger**: `body`, `frontMatter`, `prDescription` の変更
+- **Logic**:
+  - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
+  - 変更あり (`isDirty`): `localStorage` に保存
+  - 変更なし: `localStorage` から削除 (ただし `created`
+    タイプの新規作成ドラフトは維持)
+
+### 3.2 新規記事作成 (Create Article)
+
+- **Context**: コレクション内
+- **Action**: `useCollection: createArticle`
+- **Logic**:
+  - GitHub にはまだファイルを作成しない
+  - `localStorage` に `type: "created"` としてドラフトを保存
+  - エディタ画面へ遷移し、ドラフトとして読み込む
+
+### 3.3 プルリクエスト作成/保存 (Create PR / Save)
+
+- **Trigger**: 保存ボタン -> `useDraft: saveContent`
+- **Client**:
+  - Front Matter と Body を結合 (YAML/Markdown)
+  - `POST /api/content`
+- **Server**:
+  - 専用ブランチ (`staticms-update-<timestamp>`) を作成
+  - ファイルをコミット
+  - プルリクエストを作成
+- **Client**:
+  - レスポンスから `prUrl` を取得
+  - `localStorage` に `prUrl` を保存 (`pr_<user>|...`)
+  - ドラフトを削除
+  - `initialBody` 等を更新して "Unsaved Changes" 状態を解除
+  - PR ステータスをポーリング開始
+
+## 4. 同期と整合性 (Synchronization)
+
+### 4.1 PR ステータス監視 (PR Status Polling)
+
+- **Hook**: `useDraft`
+- **Trigger**: `prUrl` が存在する場合
+- **Action**: 定期的に `/api/pr-status` をコール
+- **Logic**:
+  - `open`: 編集ロック (`isPrLocked = true`)
   - `merged` / `closed`:
-    - `useContentEditor` が `prUrl`, `prStatus` をクリア
-    - `App.tsx` が `closed` ステータスを受け取り、`clearDraft()` と
-      `resetContent()` (内部で `loadContent` を呼び出し) を実行して最新化
+    - ローカルの PR 情報をクリア
+    - コンテンツをリセット (`resetContent`) し、リモートの最新状態を再取得
 
-### B. Server-Sent Events (Real-time via useSubscription Hook)
+### 4.2 リアルタイム更新 (Server-Sent Events)
 
-- **Initialization**: `useSubscription` フックが `EventSource("/api/events")`
-  を監視
-- **Event: `push`**:
-  - 現在のファイルが変更されたかチェック
-  - ローカルに未保存の変更があるかチェック (`isDirty`)
-    - Dirty: リセットをスキップ (ユーザーの作業を優先)
-    - Clean: `checkPrStatus` または `resetContent` を実行して最新化
-- **Event: `pull_request`**:
-  - `action: closed` かつ現在の PR URL と一致する場合
-  - `checkPrStatus` を実行し、`closed` であれば `resetContent()` で最新化
+- **Hook**: `useSubscription`
+- **Connection**: `GET /api/events`
+- **Events**:
+  - `push`:
+    - 現在開いているファイルが更新された場合
+    - ローカル変更がない (`!isDirty`) 場合のみ、自動的にリロード
+    - ローカル変更がある場合は、ユーザーの作業を優先（上書きしない）
+  - `pull_request`:
+    - PR がクローズされた場合、ステータスチェックをトリガー
 
-## 5. コンテンツ設定管理 (Content Configuration)
+## 5. サーバーサイド構成 (Server Architecture)
 
-コンテンツ設定（監視対象ファイルのリスト）の管理フローです。ロジックは
-`useContentConfig` フックに集約されています。
+### 5.1 データストア (Deno KV)
 
-1. **Initialization**:
-   - `App.tsx` マウント時に `useContentConfig` 内の `useEffect` が発火
-   - `GET /api/config`: 現在の設定（コンテンツリスト）を取得し、`contents` State
-     にセット
+- `sessions/<sessionId>`: アクセストークン管理 (TTLあり)
+- `config`: コンテンツ設定 (`staticms-config.json` 相当)
 
-2. **Add / Edit Config**:
-   - **Trigger**: `ContentSettings` 画面での保存ボタン
-   - **Validation**: `GET /api/content?validate=true`
-     を呼び出し、指定されたパスがリポジトリに存在するか確認
-     - ディレクトリの場合は `index.md` を付与して補完
-   - **Save**: `POST /api/config`
-     - Payload: 更新された全コンテンツリスト (`contents`)
-     - Server: `staticms-config.json` (または `config.json`) を更新
-   - **Update State**: レスポンスが成功なら `contents` State
-     を更新し、リスト画面へ遷移
+### 5.2 GitHub API 連携
 
-3. **Delete Config**:
-   - **Trigger**: `ContentList` 画面での削除ボタン
-   - **Action**: 確認ダイアログ後、`isSavingConfig` を true
-     に設定し、対象を除外したリストで `POST /api/config` を実行
-   - **Update State**: 成功なら `contents` State を更新し、`isSavingConfig` を
-     false に戻す
+- **User Token**:
+  - ログインユーザーの権限で実行 (ファイル読み書き、PR作成など)
+  - セッションに紐付いて管理
+- **App Installation Token**:
+  - Webhook 設定など、アプリとしての権限が必要な操作に使用
+  - 秘密鍵から JWT を生成し、Installation Access Token を取得
 
-## 6. リポジトリ選択 (Repository Selection)
+### 5.3 Webhook
 
-作業対象のリポジトリを選択するフローです。ロジックは `useRepository`
-フックに集約されています。
-
-1. **Initialization**:
-   - `App.tsx` マウント時に `useRepository` が初期化される
-   - `localStorage` から `staticms_repo` を読み込み、`selectedRepo` State
-     にセット
-
-2. **Select Repository**:
-   - **Trigger**: `RepositorySelector` コンポーネントでの選択アクション
-   - **Action**: `selectRepo(repoName)` を実行
-   - **State Update**:
-     - `selectedRepo` State を更新
-     - `localStorage` の `staticms_repo` を更新
-   - **View Transition**: `view` が `content-list` に切り替わる（`App.tsx`
-     側の制御）
-
-3. **Clear Repository (Logout)**:
-   - **Trigger**: ログアウト時 (`handleLogout`)
-   - **Action**: `clearRepo()` を実行
-   - **State Update**:
-     - `selectedRepo` を `null` に設定
-     - `localStorage` から `staticms_repo` を削除
+- `/api/webhook`: GitHub からのイベント (`push`, `pull_request`) を受信
+- 接続中のクライアントへ SSE でイベントをブロードキャスト
