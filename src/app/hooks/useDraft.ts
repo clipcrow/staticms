@@ -336,10 +336,8 @@ export const useDraft = (
     isPrLocked,
     setIsPrLocked,
     prDetails,
-    setPrDetails,
     checkPrStatus,
     clearPrState,
-    getPrKey,
 
     // Draft State & Methods
     hasDraft,
@@ -347,7 +345,6 @@ export const useDraft = (
     setHasDraft,
     setDraftTimestamp,
     clearDraft,
-    getDraftKey,
     saveContent,
     isSaving,
     resetContent,

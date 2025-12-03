@@ -11,9 +11,7 @@ export const useRemoteContent = () => {
   const [initialFrontMatter, setInitialFrontMatter] = useState<
     Record<string, unknown> | Record<string, unknown>[]
   >({});
-  const [customFields, setCustomFields] = useState<
-    { id: string; key: string }[]
-  >([]);
+
   const [sha, setSha] = useState("");
   const [commits, setCommits] = useState<Commit[]>([]);
   const [editorLoading, setEditorLoading] = useState(false);
@@ -128,21 +126,6 @@ export const useRemoteContent = () => {
               setPrDescription(draft.description || "");
               setBody(parsedBody); // Should be empty for new file
               setFrontMatter(parsedFM); // Should be empty for new file
-
-              // Initialize custom fields from remote (or empty if new)
-              const configuredKeys = content.fields?.map((f) => f.name) || [];
-              let customKeys: string[] = [];
-              if (!Array.isArray(parsedFM)) {
-                customKeys = Object.keys(parsedFM).filter((k) =>
-                  !configuredKeys.includes(k)
-                );
-              }
-              setCustomFields(
-                customKeys.map((k) => ({
-                  id: crypto.randomUUID(),
-                  key: k,
-                })),
-              );
             } else {
               // Restore from draft
               setBody(draft.body);
@@ -150,21 +133,6 @@ export const useRemoteContent = () => {
               setPrDescription(draft.prDescription);
               setHasDraft(true);
               setDraftTimestamp(draft.timestamp);
-
-              // Initialize custom fields from draft
-              const configuredKeys = content.fields?.map((f) => f.name) || [];
-              let customKeys: string[] = [];
-              if (!Array.isArray(draft.frontMatter)) {
-                customKeys = Object.keys(draft.frontMatter).filter((k) =>
-                  !configuredKeys.includes(k)
-                );
-              }
-              setCustomFields(
-                customKeys.map((k) => ({
-                  id: crypto.randomUUID(),
-                  key: k,
-                })),
-              );
             }
           } catch (e) {
             console.error("Failed to parse draft", e);
@@ -178,22 +146,6 @@ export const useRemoteContent = () => {
           setHasDraft(false);
           setDraftTimestamp(null);
           setPrDescription("");
-
-          // Initialize custom fields from remote
-          if (!Array.isArray(parsedFM)) {
-            const configuredKeys = content.fields?.map((f) => f.name) || [];
-            const customKeys = Object.keys(parsedFM).filter((k) =>
-              !configuredKeys.includes(k)
-            );
-            setCustomFields(
-              customKeys.map((k) => ({
-                id: crypto.randomUUID(),
-                key: k,
-              })),
-            );
-          } else {
-            setCustomFields([]);
-          }
         }
 
         // Check for existing PR URL
@@ -235,17 +187,11 @@ export const useRemoteContent = () => {
     setInitialBody,
     initialFrontMatter,
     setInitialFrontMatter,
-    customFields,
-    setCustomFields,
     sha,
-    setSha,
     commits,
-    setCommits,
     editorLoading,
-    setEditorLoading,
     isResetting,
     loadedBranch,
-    setLoadedBranch,
     loadContent,
   };
 };
