@@ -14,6 +14,7 @@ interface FrontMatterItemPanelProps {
   onDeleteItem?: (index: number) => void;
   editableKeys?: boolean;
   disableValues?: boolean;
+  valuePlaceholder?: string;
 }
 
 export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
@@ -29,6 +30,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
   onDeleteItem,
   editableKeys = false,
   disableValues = false,
+  valuePlaceholder,
 }) => {
   const [newFieldName, setNewFieldName] = useState("");
 
@@ -108,6 +110,9 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                   }}
                   readOnly={isPrLocked || disableValues}
                   disabled={isPrLocked || disableValues}
+                  placeholder={disableValues
+                    ? "Value will be set in editor"
+                    : valuePlaceholder || ""}
                 />
               </div>
             </div>
@@ -155,7 +160,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                     disabled={isPrLocked || disableValues}
                     placeholder={disableValues
                       ? "Value will be set in editor"
-                      : ""}
+                      : valuePlaceholder || ""}
                   />
                 </div>
                 <button

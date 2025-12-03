@@ -136,7 +136,10 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             <label>Front Matter</label>
             <FrontMatterItemPanel
               item={formData.fields.reduce(
-                (acc, field) => ({ ...acc, [field.name]: "" }),
+                (acc, field) => ({
+                  ...acc,
+                  [field.name]: field.defaultValue || "",
+                }),
                 {} as Record<string, unknown>,
               )}
               itemIndex={0}
@@ -145,11 +148,16 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               onUpdateItem={(_index, newItem) => {
                 const newFields = Object.keys(newItem).map((name) => ({
                   name,
+                  defaultValue: newItem[name] as string,
                 }));
                 setFormData({ ...formData, fields: newFields });
               }}
               editableKeys
-              disableValues
+              disableValues={formData.type === "singleton" || !formData.type}
+              valuePlaceholder={formData.type === "collection-files" ||
+                  formData.type === "collection-dirs"
+                ? "Default value for new articles"
+                : undefined}
             />
           </div>
 

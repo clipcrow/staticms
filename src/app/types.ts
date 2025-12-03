@@ -1,5 +1,6 @@
 export interface Field {
   name: string;
+  defaultValue?: string;
 }
 
 export interface Content {

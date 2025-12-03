@@ -17,6 +17,11 @@
   flex-shrink: 0;
 }
 
+.staticms-header-subtitle {
+  font-size: 0.8rem !important;
+  line-height: 1rem !important;
+}
+
 .staticms-header-children {
   display: flex;
   align-items: flex-end;

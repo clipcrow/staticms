@@ -20,7 +20,7 @@ export const Header = ({
           <i className="edit icon"></i>
           <div className="content">
             Staticms
-            <div className="sub header">
+            <div className="sub header staticms-header-subtitle">
               Manage headless contents with GitHub
             </div>
           </div>

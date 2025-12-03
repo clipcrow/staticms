@@ -181,9 +181,14 @@ export const useCollection = (contentConfig: Content | null): {
           contentConfig.branch || ""
         }|${path}`;
 
+      const initialFrontMatter = contentConfig.fields.reduce((acc, field) => {
+        acc[field.name] = field.defaultValue || "";
+        return acc;
+      }, {} as Record<string, unknown>);
+
       const draftData = {
         body: "",
-        frontMatter: {},
+        frontMatter: initialFrontMatter,
         prDescription: `Create article ${newArticleName}`,
         timestamp: Date.now(),
         type: "created", // Mark as new creation
