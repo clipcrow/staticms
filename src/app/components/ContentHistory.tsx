@@ -4,14 +4,16 @@ import { Commit, Content } from "../types.ts";
 interface ContentHistoryProps {
   commits: Commit[];
   currentContent: Content;
+  style?: React.CSSProperties;
 }
 
 export const ContentHistory: React.FC<ContentHistoryProps> = ({
   commits,
   currentContent,
+  style,
 }) => {
   return (
-    <div className="ui feed">
+    <div className="ui feed" style={style}>
       {commits.slice(0, 10).map((commit) => (
         <div key={commit.sha} className="event">
           <div className="content">

@@ -2,6 +2,7 @@ import React from "react";
 import { Commit, Content, PrDetails } from "../types.ts";
 import { BreadcrumbItem, Header } from "./Header.tsx";
 import { ContentHistory } from "./ContentHistory.tsx";
+import { ContentImages } from "./ContentImages.tsx";
 import { FrontMatterItemEditor } from "./FrontMatterItemEditor.tsx";
 import { FrontMatterListEditor } from "./FrontMatterListEditor.tsx";
 import { MarkdownEditor } from "./MarkdownEditor.tsx";
@@ -280,7 +281,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <ContentHistory
               commits={commits}
               currentContent={currentContent}
+              style={{ marginTop: !prUrl && !hasDraft ? 0 : undefined }}
             />
+
+            <ContentImages currentContent={currentContent} />
           </div>
         </div>
       </div>

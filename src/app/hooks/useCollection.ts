@@ -33,6 +33,11 @@ export const useCollection = (contentConfig: Content | null): {
 
       const res = await fetch(`/api/content?${params.toString()}`);
       if (!res.ok) {
+        if (res.status === 404) {
+          // Directory not found, treat as empty collection
+          setFiles([]);
+          return;
+        }
         const errData = await res.json();
         throw new Error(errData.error || "Failed to fetch files");
       }
