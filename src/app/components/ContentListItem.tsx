@@ -74,8 +74,8 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
           </span>
           {secondaryText && (
             <span
+              className="staticms-content-list-secondary-text"
               style={{
-                color: "rgba(0,0,0,0.5)",
                 fontWeight: "normal",
                 whiteSpace: "nowrap",
                 overflow: "hidden",

@@ -1,7 +1,6 @@
 import React from "react";
 import MDEditor from "react-md-editor";
 import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github.css";
 
 interface MarkdownEditorProps {
   body: string;
