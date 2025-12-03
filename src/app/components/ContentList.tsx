@@ -53,7 +53,25 @@ export const ContentList: React.FC<ContentListProps> = ({
               {contents.map((item, index) => (
                 <ContentListItem
                   key={index}
-                  title={item.name || item.filePath}
+                  title={
+                    <div style={{ display: "flex", alignItems: "baseline" }}>
+                      <span
+                        style={{ fontWeight: "bold", marginRight: "0.5em" }}
+                      >
+                        {item.filePath}
+                      </span>
+                      {item.name && (
+                        <span
+                          style={{
+                            color: "rgba(0,0,0,0.5)",
+                            fontWeight: "normal",
+                          }}
+                        >
+                          {item.name}
+                        </span>
+                      )}
+                    </div>
+                  }
                   icon={
                     <i
                       className={`${
