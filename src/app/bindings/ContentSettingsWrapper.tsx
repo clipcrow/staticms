@@ -51,6 +51,22 @@ export const ContentSettingsWrapper: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isDuplicate = contents.some((c) => {
+      if (c.owner !== owner || c.repo !== repo) return false;
+      if (c.filePath === formData.filePath) {
+        if (!filePath) return true;
+        if (c.filePath === decodeURIComponent(filePath)) return false;
+        return true;
+      }
+      return false;
+    });
+
+    if (isDuplicate) {
+      alert("The file or directory path is already in use in this repository.");
+      return;
+    }
+
     const success = await saveContentConfig(
       formData,
       filePath ? decodeURIComponent(filePath) : undefined,
