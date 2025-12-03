@@ -21,126 +21,115 @@ export const ContentList: React.FC<ContentListProps> = ({
   onSelectContent,
   onAddNewContentToRepo,
   loadingItemIndex,
-  onChangeRepo,
+  onChangeRepo: _onChangeRepo,
 }) => {
   const [owner, repo] = selectedRepo.split("/");
 
   return (
     <div className="ui container">
       <Header
+        breadcrumbs={[{ label: selectedRepo }]}
         rightContent={
-          <button type="button" className="ui button" onClick={onChangeRepo}>
-            <i className="exchange icon"></i>
-            Change Repo
+          <button
+            type="button"
+            className="ui green button"
+            onClick={() => onAddNewContentToRepo(owner, repo)}
+          >
+            <i className="plus icon"></i>
+            Add New Content
           </button>
         }
       />
 
-      <div className="ui card fluid">
-        <div className="content">
-          <div className="header">
-            <i className="github icon"></i>
-            {selectedRepo}
-            <button
-              type="button"
-              className="ui green button right floated"
-              onClick={() => onAddNewContentToRepo(owner, repo)}
-            >
-              <i className="plus icon"></i>
-              Add New Content
-            </button>
-          </div>
-        </div>
-        <div className="content">
-          {contents.length === 0
-            ? (
-              <div className="ui message info">
-                No contents configured. Click the + button to add content.
-              </div>
-            )
-            : (
-              <div className="ui relaxed divided list">
-                {contents.map((item, index) => (
-                  <ContentListItem
-                    key={index}
-                    title={item.name || item.filePath}
-                    icon={
-                      <i
-                        className={`${
-                          item.type?.startsWith("collection")
-                            ? "folder"
-                            : "file outline"
-                        } icon`}
-                      >
-                      </i>
+      <div className="ui segment">
+        {contents.length === 0
+          ? (
+            <div className="ui message info">
+              No contents configured. Click the + button to add content.
+            </div>
+          )
+          : (
+            <div className="ui relaxed divided list">
+              {contents.map((item, index) => (
+                <ContentListItem
+                  key={index}
+                  title={item.name || item.filePath}
+                  icon={
+                    <i
+                      className={`${
+                        item.type?.startsWith("collection")
+                          ? "folder"
+                          : "file outline"
+                      } icon`}
+                    >
+                    </i>
+                  }
+                  loading={loadingItemIndex === index}
+                  disabled={loadingItemIndex !== null &&
+                    loadingItemIndex !== index}
+                  onClick={() => {
+                    if (loadingItemIndex === null) {
+                      onSelectContent(item, index);
                     }
-                    loading={loadingItemIndex === index}
-                    disabled={loadingItemIndex !== null &&
-                      loadingItemIndex !== index}
-                    onClick={() => {
-                      if (loadingItemIndex === null) {
-                        onSelectContent(item, index);
-                      }
-                    }}
-                    actions={
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditContentConfig(index);
-                        }}
-                        className="ui icon button mini"
-                        title="Edit Configuration"
-                        disabled={loadingItemIndex !== null}
-                      >
-                        <i className="edit icon"></i>
-                      </button>
-                    }
-                    labels={
-                      <>
-                        {item.branch && (
-                          <span className="ui label mini basic staticms-content-list-branch">
-                            <i className="code branch icon"></i>
-                            {item.branch}
-                          </span>
-                        )}
-                        {(() => {
-                          const prKey = getPrKey(item);
-                          const draftKey = getDraftKey(item);
-                          const hasPr = localStorage.getItem(prKey);
-                          const hasDraft = localStorage.getItem(draftKey);
+                  }}
+                  actions={
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditContentConfig(index);
+                      }}
+                      className="ui icon button mini"
+                      title="Edit Configuration"
+                      disabled={loadingItemIndex !== null}
+                    >
+                      <i className="edit icon"></i>
+                    </button>
+                  }
+                  labels={
+                    <>
+                      {item.branch && (
+                        <span className="ui label mini basic staticms-content-list-branch">
+                          <i className="code branch icon"></i>
+                          {item.branch}
+                        </span>
+                      )}
+                      {(() => {
+                        const prKey = getPrKey(item);
+                        const draftKey = getDraftKey(item);
+                        const hasPr = localStorage.getItem(prKey);
+                        const hasDraft = localStorage.getItem(draftKey);
 
-                          if (hasPr) {
-                            return (
-                              <span
-                                className="ui label orange mini basic"
-                                style={{ marginLeft: "0.5em" }}
-                              >
-                                <i className="lock icon"></i>
-                                PR Open
-                              </span>
-                            );
-                          }
-                          if (hasDraft) {
-                            return (
-                              <span
-                                className="ui label gray mini basic"
-                                style={{ marginLeft: "0.5em" }}
-                              >
-                                <i className="edit icon"></i>
-                                Draft / PR
-                              </span>
-                            );
-                          }
-                          return null;
-                        })()}
-                      </>
-                    }
-                  />
-                ))}
-              </div>
-            )}
-        </div>
+                        if (hasPr) {
+                          return (
+                            <span
+                              className="ui label orange mini basic"
+                              style={{ marginLeft: "0.5em" }}
+                            >
+                              <i className="lock icon"></i>
+                              PR Open
+                            </span>
+                          );
+                        }
+                        if (hasDraft) {
+                          return (
+                            <span
+                              className="ui label gray mini basic"
+                              style={{ marginLeft: "0.5em" }}
+                            >
+                              <i className="edit icon"></i>
+                              Draft / PR
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </>
+                  }
+                />
+              ))}
+            </div>
+          )}
       </div>
     </div>
   );

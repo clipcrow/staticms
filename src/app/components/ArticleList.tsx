@@ -17,7 +17,7 @@ export interface ArticleListProps {
 
 export const ArticleList: React.FC<ArticleListProps> = ({
   contentConfig,
-  onBack,
+  onBack: _onBack,
   onSelectArticle,
   files,
   loading,
@@ -42,75 +42,55 @@ export const ArticleList: React.FC<ArticleListProps> = ({
 
   return (
     <div className="ui container">
-      <Header />
-
-      <div
-        className="ui top attached segment"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <button
-            type="button"
-            className="ui blue button staticms-editor-back-button"
-            onClick={onBack}
-          >
-            <i className="github icon"></i>
-            <span className="staticms-editor-repo-name">
-              {contentConfig.owner}/{contentConfig.repo}
-            </span>
-          </button>
-          {contentConfig.branch && (
-            <span className="ui label mini basic staticms-editor-branch-label">
-              <i className="code branch icon"></i>
-              {contentConfig.branch}
-            </span>
-          )}
-          <span className="staticms-editor-separator">
-            /
-          </span>
-          <span className="staticms-editor-file-name">
-            {contentConfig.name || contentConfig.filePath}
-          </span>
-        </div>
-
-        <div className="ui form" style={{ margin: 0 }}>
-          <div className="inline fields" style={{ margin: 0 }}>
-            <div className="field" style={{ padding: 0 }}>
-              <div className="ui input">
-                <input
-                  type="text"
-                  placeholder="New article name..."
-                  value={newArticleName}
-                  onChange={(e) => setNewArticleName(e.target.value)}
-                  disabled={isCreating}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleCreateArticle();
-                    }
-                  }}
-                />
+      <Header
+        breadcrumbs={[
+          {
+            label: `${contentConfig.owner}/${contentConfig.repo}`,
+            to: `/${contentConfig.owner}/${contentConfig.repo}`,
+          },
+          {
+            label: contentConfig.name || contentConfig.filePath,
+          },
+        ]}
+        rightContent={
+          <div className="ui form" style={{ margin: 0 }}>
+            <div className="inline fields" style={{ margin: 0 }}>
+              <div className="field" style={{ padding: 0 }}>
+                <div className="ui input">
+                  <input
+                    type="text"
+                    placeholder="New article name..."
+                    value={newArticleName}
+                    onChange={(e) => setNewArticleName(e.target.value)}
+                    disabled={isCreating}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleCreateArticle();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+              <div
+                className="field"
+                style={{ padding: 0, paddingLeft: "0.5em" }}
+              >
+                <button
+                  type="button"
+                  className={`ui green button ${isCreating ? "loading" : ""}`}
+                  onClick={handleCreateArticle}
+                  disabled={isCreating || !newArticleName.trim()}
+                >
+                  <i className="plus icon"></i>
+                  Create
+                </button>
               </div>
             </div>
-            <div className="field" style={{ padding: 0, paddingLeft: "0.5em" }}>
-              <button
-                type="button"
-                className={`ui green button ${isCreating ? "loading" : ""}`}
-                onClick={handleCreateArticle}
-                disabled={isCreating || !newArticleName.trim()}
-              >
-                <i className="plus icon"></i>
-                Create
-              </button>
-            </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="ui bottom attached segment">
+      <div className="ui segment">
         {loading && <div className="ui active centered inline loader"></div>}
         {error && <div className="ui negative message">{error}</div>}
         {!loading && !error && (

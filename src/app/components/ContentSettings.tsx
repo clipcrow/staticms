@@ -21,17 +21,20 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   onSave,
   onCancel,
   onDelete,
+  repoInfo,
   loading = false,
 }) => {
   return (
     <div className="ui container">
-      <Header>
-        <div className="staticms-settings-header-title-container">
-          <span className="staticms-settings-header-title">
-            {editingIndex !== null ? "Edit Content" : "Add Content"}
-          </span>
-        </div>
-      </Header>
+      <Header
+        breadcrumbs={[
+          {
+            label: `${repoInfo.owner}/${repoInfo.repo}`,
+            to: `/${repoInfo.owner}/${repoInfo.repo}`,
+          },
+          { label: editingIndex !== null ? "Edit Content" : "Add Content" },
+        ]}
+      />
       <div className="ui segment">
         <form
           onSubmit={onSave}

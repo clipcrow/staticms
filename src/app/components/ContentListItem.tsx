@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ContentListItemProps {
-  title: string;
+  title: React.ReactNode;
   icon?: React.ReactNode;
   onClick: () => void;
   actions?: React.ReactNode;
@@ -28,11 +28,6 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
       className={`item staticms-content-list-item ${className || ""}`}
       style={style}
     >
-      {actions && (
-        <div className="right floated content">
-          {actions}
-        </div>
-      )}
       <div
         className="content staticms-content-list-clickable"
         onClick={!disabled ? onClick : undefined}
@@ -41,7 +36,8 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
           opacity: disabled ? 0.5 : 1,
           display: "flex",
           alignItems: "center",
-          width: actions ? "auto" : "100%",
+          flex: 1,
+          minWidth: 0,
         }}
       >
         {loading
@@ -56,11 +52,16 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
               </span>
             )
           )}
-        <span className="header staticms-content-list-header">
+        <div className="header staticms-content-list-header">
           {title}
-        </span>
+        </div>
         {labels}
       </div>
+      {actions && (
+        <div className="content" style={{ paddingLeft: "0.5em" }}>
+          {actions}
+        </div>
+      )}
     </div>
   );
 };

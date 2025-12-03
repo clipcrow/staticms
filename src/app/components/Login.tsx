@@ -15,7 +15,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, isLoggingIn }) => {
 
   return (
     <div className="ui container staticms-login-container">
-      <Header />
+      <Header breadcrumbs={undefined} />
 
       <div className="staticms-login-content">
         <div className="staticms-login-inner">

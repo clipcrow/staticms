@@ -1,17 +1,22 @@
 import React from "react";
+import { Link } from "react-router-dom";
+
+export interface BreadcrumbItem {
+  label: React.ReactNode;
+  to?: string;
+  onClick?: () => void;
+}
 
 interface HeaderProps {
-  onLogout?: () => void;
-  children?: React.ReactNode;
+  breadcrumbs?: BreadcrumbItem[];
   rightContent?: React.ReactNode;
-  loading?: boolean;
+  rootLink?: boolean;
 }
 
 export const Header = ({
-  onLogout,
-  children,
+  breadcrumbs,
   rightContent,
-  loading,
+  rootLink = true,
 }: HeaderProps) => {
   return (
     <div className="staticms-header-container">
@@ -25,24 +30,50 @@ export const Header = ({
             </div>
           </div>
         </h1>
-        {children && (
+        {breadcrumbs && (
           <div className="staticms-header-children">
-            {children}
+            <div className="ui breadcrumb staticms-header-breadcrumb">
+              {rootLink
+                ? (
+                  <Link to="/" className="section">
+                    <i className="github icon"></i>
+                  </Link>
+                )
+                : (
+                  <div className="section">
+                    <i className="github icon"></i>
+                  </div>
+                )}
+              {breadcrumbs.map((item, index) => (
+                <React.Fragment key={index}>
+                  {(rootLink || index > 0) && (
+                    <i className="right chevron icon divider"></i>
+                  )}
+                  {item.to
+                    ? (
+                      <Link to={item.to} className="section">
+                        {item.label}
+                      </Link>
+                    )
+                    : item.onClick
+                    ? (
+                      <span
+                        className="section"
+                        onClick={item.onClick}
+                        style={{ cursor: "pointer", color: "#4183c4" }}
+                      >
+                        {item.label}
+                      </span>
+                    )
+                    : <div className="active section">{item.label}</div>}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
         )}
       </div>
       <div>
-        {rightContent ? rightContent : onLogout && (
-          <button
-            type="button"
-            className={`ui button ${loading ? "loading" : ""}`}
-            onClick={onLogout}
-            disabled={loading}
-          >
-            <i className="sign out icon"></i>
-            Logout
-          </button>
-        )}
+        {rightContent}
       </div>
     </div>
   );

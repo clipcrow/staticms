@@ -1,6 +1,6 @@
 import React from "react";
 import { Commit, Content, PrDetails } from "../types.ts";
-import { Header } from "./Header.tsx";
+import { BreadcrumbItem, Header } from "./Header.tsx";
 import { ContentHistory } from "./ContentHistory.tsx";
 import { FrontMatterItemEditor } from "./FrontMatterItemEditor.tsx";
 import { FrontMatterListEditor } from "./FrontMatterListEditor.tsx";
@@ -24,7 +24,7 @@ interface ContentEditorProps {
   commits: Commit[];
   onSaveContent: () => void;
   onReset: () => void;
-  onBack: () => void;
+  onBack?: () => void;
   loading: boolean;
   prDetails: PrDetails | null;
   isResetting?: boolean;
@@ -47,11 +47,11 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   commits,
   onSaveContent,
   onReset,
-  onBack,
+  onBack: _onBack,
   loading,
   prDetails,
   isResetting = false,
-  onBackToCollection,
+  onBackToCollection: _onBackToCollection,
 }) => {
   const [isPrOpen, setIsPrOpen] = React.useState(false);
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
@@ -65,62 +65,44 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
     );
   }
 
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      label: `${currentContent.owner}/${currentContent.repo}`,
+      to: `/${currentContent.owner}/${currentContent.repo}`,
+    },
+  ];
+
+  if (currentContent.collectionName) {
+    breadcrumbs.push({
+      label: currentContent.collectionName,
+      to: `/${currentContent.owner}/${currentContent.repo}/collection/${
+        encodeURIComponent(currentContent.collectionPath || "")
+      }`,
+    });
+    breadcrumbs.push({
+      label: currentContent.name ||
+        currentContent.filePath.split("/").pop() ||
+        "",
+    });
+  } else {
+    breadcrumbs.push({
+      label: currentContent.name || currentContent.filePath,
+    });
+  }
+
   return (
     <div className="ui container staticms-editor-container">
-      <Header>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <button
-            type="button"
-            className="ui blue button staticms-editor-back-button"
-            onClick={onBack}
-          >
-            <i className="github icon"></i>
-            <span className="staticms-editor-repo-name">
-              {currentContent.owner}/{currentContent.repo}
-            </span>
-          </button>
-          {currentContent.branch && (
-            <span className="ui label mini basic staticms-editor-branch-label">
-              <i className="code branch icon"></i>
-              {currentContent.branch}
-            </span>
-          )}
-          <span className="staticms-editor-separator">
-            /
-          </span>
-          {currentContent.collectionName
-            ? (
-              <>
-                <button
-                  type="button"
-                  className="ui blue button staticms-editor-collection-button"
-                  onClick={onBackToCollection || onBack}
-                >
-                  <i className="folder open icon"></i>
-                  {currentContent.collectionName}
-                </button>
-                <span className="staticms-editor-separator">
-                  /
-                </span>
-                <span className="staticms-editor-file-name">
-                  {currentContent.name ||
-                    currentContent.filePath.split("/").pop()}
-                </span>
-              </>
-            )
-            : (
-              <span className="staticms-editor-file-name">
-                {currentContent.name || currentContent.filePath}
-              </span>
-            )}
-          {isPrLocked && (
+      <Header
+        breadcrumbs={breadcrumbs}
+        rightContent={isPrLocked
+          ? (
             <div className="ui label orange mini staticms-editor-pr-label">
               <i className="lock icon"></i>
               PR Open
             </div>
-          )}
-        </div>
-      </Header>
+          )
+          : undefined}
+      />
 
       <div className="ui grid staticms-editor-grid">
         <div className="twelve wide column staticms-editor-main-column">
