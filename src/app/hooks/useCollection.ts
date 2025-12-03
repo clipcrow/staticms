@@ -45,7 +45,17 @@ export const useCollection = (contentConfig: Content | null): {
 
       let fetchedFiles: FileItem[] = [];
       if (data.type === "dir" && Array.isArray(data.files)) {
-        fetchedFiles = data.files;
+        if (contentConfig.type === "collection-files") {
+          // Filter for .md files only, exclude directories
+          fetchedFiles = data.files.filter((f: FileItem) =>
+            f.type === "file" && f.name.endsWith(".md")
+          );
+        } else if (contentConfig.type === "collection-dirs") {
+          // Filter for directories only
+          fetchedFiles = data.files.filter((f: FileItem) => f.type === "dir");
+        } else {
+          fetchedFiles = data.files;
+        }
       } else {
         setError("Not a directory or empty");
       }

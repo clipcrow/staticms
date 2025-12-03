@@ -24,6 +24,17 @@ export const SingletonEditorRoute: React.FC = () => {
     ) || null;
   }, [contents, owner, repo, decodedPath]);
 
+  const contentToRender = useMemo(() => {
+    if (!currentContent) return null;
+    if (currentContent.type === "singleton-index") {
+      return {
+        ...currentContent,
+        filePath: `${currentContent.filePath}/index.md`,
+      };
+    }
+    return currentContent;
+  }, [currentContent]);
+
   if (configLoading) {
     return <div className="ui active centered inline loader"></div>;
   }
@@ -49,5 +60,9 @@ export const SingletonEditorRoute: React.FC = () => {
     );
   }
 
-  return <ContentEditorWrapper content={currentContent} />;
+  if (!contentToRender) {
+    return null; // Should be handled by !currentContent check above, but for type safety
+  }
+
+  return <ContentEditorWrapper content={contentToRender} />;
 };

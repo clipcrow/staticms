@@ -9,11 +9,14 @@ export interface Content {
   branch?: string;
   filePath: string;
   name?: string;
-  type?: "singleton" | "collection-files" | "collection-dirs";
+  type?:
+    | "singleton"
+    | "singleton-index"
+    | "collection-files"
+    | "collection-dirs";
   fields: Field[];
   collectionName?: string;
   collectionPath?: string;
-  collectionType?: "singleton" | "collection-files" | "collection-dirs";
 }
 
 export interface Config {

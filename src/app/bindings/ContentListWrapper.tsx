@@ -28,11 +28,16 @@ export const ContentListWrapper: React.FC = () => {
   const handleSelectContent = async (content: Content, index: number) => {
     setLoadingItemIndex(index);
     try {
+      let fetchPath = content.filePath;
+      if (content.type === "singleton-index") {
+        fetchPath = `${content.filePath}/index.md`;
+      }
+      const encodedFetchPath = encodeURIComponent(fetchPath);
       const encodedPath = encodeURIComponent(content.filePath);
       const branch = content.branch || "";
 
       const res = await fetch(
-        `/api/content?owner=${content.owner}&repo=${content.repo}&filePath=${encodedPath}&branch=${branch}`,
+        `/api/content?owner=${content.owner}&repo=${content.repo}&filePath=${encodedFetchPath}&branch=${branch}`,
       );
 
       if (!res.ok) {
@@ -65,10 +70,6 @@ export const ContentListWrapper: React.FC = () => {
     navigate(`/${owner}/${repo}/add`);
   };
 
-  const handleChangeRepo = () => {
-    navigate("/");
-  };
-
   if (configLoading) {
     return <div className="ui active centered inline loader"></div>;
   }
@@ -85,7 +86,6 @@ export const ContentListWrapper: React.FC = () => {
       onSelectContent={handleSelectContent}
       onAddNewContentToRepo={handleAddNewContentToRepo}
       loadingItemIndex={loadingItemIndex}
-      onChangeRepo={handleChangeRepo}
     />
   );
 };

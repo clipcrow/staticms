@@ -65,7 +65,6 @@ export const ArticleEditorRoute: React.FC = () => {
     type: "singleton", // It's a single file now
     collectionName: currentContent.name || currentContent.filePath,
     collectionPath: currentContent.filePath,
-    collectionType: currentContent.type,
     // Fields are inherited from the collection config
     fields: currentContent.fields,
   };

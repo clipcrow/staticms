@@ -24,6 +24,81 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   repoInfo,
   loading = false,
 }) => {
+  const getUiType = () => {
+    if (
+      formData.type === "collection-files" ||
+      formData.type === "collection-dirs"
+    ) {
+      return "collection";
+    }
+    return "singleton";
+  };
+
+  const getUiBinding = () => {
+    if (
+      formData.type === "singleton-index" ||
+      formData.type === "collection-dirs"
+    ) {
+      return "directory";
+    }
+    return "file";
+  };
+
+  const uiType = getUiType();
+  const uiBinding = getUiBinding();
+
+  const handleTypeChange = (newType: "singleton" | "collection") => {
+    if (newType === "singleton") {
+      setFormData({
+        ...formData,
+        type: uiBinding === "directory" ? "singleton-index" : "singleton",
+      });
+    } else {
+      setFormData({
+        ...formData,
+        type: uiBinding === "directory"
+          ? "collection-dirs"
+          : "collection-files",
+      });
+    }
+  };
+
+  const handleBindingChange = (newBinding: "file" | "directory") => {
+    if (uiType === "singleton") {
+      setFormData({
+        ...formData,
+        type: newBinding === "directory" ? "singleton-index" : "singleton",
+      });
+    } else {
+      setFormData({
+        ...formData,
+        type: newBinding === "directory"
+          ? "collection-dirs"
+          : "collection-files",
+      });
+    }
+  };
+
+  const getPathLabel = () => {
+    if (uiType === "singleton") {
+      return uiBinding === "directory"
+        ? "Singleton Directory Path"
+        : "Singleton File Path";
+    }
+    return "Collection Directory Path";
+  };
+
+  const getPathPlaceholder = () => {
+    if (uiType === "singleton") {
+      return uiBinding === "directory"
+        ? "e.g. content/about"
+        : "e.g. content/blog/post.md";
+    }
+    return uiBinding === "directory"
+      ? "e.g. content/docs"
+      : "e.g. content/blog";
+  };
+
   return (
     <div className="ui container">
       <Header
@@ -56,62 +131,73 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             </small>
           </div>
 
-          <div className="field">
-            <label>Content Type</label>
-            <div className="inline fields">
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentType"
-                    checked={formData.type === "singleton" || !formData.type}
-                    onChange={() =>
-                      setFormData({ ...formData, type: "singleton" })}
-                    disabled={loading}
-                  />
-                  <label>Singleton (Single File)</label>
+          <div className="two fields">
+            <div className="field">
+              <label>Content Type</label>
+              <div className="inline fields">
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentType"
+                      checked={uiType === "singleton"}
+                      onChange={() => handleTypeChange("singleton")}
+                      disabled={loading}
+                    />
+                    <label>Singleton</label>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentType"
+                      checked={uiType === "collection"}
+                      onChange={() => handleTypeChange("collection")}
+                      disabled={loading}
+                    />
+                    <label>Collection</label>
+                  </div>
                 </div>
               </div>
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentType"
-                    checked={formData.type === "collection-files"}
-                    onChange={() =>
-                      setFormData({ ...formData, type: "collection-files" })}
-                    disabled={loading}
-                  />
-                  <label>Collection (Multiple Files)</label>
+            </div>
+
+            <div className="field">
+              <label>Content Binding</label>
+              <div className="inline fields">
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentBinding"
+                      checked={uiBinding === "file"}
+                      onChange={() => handleBindingChange("file")}
+                      disabled={loading}
+                    />
+                    <label>File</label>
+                  </div>
                 </div>
-              </div>
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentType"
-                    checked={formData.type === "collection-dirs"}
-                    onChange={() =>
-                      setFormData({ ...formData, type: "collection-dirs" })}
-                    disabled={loading}
-                  />
-                  <label>Collection (Multiple Directories)</label>
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentBinding"
+                      checked={uiBinding === "directory"}
+                      onChange={() => handleBindingChange("directory")}
+                      disabled={loading}
+                    />
+                    <label>Directory</label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="field">
-            <label>
-              {formData.type === "singleton" || !formData.type
-                ? "Content File Path"
-                : "Collection Directory Path"}
-            </label>
+            <label>{getPathLabel()}</label>
             <input
               type="text"
-              placeholder={formData.type === "singleton" || !formData.type
-                ? "e.g. content/blog/post.md"
-                : "e.g. content/blog"}
+              placeholder={getPathPlaceholder()}
               value={formData.filePath}
               onChange={(e) =>
                 setFormData({ ...formData, filePath: e.target.value })}
