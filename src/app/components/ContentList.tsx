@@ -11,7 +11,6 @@ interface ContentListProps {
   onSelectContent: (content: Content, index: number) => void;
   onAddNewContentToRepo: (owner: string, repo: string, branch?: string) => void;
   loadingItemIndex: number | null;
-  onChangeRepo: () => void;
 }
 
 export const ContentList: React.FC<ContentListProps> = ({
@@ -21,7 +20,6 @@ export const ContentList: React.FC<ContentListProps> = ({
   onSelectContent,
   onAddNewContentToRepo,
   loadingItemIndex,
-  onChangeRepo: _onChangeRepo,
 }) => {
   const [owner, repo] = selectedRepo.split("/");
 
@@ -53,25 +51,6 @@ export const ContentList: React.FC<ContentListProps> = ({
               {contents.map((item, index) => (
                 <ContentListItem
                   key={index}
-                  title={
-                    <div style={{ display: "flex", alignItems: "baseline" }}>
-                      <span
-                        style={{ fontWeight: "bold", marginRight: "0.5em" }}
-                      >
-                        {item.filePath}
-                      </span>
-                      {item.name && (
-                        <span
-                          style={{
-                            color: "rgba(0,0,0,0.5)",
-                            fontWeight: "normal",
-                          }}
-                        >
-                          {item.name}
-                        </span>
-                      )}
-                    </div>
-                  }
                   icon={
                     <i
                       className={`${
@@ -82,28 +61,8 @@ export const ContentList: React.FC<ContentListProps> = ({
                     >
                     </i>
                   }
-                  loading={loadingItemIndex === index}
-                  disabled={loadingItemIndex !== null &&
-                    loadingItemIndex !== index}
-                  onClick={() => {
-                    if (loadingItemIndex === null) {
-                      onSelectContent(item, index);
-                    }
-                  }}
-                  actions={
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEditContentConfig(index);
-                      }}
-                      className="ui icon button mini"
-                      title="Edit Configuration"
-                      disabled={loadingItemIndex !== null}
-                    >
-                      <i className="file alternate outline icon"></i>
-                    </button>
-                  }
+                  primaryText={item.filePath}
+                  secondaryText={item.name}
                   labels={
                     <>
                       {item.branch && (
@@ -175,6 +134,28 @@ export const ContentList: React.FC<ContentListProps> = ({
                       })()}
                     </>
                   }
+                  actions={
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditContentConfig(index);
+                      }}
+                      className="ui icon button mini"
+                      title="Edit Configuration"
+                      disabled={loadingItemIndex !== null}
+                    >
+                      <i className="file alternate outline icon"></i>
+                    </button>
+                  }
+                  loading={loadingItemIndex === index}
+                  disabled={loadingItemIndex !== null &&
+                    loadingItemIndex !== index}
+                  onClick={() => {
+                    if (loadingItemIndex === null) {
+                      onSelectContent(item, index);
+                    }
+                  }}
                 />
               ))}
             </div>

@@ -110,33 +110,9 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                     return (
                       <ContentListItem
                         key={repo.id}
-                        title={
-                          <div
-                            style={{ display: "flex", alignItems: "center" }}
-                          >
-                            <span
-                              style={{
-                                fontWeight: "bold",
-                                marginRight: "1em",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {repo.full_name}
-                            </span>
-                            <span
-                              style={{
-                                color: "rgba(0,0,0,0.6)",
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {repo.description || ""}
-                            </span>
-                          </div>
-                        }
                         icon={<i className="large github icon" />}
-                        onClick={() => onSelect(repo.full_name)}
+                        primaryText={repo.full_name}
+                        secondaryText={repo.description || ""}
                         labels={
                           <>
                             {hasPr && (
@@ -165,6 +141,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                             )}
                           </>
                         }
+                        onClick={() => onSelect(repo.full_name)}
                       />
                     );
                   })}

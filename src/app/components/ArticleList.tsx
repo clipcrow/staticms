@@ -99,8 +99,6 @@ export const ArticleList: React.FC<ArticleListProps> = ({
             {files.map((file) => (
               <ContentListItem
                 key={file.sha}
-                title={file.name}
-                loading={loadingPath === file.path}
                 icon={
                   <i
                     className={`icon ${
@@ -108,22 +106,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     }`}
                   />
                 }
-                onClick={async () => {
-                  setLoadingPath(file.path);
-                  try {
-                    if (
-                      contentConfig.type === "collection-dirs" &&
-                      file.type === "dir"
-                    ) {
-                      await onSelectArticle(`${file.path}/index.md`);
-                    } else {
-                      await onSelectArticle(file.path);
-                    }
-                  } finally {
-                    setLoadingPath(null);
-                  }
-                }}
-                style={{ cursor: "pointer", padding: "10px" }}
+                primaryText={file.name}
                 labels={
                   <>
                     {(() => {
@@ -185,6 +168,23 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     <i className="trash icon red"></i>
                   </button>
                 }
+                loading={loadingPath === file.path}
+                style={{ cursor: "pointer", padding: "10px" }}
+                onClick={async () => {
+                  setLoadingPath(file.path);
+                  try {
+                    if (
+                      contentConfig.type === "collection-dirs" &&
+                      file.type === "dir"
+                    ) {
+                      await onSelectArticle(`${file.path}/index.md`);
+                    } else {
+                      await onSelectArticle(file.path);
+                    }
+                  } finally {
+                    setLoadingPath(null);
+                  }
+                }}
               />
             ))}
           </div>

@@ -1,27 +1,29 @@
 import React from "react";
 
 interface ContentListItemProps {
-  title: React.ReactNode;
   icon?: React.ReactNode;
-  onClick: () => void;
-  actions?: React.ReactNode;
+  primaryText: string;
+  secondaryText?: string;
   labels?: React.ReactNode;
+  actions?: React.ReactNode;
   loading?: boolean;
   disabled?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  onClick: () => void;
 }
 
 export const ContentListItem: React.FC<ContentListItemProps> = ({
-  title,
   icon,
-  onClick,
-  actions,
+  primaryText,
+  secondaryText,
   labels,
+  actions,
   loading,
   disabled,
   className,
   style,
+  onClick,
 }) => {
   return (
     <div
@@ -52,8 +54,37 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
               </span>
             )
           )}
-        <div className="header staticms-content-list-header">
-          {title}
+        <div
+          className="header staticms-content-list-header"
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          <span
+            style={{
+              fontWeight: "bold",
+              marginRight: "0.5em",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {primaryText}
+          </span>
+          {secondaryText && (
+            <span
+              style={{
+                color: "rgba(0,0,0,0.5)",
+                fontWeight: "normal",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {secondaryText}
+            </span>
+          )}
         </div>
         <div className="staticms-content-list-labels">
           {labels}
