@@ -79,6 +79,8 @@ export const ContentList: React.FC<ContentListProps> = ({
                         const draftPrefix = `draft_${username}|${prefixBase}`;
                         const prPrefix = `pr_${username}|${prefixBase}`;
 
+                        let prCount = 0;
+                        let draftCount = 0;
                         let hasPr = false;
                         let hasDraft = false;
 
@@ -93,13 +95,14 @@ export const ContentList: React.FC<ContentListProps> = ({
                           for (let i = 0; i < localStorage.length; i++) {
                             const key = localStorage.key(i);
                             if (key?.startsWith(collectionDraftPrefix)) {
-                              hasDraft = true;
+                              draftCount++;
                             }
                             if (key?.startsWith(collectionPrPrefix)) {
-                              hasPr = true;
+                              prCount++;
                             }
-                            if (hasDraft && hasPr) break;
                           }
+                          hasPr = prCount > 0;
+                          hasDraft = draftCount > 0;
                         } else {
                           // Singleton
                           const prKey = getPrKey(item);
@@ -108,29 +111,34 @@ export const ContentList: React.FC<ContentListProps> = ({
                           hasDraft = !!localStorage.getItem(draftKey);
                         }
 
+                        const labels = [];
                         if (hasPr) {
-                          return (
+                          labels.push(
                             <span
+                              key="pr"
                               className="ui label orange mini basic"
                               style={{ marginLeft: "0.5em" }}
                             >
                               <i className="lock icon"></i>
-                              PR Open
-                            </span>
+                              PR Open{prCount > 0 ? `: ${prCount}` : ""}
+                            </span>,
                           );
                         }
                         if (hasDraft) {
-                          return (
+                          labels.push(
                             <span
+                              key="draft"
                               className="ui label gray mini basic"
                               style={{ marginLeft: "0.5em" }}
                             >
                               <i className="edit icon"></i>
-                              Draft / PR
-                            </span>
+                              Draft / PR{draftCount > 0
+                                ? `: ${draftCount}`
+                                : ""}
+                            </span>,
                           );
                         }
-                        return null;
+                        return labels;
                       })()}
                     </>
                   }

@@ -97,15 +97,16 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                       `draft_${username}|${repo.owner.login}|${repo.name}|`;
                     const prPrefix =
                       `pr_${username}|${repo.owner.login}|${repo.name}|`;
-                    let hasDraft = false;
-                    let hasPr = false;
+                    let draftCount = 0;
+                    let prCount = 0;
 
                     for (let i = 0; i < localStorage.length; i++) {
                       const key = localStorage.key(i);
-                      if (key?.startsWith(draftPrefix)) hasDraft = true;
-                      if (key?.startsWith(prPrefix)) hasPr = true;
-                      if (hasDraft && hasPr) break;
+                      if (key?.startsWith(draftPrefix)) draftCount++;
+                      if (key?.startsWith(prPrefix)) prCount++;
                     }
+                    const hasDraft = draftCount > 0;
+                    const hasPr = prCount > 0;
 
                     return (
                       <ContentListItem
@@ -121,7 +122,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                                 style={{ marginLeft: "0.5em" }}
                               >
                                 <i className="lock icon"></i>
-                                PR Open
+                                PR Open: {prCount}
                               </span>
                             )}
                             {hasDraft && (
@@ -130,7 +131,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                                 style={{ marginLeft: "0.5em" }}
                               >
                                 <i className="edit icon"></i>
-                                Draft / PR
+                                Draft / PR: {draftCount}
                               </span>
                             )}
                             {repo.private && (

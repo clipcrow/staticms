@@ -53,7 +53,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   isResetting = false,
   onBackToCollection: _onBackToCollection,
 }) => {
-  const [isPrOpen, setIsPrOpen] = React.useState(false);
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
     currentContent.filePath.endsWith(".yml");
 
@@ -156,7 +155,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div className="four wide column staticms-editor-sidebar-column">
           <div>
             {prUrl && (
-              <div className="ui message orange">
+              <div className="ui message orange" style={{ marginTop: 0 }}>
                 <div className="header">
                   <i className="circle icon orange"></i>
                   PR Open
@@ -183,96 +182,87 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
 
             {hasDraft && (
-              <div className="ui message gray">
+              <div
+                className="ui message gray"
+                style={{ marginTop: prUrl ? undefined : 0 }}
+              >
                 <div className="content">
-                  <div
-                    className="header staticms-editor-draft-header"
-                    onClick={() => setIsPrOpen(!isPrOpen)}
-                  >
+                  <div className="header staticms-editor-draft-header">
                     <i className="circle icon gray"></i>
                     Draft / PR
-                    <i
-                      className={`right floated icon ${
-                        isPrOpen ? "chevron down" : "chevron right"
-                      }`}
-                    >
-                    </i>
                   </div>
                   <div className="meta">
                     {draftTimestamp
                       ? new Date(draftTimestamp).toLocaleString()
                       : ""}
                   </div>
-                  {isPrOpen && (
-                    <div className="description staticms-editor-draft-description">
-                      {isPrLocked && prDetails
-                        ? (
-                          <div className="ui feed">
-                            <div className="event">
-                              <div className="content">
-                                <div className="summary">
-                                  <a
-                                    href={prDetails.html_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                  >
-                                    PR #{prDetails.number}: {prDetails.title}
-                                  </a>
-                                  <div className="date">
-                                    {new Date(prDetails.created_at)
-                                      .toLocaleDateString()}
-                                  </div>
+                  <div className="description staticms-editor-draft-description">
+                    {isPrLocked && prDetails
+                      ? (
+                        <div className="ui feed">
+                          <div className="event">
+                            <div className="content">
+                              <div className="summary">
+                                <a
+                                  href={prDetails.html_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  PR #{prDetails.number}: {prDetails.title}
+                                </a>
+                                <div className="date">
+                                  {new Date(prDetails.created_at)
+                                    .toLocaleDateString()}
                                 </div>
-                                <div className="extra text">
-                                  {prDetails.body}
-                                </div>
-                                <div className="meta">
-                                  by {prDetails.user.login}
-                                </div>
+                              </div>
+                              <div className="extra text">
+                                {prDetails.body}
+                              </div>
+                              <div className="meta">
+                                by {prDetails.user.login}
                               </div>
                             </div>
                           </div>
-                        )
-                        : (
-                          <div className="ui form">
-                            <div className="field">
-                              <label>Description</label>
-                              <textarea
-                                rows={3}
-                                value={prDescription}
-                                onChange={(e) =>
-                                  setPrDescription(e.target.value)}
-                                placeholder="PR Description..."
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              className={`ui primary button fluid ${
-                                isSaving ? "loading" : ""
-                              }`}
-                              onClick={onSaveContent}
-                              disabled={isSaving}
-                            >
-                              Create PR
-                            </button>
+                        </div>
+                      )
+                      : (
+                        <div className="ui form">
+                          <div className="field">
+                            <label>Description</label>
+                            <textarea
+                              rows={3}
+                              value={prDescription}
+                              onChange={(e) => setPrDescription(e.target.value)}
+                              placeholder="PR Description..."
+                            />
                           </div>
-                        )}
-                      <div className="staticms-editor-reset-container">
-                        <button
-                          type="button"
-                          className={`ui red button staticms-editor-reset-button ${
-                            isResetting ? "loading" : ""
-                          }`}
-                          onClick={onReset}
-                          disabled={loading || isSaving || isResetting}
-                          title="Reset changes"
-                        >
-                          <i className="undo icon"></i>
-                          Reset
-                        </button>
-                      </div>
+                          <button
+                            type="button"
+                            className={`ui primary button fluid ${
+                              isSaving ? "loading" : ""
+                            }`}
+                            onClick={onSaveContent}
+                            disabled={isSaving}
+                          >
+                            Create PR
+                          </button>
+                        </div>
+                      )}
+                    <div className="staticms-editor-reset-container">
+                      <button
+                        type="button"
+                        className={`ui red button staticms-editor-reset-button ${
+                          isResetting ? "loading" : ""
+                        }`}
+                        onClick={onReset}
+                        disabled={loading || isSaving || isResetting}
+                        title="Reset changes"
+                      >
+                        <i className="undo icon"></i>
+                        Reset
+                      </button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             )}
