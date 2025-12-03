@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useContentConfig } from "../hooks/useContentConfig.ts";
-import { ContentSettings } from "./ContentSettings.tsx";
+import { ContentSettings } from "../components/ContentSettings.tsx";
 import { Content } from "../types.ts";
 
 export const ContentSettingsWrapper: React.FC = () => {

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "../hooks/useContentConfig.ts";
-import { ContentList } from "./ContentList.tsx";
+import { ContentList } from "../components/ContentList.tsx";
 import { Content } from "../types.ts";
 
 export const ContentListWrapper: React.FC = () => {

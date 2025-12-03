@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Content } from "../types.ts";
 import { useCollection } from "../hooks/useCollection.ts";
-import { ArticleList } from "./ArticleList.tsx";
+import { ArticleList } from "../components/ArticleList.tsx";
 
 interface ArticleListWrapperProps {
   content: Content;

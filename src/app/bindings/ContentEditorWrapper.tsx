@@ -4,7 +4,7 @@ import { Content } from "../types.ts";
 import { useRemoteContent } from "../hooks/useRemoteContent.ts";
 import { useDraft } from "../hooks/useDraft.ts";
 import { useSubscription } from "../hooks/useSubscription.ts";
-import { ContentEditor } from "./ContentEditor.tsx";
+import { ContentEditor } from "../components/ContentEditor.tsx";
 import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 
 interface ContentEditorWrapperProps {

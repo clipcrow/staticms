@@ -2,19 +2,12 @@ import React, { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "../hooks/useContentConfig.ts";
 import { ContentEditorWrapper } from "./ContentEditorWrapper.tsx";
-import { ArticleListWrapper } from "./ArticleListWrapper.tsx";
-import { Content } from "../types.ts";
 
-interface ContentRouteProps {
-  mode: "collection-list" | "singleton-editor" | "article-editor";
-}
-
-export const ContentRoute: React.FC<ContentRouteProps> = ({ mode }) => {
-  const { owner, repo, contentId, articleId } = useParams<{
+export const SingletonEditorRoute: React.FC = () => {
+  const { owner, repo, contentId } = useParams<{
     owner: string;
     repo: string;
     contentId: string;
-    articleId?: string;
   }>();
   const navigate = useNavigate();
   const { contents, configLoading } = useContentConfig();
@@ -56,32 +49,5 @@ export const ContentRoute: React.FC<ContentRouteProps> = ({ mode }) => {
     );
   }
 
-  if (mode === "article-editor" && articleId) {
-    const decodedArticlePath = decodeURIComponent(articleId);
-
-    // Construct a virtual content object for the article
-    const articleContent: Content = {
-      ...currentContent,
-      filePath: decodedArticlePath,
-      name: undefined, // Let the editor figure out the name from path
-      type: "singleton", // It's a single file now
-      collectionName: currentContent.name || currentContent.filePath,
-      collectionPath: currentContent.filePath,
-      collectionType: currentContent.type,
-      // Fields are inherited from the collection config
-      fields: currentContent.fields,
-    };
-
-    return <ContentEditorWrapper content={articleContent} />;
-  }
-
-  if (mode === "collection-list") {
-    return <ArticleListWrapper content={currentContent} />;
-  }
-
-  if (mode === "singleton-editor") {
-    return <ContentEditorWrapper content={currentContent} />;
-  }
-
-  return <div>Invalid Route Configuration</div>;
+  return <ContentEditorWrapper content={currentContent} />;
 };

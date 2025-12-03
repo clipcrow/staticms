@@ -10,9 +10,11 @@ import {
 } from "react-router-dom";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
-import { ContentListWrapper } from "./components/ContentListWrapper.tsx";
-import { ContentSettingsWrapper } from "./components/ContentSettingsWrapper.tsx";
-import { ContentRoute } from "./components/ContentRoute.tsx";
+import { ContentListWrapper } from "./bindings/ContentListWrapper.tsx";
+import { ContentSettingsWrapper } from "./bindings/ContentSettingsWrapper.tsx";
+import { CollectionListRoute } from "./bindings/CollectionListRoute.tsx";
+import { ArticleEditorRoute } from "./bindings/ArticleEditorRoute.tsx";
+import { SingletonEditorRoute } from "./bindings/SingletonEditorRoute.tsx";
 import { NotFound } from "./components/NotFound.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 
@@ -59,15 +61,15 @@ function AppContent() {
           <Route path="add" element={<ContentSettingsWrapper />} />
           <Route path="edit" element={<ContentSettingsWrapper />} />
           <Route path="collection/:contentId">
-            <Route index element={<ContentRoute mode="collection-list" />} />
+            <Route index element={<CollectionListRoute />} />
             <Route
               path=":articleId"
-              element={<ContentRoute mode="article-editor" />}
+              element={<ArticleEditorRoute />}
             />
           </Route>
           <Route
             path="singleton/:contentId"
-            element={<ContentRoute mode="singleton-editor" />}
+            element={<SingletonEditorRoute />}
           />
         </Route>
       </Route>
