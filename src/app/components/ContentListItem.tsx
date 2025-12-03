@@ -55,7 +55,9 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
         <div className="header staticms-content-list-header">
           {title}
         </div>
-        {labels}
+        <div className="staticms-content-list-labels">
+          {labels}
+        </div>
       </div>
       {actions && (
         <div className="content" style={{ paddingLeft: "0.5em" }}>

@@ -59,6 +59,12 @@
   margin-right: 1em !important;
 }
 
+.staticms-content-list-labels {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
 .staticms-content-list-branch {
   margin-left: 0.5em !important;
   vertical-align: middle !important;

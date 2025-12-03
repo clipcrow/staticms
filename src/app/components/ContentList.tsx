@@ -1,7 +1,7 @@
 import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
-import { getDraftKey, getPrKey } from "../hooks/utils.ts";
+import { getDraftKey, getPrKey, getUsername } from "../hooks/utils.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
 
 interface ContentListProps {
@@ -83,7 +83,7 @@ export const ContentList: React.FC<ContentListProps> = ({
                       title="Edit Configuration"
                       disabled={loadingItemIndex !== null}
                     >
-                      <i className="edit icon"></i>
+                      <i className="file alternate outline icon"></i>
                     </button>
                   }
                   labels={
@@ -95,10 +95,41 @@ export const ContentList: React.FC<ContentListProps> = ({
                         </span>
                       )}
                       {(() => {
-                        const prKey = getPrKey(item);
-                        const draftKey = getDraftKey(item);
-                        const hasPr = localStorage.getItem(prKey);
-                        const hasDraft = localStorage.getItem(draftKey);
+                        const username = getUsername();
+                        const prefixBase = `${item.owner}|${item.repo}|${
+                          item.branch || ""
+                        }|${item.filePath}`;
+                        const draftPrefix = `draft_${username}|${prefixBase}`;
+                        const prPrefix = `pr_${username}|${prefixBase}`;
+
+                        let hasPr = false;
+                        let hasDraft = false;
+
+                        if (item.type?.startsWith("collection")) {
+                          // For collections, check if any key starts with the prefix + "/"
+                          // Actually, filePath is the directory.
+                          // Keys are like: draft_user|owner|repo|branch|path/to/file.md
+                          // So we check if key starts with draft_user|owner|repo|branch|path/to/dir/
+                          const collectionDraftPrefix = `${draftPrefix}/`;
+                          const collectionPrPrefix = `${prPrefix}/`;
+
+                          for (let i = 0; i < localStorage.length; i++) {
+                            const key = localStorage.key(i);
+                            if (key?.startsWith(collectionDraftPrefix)) {
+                              hasDraft = true;
+                            }
+                            if (key?.startsWith(collectionPrPrefix)) {
+                              hasPr = true;
+                            }
+                            if (hasDraft && hasPr) break;
+                          }
+                        } else {
+                          // Singleton
+                          const prKey = getPrKey(item);
+                          const draftKey = getDraftKey(item);
+                          hasPr = !!localStorage.getItem(prKey);
+                          hasDraft = !!localStorage.getItem(draftKey);
+                        }
 
                         if (hasPr) {
                           return (
