@@ -183,7 +183,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         <div className="four wide column">
           <div>
             {prUrl && (
-              <div className="ui message orange">
+              <div
+                className="ui message orange"
+                style={{ marginBottom: "2em" }}
+              >
                 <div className="header">
                   <i className="circle icon orange"></i>
                   PR Open
@@ -210,7 +213,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
 
             {hasDraft && (
-              <div className="ui message gray">
+              <div className="ui message gray" style={{ marginBottom: "2em" }}>
                 <div className="content">
                   <div className="header staticms-editor-draft-header">
                     <i className="circle icon gray"></i>
@@ -281,7 +284,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             <ContentHistory
               commits={commits}
               currentContent={currentContent}
-              style={{ marginTop: !prUrl && !hasDraft ? 0 : undefined }}
             />
 
             <ContentImages currentContent={currentContent} />

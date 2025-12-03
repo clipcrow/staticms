@@ -70,7 +70,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
 
   if (loading) {
     return (
-      <div className="ui segment">
+      <div className="ui basic segment" style={{ marginBottom: "2em" }}>
         <div className="ui active centered inline loader"></div>
       </div>
     );
@@ -79,7 +79,10 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   if (images.length === 0) return null;
 
   return (
-    <div className="ui segment">
+    <div
+      className="ui basic segment"
+      style={{ padding: 0, marginBottom: "2em" }}
+    >
       <h4 className="ui header">Images</h4>
       <div className="ui relaxed list">
         {images.map((img) => (

@@ -339,7 +339,7 @@
     color: #ffffff;
   }
 
-  .ui.segment {
+  .ui.segment:not(.basic) {
     background-color: #242526;
     color: #ffffff;
     border: 1px solid #444;
