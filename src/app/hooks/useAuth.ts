@@ -18,9 +18,18 @@ export const useAuth = () => {
           if (login) {
             localStorage.setItem("staticms_user", login);
           }
+        } else {
+          console.warn(
+            "[useAuth] Auth check failed with status:",
+            userRes.status,
+          );
+          localStorage.removeItem("staticms_user");
+          setIsAuthenticated(false);
         }
       } catch (e) {
-        console.error("Auth check failed", e);
+        console.error("[useAuth] Auth check error", e);
+        // On network error, we might want to retry, but for now we just fail
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
@@ -43,6 +52,8 @@ export const useAuth = () => {
     try {
       await fetch("/api/auth/logout");
       setIsAuthenticated(false);
+      setUsername(null);
+      localStorage.removeItem("staticms_user");
       // Navigation to login will happen automatically because isAuthenticated becomes false
     } catch (e) {
       console.error("Logout failed", e);
@@ -58,5 +69,6 @@ export const useAuth = () => {
     loading,
     login,
     logout,
+    username,
   };
 };
