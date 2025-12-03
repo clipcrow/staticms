@@ -294,13 +294,6 @@
   margin-top: 1em !important;
 }
 
-.staticms-md-editor-root {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 500px;
-}
-
 .staticms-repo-selector-loading-segment {
   min-height: 200px !important;
 }
@@ -330,12 +323,12 @@
 }
 
 /* Increase markdown editor toolbar button size */
-.staticms-md-editor-root .w-md-editor-toolbar li > button {
+.w-md-editor-toolbar li > button {
   width: 32px !important;
   height: 32px !important;
 }
 
-.staticms-md-editor-root .w-md-editor-toolbar li > button svg {
+.w-md-editor-toolbar li > button svg {
   width: 18px !important;
   height: 18px !important;
 }

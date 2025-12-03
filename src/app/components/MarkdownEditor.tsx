@@ -15,7 +15,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   isPrLocked,
 }) => {
   return (
-    <div className="staticms-md-editor-root" data-color-mode="light">
+    <>
       {/* @ts-ignore: MDEditor type compatibility issue with Deno/React 19 */}
       <MDEditor
         value={body}
@@ -32,6 +32,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         visibleDragbar={!isPrLocked}
         hideToolbar={isPrLocked}
       />
-    </div>
+    </>
   );
 };
