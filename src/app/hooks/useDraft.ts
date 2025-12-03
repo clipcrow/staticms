@@ -301,17 +301,6 @@ export const useDraft = (
     setPrDescription,
   ]);
 
-  const handleReset = useCallback(() => {
-    if (!currentContent) return;
-    if (
-      !confirm(
-        "Are you sure you want to discard your local changes and reset to the remote content?",
-      )
-    ) return;
-
-    resetContent();
-  }, [currentContent, resetContent]);
-
   // Check PR Status Effect
   useEffect(() => {
     if (prUrl) {
@@ -348,6 +337,5 @@ export const useDraft = (
     saveContent,
     isSaving,
     resetContent,
-    handleReset,
   };
 };

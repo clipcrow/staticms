@@ -53,7 +53,6 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     clearDraft,
     saveContent,
     isSaving,
-    handleReset,
     resetContent,
   } = useDraft(
     content,
@@ -138,7 +137,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       isSaving={isSaving}
       commits={commits}
       onSaveContent={() => saveContent(sha)}
-      onReset={handleReset}
+      onReset={resetContent}
       onBack={handleBack}
       loading={editorLoading}
       prDetails={prDetails}

@@ -120,12 +120,6 @@
   margin-top: 5em !important;
 }
 
-.staticms-editor-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
 .staticms-editor-back-button {
   display: flex;
   align-items: center;
@@ -181,12 +175,6 @@
   align-items: stretch;
 }
 
-.staticms-editor-main-column {
-  display: flex;
-  flex-direction: column;
-  padding: 0 1em !important; /* Keep horizontal padding */
-}
-
 .staticms-editor-fm-segment {
   min-height: 0;
   display: flex !important;
@@ -202,10 +190,6 @@
 
 .staticms-editor-fm-segment-md {
   flex-shrink: 0;
-}
-
-.staticms-editor-sidebar-column {
-  padding-bottom: 2em !important;
 }
 
 .staticms-editor-pr-number {

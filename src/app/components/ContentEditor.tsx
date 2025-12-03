@@ -56,6 +56,16 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
     currentContent.filePath.endsWith(".yml");
 
+  const handleReset = () => {
+    if (
+      globalThis.confirm(
+        "Are you sure you want to discard your local changes and reset to the remote content?",
+      )
+    ) {
+      onReset();
+    }
+  };
+
   if (loading) {
     return (
       <div className="ui active dimmer">
@@ -90,21 +100,38 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   }
 
   return (
-    <div className="ui container staticms-editor-container">
+    <div className="ui container">
       <Header
         breadcrumbs={breadcrumbs}
-        rightContent={isPrLocked
-          ? (
-            <div className="ui label orange mini staticms-editor-pr-label">
-              <i className="lock icon"></i>
-              PR Open
-            </div>
-          )
-          : undefined}
+        rightContent={
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {isPrLocked && (
+              <div
+                className="ui label orange mini staticms-editor-pr-label"
+                style={{ marginRight: "1em" }}
+              >
+                <i className="lock icon"></i>
+                PR Open
+              </div>
+            )}
+            <button
+              type="button"
+              className={`ui button tiny ${hasDraft ? "red" : ""} ${
+                isResetting ? "loading" : ""
+              }`}
+              onClick={handleReset}
+              disabled={!hasDraft || loading || isSaving || isResetting}
+              title="Discard local draft"
+            >
+              <i className="undo icon"></i>
+              Reset Draft
+            </button>
+          </div>
+        }
       />
 
       <div className="ui grid staticms-editor-grid">
-        <div className="twelve wide column staticms-editor-main-column">
+        <div className="twelve wide column">
           <div
             className={`staticms-editor-fm-segment ${
               isYaml
@@ -152,10 +179,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
           )}
         </div>
 
-        <div className="four wide column staticms-editor-sidebar-column">
+        <div className="four wide column">
           <div>
             {prUrl && (
-              <div className="ui message orange" style={{ marginTop: 0 }}>
+              <div className="ui message orange">
                 <div className="header">
                   <i className="circle icon orange"></i>
                   PR Open
@@ -182,10 +209,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
 
             {hasDraft && (
-              <div
-                className="ui message gray"
-                style={{ marginTop: prUrl ? undefined : 0 }}
-              >
+              <div className="ui message gray">
                 <div className="content">
                   <div className="header staticms-editor-draft-header">
                     <i className="circle icon gray"></i>
@@ -248,20 +272,6 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                           </button>
                         </div>
                       )}
-                    <div className="staticms-editor-reset-container">
-                      <button
-                        type="button"
-                        className={`ui red button staticms-editor-reset-button ${
-                          isResetting ? "loading" : ""
-                        }`}
-                        onClick={onReset}
-                        disabled={loading || isSaving || isResetting}
-                        title="Reset changes"
-                      >
-                        <i className="undo icon"></i>
-                        Reset
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
