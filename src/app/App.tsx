@@ -80,7 +80,7 @@ function AppContent() {
 
 const root = createRoot(document.getElementById("root")!);
 root.render(
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_relativeSplatPath: true }}>
     <AppContent />
   </BrowserRouter>,
 );

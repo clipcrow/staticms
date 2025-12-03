@@ -15,9 +15,18 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     const fetchImages = async () => {
       setLoading(true);
       try {
+        console.log(
+          `[ContentImages] currentContent.filePath: ${currentContent.filePath}`,
+        );
+        console.log(
+          `[ContentImages] currentContent.type: ${currentContent.type}`,
+        );
+
         // Determine directory path
         const parts = currentContent.filePath.split("/");
-        parts.pop(); // Remove filename
+        if (parts.length > 0) {
+          parts.pop(); // Remove filename
+        }
         const dirPath = parts.join("/");
 
         console.log(`[ContentImages] Fetching images from: ${dirPath}`);
