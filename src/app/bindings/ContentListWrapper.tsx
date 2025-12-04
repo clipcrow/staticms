@@ -50,11 +50,11 @@ export const ContentListWrapper: React.FC = () => {
         content.type === "collection-files" ||
         content.type === "collection-dirs"
       ) {
-        navigate(`/${owner}/${repo}/collection/${encodedPath}`, {
+        navigate(`/${owner}/${repo}/${encodedPath}`, {
           state: { initialData: data },
         });
       } else {
-        navigate(`/${owner}/${repo}/singleton/${encodedPath}`, {
+        navigate(`/${owner}/${repo}/${encodedPath}`, {
           state: { initialData: data },
         });
       }

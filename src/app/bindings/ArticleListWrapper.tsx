@@ -32,7 +32,15 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
   const handleSelectArticle = async (path: string) => {
     // Encode collection and article IDs
     const encodedCollectionId = encodeURIComponent(content.filePath);
-    const encodedArticleId = encodeURIComponent(path);
+
+    let relativePath = path;
+    if (path.startsWith(content.filePath)) {
+      relativePath = path.substring(content.filePath.length);
+      if (relativePath.startsWith("/")) {
+        relativePath = relativePath.substring(1);
+      }
+    }
+    const encodedArticleId = encodeURIComponent(relativePath);
     // Build API request for the article content
     const params = new URLSearchParams({
       owner: content.owner,
@@ -52,7 +60,7 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
         data = await res.json();
       }
       navigate(
-        `/${content.owner}/${content.repo}/collection/${encodedCollectionId}/${encodedArticleId}`,
+        `/${content.owner}/${content.repo}/${encodedCollectionId}/${encodedArticleId}`,
         { state: { initialData: data } },
       );
     } catch (e) {

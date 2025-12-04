@@ -114,7 +114,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       // We need to encode the collection path
       const encodedCollectionPath = encodeURIComponent(content.collectionPath);
       navigate(
-        `/${content.owner}/${content.repo}/collection/${encodedCollectionPath}`,
+        `/${content.owner}/${content.repo}/${encodedCollectionPath}`,
       );
     } else {
       handleBack();

@@ -85,7 +85,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   if (currentContent.collectionName) {
     breadcrumbs.push({
       label: currentContent.collectionName,
-      to: `/${currentContent.owner}/${currentContent.repo}/collection/${
+      to: `/${currentContent.owner}/${currentContent.repo}/${
         encodeURIComponent(currentContent.collectionPath || "")
       }`,
     });

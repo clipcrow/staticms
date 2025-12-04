@@ -12,9 +12,8 @@ import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { ContentListWrapper } from "./bindings/ContentListWrapper.tsx";
 import { ContentSettingsWrapper } from "./bindings/ContentSettingsWrapper.tsx";
-import { CollectionListRoute } from "./bindings/CollectionListRoute.tsx";
+import { ContentDispatcher } from "./bindings/ContentDispatcher.tsx";
 import { ArticleEditorRoute } from "./bindings/ArticleEditorRoute.tsx";
-import { SingletonEditorRoute } from "./bindings/SingletonEditorRoute.tsx";
 import { NotFound } from "./components/NotFound.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 
@@ -60,17 +59,13 @@ function AppContent() {
           <Route index element={<ContentListWrapper />} />
           <Route path="add" element={<ContentSettingsWrapper />} />
           <Route path="edit" element={<ContentSettingsWrapper />} />
-          <Route path="collection/:contentId">
-            <Route index element={<CollectionListRoute />} />
+          <Route path=":contentId">
+            <Route index element={<ContentDispatcher />} />
             <Route
               path=":articleId"
               element={<ArticleEditorRoute />}
             />
           </Route>
-          <Route
-            path="singleton/:contentId"
-            element={<SingletonEditorRoute />}
-          />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
