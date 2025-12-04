@@ -136,6 +136,10 @@ Staticms
     - ローカル変更がある場合は、ユーザーの作業を優先（上書きしない）
   - `pull_request`:
     - PR がクローズされた場合、ステータスチェックをトリガー
+  - `repository_update`:
+    - GitHub App のインストール状態が変更された場合 (`installation`,
+      `installation_repositories`)
+    - リポジトリリストを再取得し、UIを更新
 
 ## 5. サーバーサイド構成 (Server Architecture)
 

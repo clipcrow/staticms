@@ -68,9 +68,9 @@ App作成後、以下の情報を取得し、`.env` ファイルに設定しま�
 
 ```env
 # サーバー設定
-STATICMS_GITHUB_APP_URL=あなたのAppの公開URL/installations/select_target
 STATICMS_PORT=3030
 STATICMS_PUBLIC_URL=https://xxxx-xxxx.ngrok-free.app
+STATICMS_GITHUB_APP_URL=あなたのAppの公開URL/installations/select_target
 
 # GitHub App設定
 GITHUB_APP_ID=あなたのAppID
