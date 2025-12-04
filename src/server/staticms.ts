@@ -237,7 +237,7 @@ router.get("/api/auth/login", async (ctx) => {
   }
 
   const redirectUrl =
-    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,read:org`;
+    `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,read:org&prompt=consent`;
   ctx.response.redirect(redirectUrl);
 });
 
