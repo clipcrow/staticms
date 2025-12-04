@@ -231,6 +231,19 @@ export const useDraft = (
         `[handleSaveContent] Sending branch: "${currentContent.branch}"`,
       );
 
+      // Get pending images
+      const parts = currentContent.filePath.split("/");
+      if (parts.length > 0) parts.pop();
+      const dirPath = parts.join("/");
+      const pendingImagesKey =
+        `pending_images_${currentContent.owner}_${currentContent.repo}_${
+          currentContent.branch || ""
+        }_${dirPath}`;
+      const pendingImagesJson = localStorage.getItem(pendingImagesKey);
+      const pendingImages = pendingImagesJson
+        ? JSON.parse(pendingImagesJson)
+        : [];
+
       const res = await fetch("/api/content", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -244,6 +257,7 @@ export const useDraft = (
           title: generatedTitle,
           description: prDescription,
           sha,
+          images: pendingImages,
         }),
       });
       const data = await res.json();
@@ -257,6 +271,9 @@ export const useDraft = (
         // Clear draft on success
         clearDraft();
         setPrDescription("");
+
+        // Clear pending images
+        localStorage.removeItem(pendingImagesKey);
 
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);

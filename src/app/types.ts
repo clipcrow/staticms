@@ -53,4 +53,5 @@ export interface FileItem {
   path: string;
   type: "file" | "dir";
   sha: string;
+  content?: string;
 }

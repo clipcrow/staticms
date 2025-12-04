@@ -820,8 +820,27 @@ router.post("/api/content", async (ctx) => {
       content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
       branch: newBranchName,
     };
+
     if (sha) {
       fileUpdateBody.sha = sha;
+    } else {
+      // If SHA is missing, check if file exists in the new branch (inherited from base)
+      // and get its SHA to perform an update instead of a create (which would fail with 422)
+      try {
+        const existingFile = await githubRequest(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${encodedPath}?ref=${newBranchName}`,
+          {},
+          token,
+        );
+        if (existingFile.sha) {
+          console.log(
+            `[POST /api/content] File exists (SHA: ${existingFile.sha}), updating instead of creating.`,
+          );
+          fileUpdateBody.sha = existingFile.sha;
+        }
+      } catch {
+        // File doesn't exist, proceed with create
+      }
     }
 
     await githubRequest(
@@ -832,6 +851,51 @@ router.post("/api/content", async (ctx) => {
       },
       token,
     );
+
+    // 4.5 Upload images if present
+    // deno-lint-ignore no-explicit-any
+    const images = (body as any).images;
+    if (images && Array.isArray(images)) {
+      for (const img of images) {
+        if (!img.path || !img.content) continue;
+        console.log(`[POST /api/content] Uploading image: ${img.path}`);
+
+        const normalizedImgPath = normalize(img.path);
+        const encodedImgPath = normalizedImgPath.split("/").map(
+          encodeURIComponent,
+        ).join("/");
+
+        // Check if image already exists to get SHA (for update)
+        let imgSha = undefined;
+        try {
+          const imgRes = await githubRequest(
+            `https://api.github.com/repos/${owner}/${repo}/contents/${encodedImgPath}?ref=${newBranchName}`,
+            {},
+            token,
+          );
+          imgSha = imgRes.sha;
+        } catch (e) {
+          // Image doesn't exist, that's fine. But log it just in case it's not a 404.
+          console.log(
+            `[POST /api/content] Image check failed (likely new): ${e}`,
+          );
+        }
+
+        await githubRequest(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${encodedImgPath}`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              message: `Upload ${img.path} via Staticms`,
+              content: img.content, // Already base64 encoded from client
+              branch: newBranchName,
+              sha: imgSha,
+            }),
+          },
+          token,
+        );
+      }
+    }
 
     // 5. Create Pull Request
     const prData = await githubRequest(

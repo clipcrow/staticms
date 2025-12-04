@@ -3,13 +3,75 @@ import { Content, FileItem } from "../types.ts";
 
 interface ContentImagesProps {
   currentContent: Content;
+  setHasDraft: (has: boolean) => void;
+  setDraftTimestamp: (ts: number | null) => void;
 }
 
 export const ContentImages: React.FC<ContentImagesProps> = ({
   currentContent,
+  setHasDraft,
+  setDraftTimestamp,
 }) => {
   const [images, setImages] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [pendingImages, setPendingImages] = useState<FileItem[]>([]);
+
+  // Helper to get storage key
+  const getStorageKey = () => {
+    const parts = currentContent.filePath.split("/");
+    if (parts.length > 0) parts.pop();
+    const dirPath = parts.join("/");
+    return `pending_images_${currentContent.owner}_${currentContent.repo}_${
+      currentContent.branch || ""
+    }_${dirPath}`;
+  };
+
+  useEffect(() => {
+    // Load pending images
+    const key = getStorageKey();
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try {
+        setPendingImages(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse pending images", e);
+      }
+    }
+  }, [currentContent]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        // Extract base64 content (remove data:image/png;base64, prefix)
+        const content = result.split(",")[1];
+
+        const parts = currentContent.filePath.split("/");
+        if (parts.length > 0) parts.pop();
+        const dirPath = parts.join("/");
+        const fullPath = dirPath ? `${dirPath}/${file.name}` : file.name;
+
+        const newImage: FileItem = {
+          name: file.name,
+          path: fullPath,
+          type: "file",
+          sha: "pending-" + Date.now(), // Temporary SHA
+          content: content, // Store content for upload
+        };
+
+        const updatedPending = [...pendingImages, newImage];
+        setPendingImages(updatedPending);
+        localStorage.setItem(getStorageKey(), JSON.stringify(updatedPending));
+
+        // Trigger draft state
+        setHasDraft(true);
+        setDraftTimestamp(Date.now());
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -76,6 +138,8 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     return `/api/content?owner=${currentContent.owner}&repo=${currentContent.repo}&filePath=${encodedPath}&branch=${branch}&media=true`;
   };
 
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
   if (loading) {
     return (
       <div className="ui basic segment" style={{ marginBottom: "2em" }}>
@@ -84,7 +148,35 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     );
   }
 
-  if (images.length === 0) return null;
+  const allImages = [...pendingImages, ...images];
+
+  if (allImages.length === 0 && !loading) {
+    // Show button even if no images
+    return (
+      <div
+        className="ui basic segment"
+        style={{ padding: 0, marginBottom: "2em" }}
+      >
+        <h4 className="ui header">Images Nearby</h4>
+        <div className="ui message info">No images found.</div>
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept="image/*"
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          className="ui button mini basic fluid"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <i className="plus icon"></i>
+          Add Image
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -94,20 +186,56 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
       >
         <h4 className="ui header">Images Nearby</h4>
         <div className="ui relaxed list">
-          {images.map((img) => (
-            <div
-              key={img.sha}
-              className="item"
-              style={{ cursor: "pointer" }}
-              onClick={() => setPreviewImage(getImageUrl(img.path))}
-            >
-              <i className="image icon"></i>
-              <div className="content">
-                {img.name}
+          {allImages.map((img) => {
+            const isPending = img.sha.startsWith("pending-");
+            return (
+              <div
+                key={img.sha}
+                className="item"
+                style={{ cursor: "pointer" }}
+                onClick={() => {
+                  if (isPending) {
+                    // For pending images, we can preview using data URL
+                    // Reconstruct data URL
+                    setPreviewImage(`data:image/png;base64,${img.content}`);
+                  } else {
+                    setPreviewImage(getImageUrl(img.path));
+                  }
+                }}
+              >
+                <i className={`image icon ${isPending ? "yellow" : ""}`}></i>
+                <div className="content">
+                  {img.name}
+                  {isPending && (
+                    <span
+                      className="ui label mini yellow basic"
+                      style={{ marginLeft: "0.5em" }}
+                    >
+                      Pending
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          accept="image/*"
+          onChange={handleFileChange}
+        />
+        <button
+          type="button"
+          className="ui button mini basic fluid"
+          style={{ marginTop: "1em" }}
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <i className="plus icon"></i>
+          Add Image
+        </button>
       </div>
 
       {previewImage && (

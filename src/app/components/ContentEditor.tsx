@@ -18,7 +18,9 @@ interface ContentEditorProps {
   isPrLocked: boolean;
   prUrl: string | null;
   hasDraft: boolean;
+  setHasDraft: (has: boolean) => void;
   draftTimestamp: number | null;
+  setDraftTimestamp: (ts: number | null) => void;
   prDescription: string;
   setPrDescription: (desc: string) => void;
   isSaving: boolean;
@@ -41,7 +43,9 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   isPrLocked,
   prUrl,
   hasDraft,
+  setHasDraft,
   draftTimestamp,
+  setDraftTimestamp,
   prDescription,
   setPrDescription,
   isSaving,
@@ -287,7 +291,11 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               currentContent={currentContent}
             />
 
-            <ContentImages currentContent={currentContent} />
+            <ContentImages
+              currentContent={currentContent}
+              setHasDraft={setHasDraft}
+              setDraftTimestamp={setDraftTimestamp}
+            />
           </div>
         </div>
       </div>
