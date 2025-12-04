@@ -54,6 +54,8 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     saveContent,
     isSaving,
     resetContent,
+    pendingImages,
+    setPendingImages,
   } = useDraft(
     content,
     body,
@@ -136,6 +138,8 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       setDraftTimestamp={setDraftTimestamp}
       prDescription={prDescription}
       setPrDescription={setPrDescription}
+      pendingImages={pendingImages}
+      setPendingImages={setPendingImages}
       isSaving={isSaving}
       commits={commits}
       onSaveContent={() => saveContent(sha)}

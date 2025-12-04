@@ -5,39 +5,23 @@ interface ContentImagesProps {
   currentContent: Content;
   setHasDraft: (has: boolean) => void;
   setDraftTimestamp: (ts: number | null) => void;
+  hasDraft: boolean;
+  isPrLocked: boolean;
+  pendingImages: FileItem[];
+  setPendingImages: (images: FileItem[]) => void;
 }
 
 export const ContentImages: React.FC<ContentImagesProps> = ({
   currentContent,
   setHasDraft,
   setDraftTimestamp,
+  hasDraft,
+  isPrLocked,
+  pendingImages,
+  setPendingImages,
 }) => {
   const [images, setImages] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [pendingImages, setPendingImages] = useState<FileItem[]>([]);
-
-  // Helper to get storage key
-  const getStorageKey = () => {
-    const parts = currentContent.filePath.split("/");
-    if (parts.length > 0) parts.pop();
-    const dirPath = parts.join("/");
-    return `pending_images_${currentContent.owner}_${currentContent.repo}_${
-      currentContent.branch || ""
-    }_${dirPath}`;
-  };
-
-  useEffect(() => {
-    // Load pending images
-    const key = getStorageKey();
-    const saved = localStorage.getItem(key);
-    if (saved) {
-      try {
-        setPendingImages(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse pending images", e);
-      }
-    }
-  }, [currentContent]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -63,7 +47,8 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
 
         const updatedPending = [...pendingImages, newImage];
         setPendingImages(updatedPending);
-        localStorage.setItem(getStorageKey(), JSON.stringify(updatedPending));
+        // Note: We no longer save to localStorage here.
+        // The parent component (via useDraft) will save pendingImages to the single draft object.
 
         // Trigger draft state
         setHasDraft(true);
@@ -75,6 +60,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
 
   useEffect(() => {
     const fetchImages = async () => {
+      // If we just cleared a draft (hasDraft became false), we should re-fetch to see if new images were merged
       setLoading(true);
       try {
         console.log(
@@ -89,7 +75,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
         if (parts.length > 0) {
           parts.pop(); // Remove filename
         }
-        const dirPath = parts.join("/");
+        const dirPath = parts.join("/") || "."; // Use "." for root directory
 
         console.log(`[ContentImages] Fetching images from: ${dirPath}`);
 
@@ -128,7 +114,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     };
 
     fetchImages();
-  }, [currentContent]);
+  }, [currentContent, hasDraft]); // Re-fetch when hasDraft changes (e.g. after PR merge/close)
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -168,8 +154,11 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
         />
         <button
           type="button"
-          className="ui button mini basic fluid"
-          onClick={() => fileInputRef.current?.click()}
+          className={`ui button mini basic fluid ${
+            isPrLocked ? "disabled" : ""
+          }`}
+          onClick={() => !isPrLocked && fileInputRef.current?.click()}
+          disabled={isPrLocked}
         >
           <i className="plus icon"></i>
           Add Image
@@ -229,9 +218,12 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
         />
         <button
           type="button"
-          className="ui button mini basic fluid"
+          className={`ui button mini basic fluid ${
+            isPrLocked ? "disabled" : ""
+          }`}
           style={{ marginTop: "1em" }}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => !isPrLocked && fileInputRef.current?.click()}
+          disabled={isPrLocked}
         >
           <i className="plus icon"></i>
           Add Image

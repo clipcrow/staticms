@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
-import { Content, PrDetails } from "../types.ts";
+import { Content, FileItem, PrDetails } from "../types.ts";
 import { getDraftKey, getPrKey } from "./utils.ts";
 
 export const useDraft = (
@@ -33,6 +33,7 @@ export const useDraft = (
   // Draft State
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
+  const [pendingImages, setPendingImages] = useState<FileItem[]>([]);
 
   // for Loading Indicators
   const [isSaving, setIsSaving] = useState(false);
@@ -79,13 +80,15 @@ export const useDraft = (
 
       const isDirty = body !== initialBody ||
         JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
-        prDescription !== "";
+        prDescription !== "" ||
+        pendingImages.length > 0;
 
       if (isDirty) {
         const draft = {
           body,
           frontMatter,
           prDescription,
+          pendingImages,
           timestamp: Date.now(),
         };
         localStorage.setItem(key, JSON.stringify(draft));
@@ -125,15 +128,38 @@ export const useDraft = (
     body,
     frontMatter,
     prDescription,
+    pendingImages,
     currentContent,
     initialBody,
     initialFrontMatter,
   ]);
 
+  // Load draft on mount (including pending images)
+  useEffect(() => {
+    if (currentContent) {
+      const key = getDraftKey(currentContent);
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.pendingImages) {
+            setPendingImages(parsed.pendingImages);
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }, [currentContent]);
+
   const clearDraft = useCallback(() => {
     if (!currentContent) return;
     const key = getDraftKey(currentContent);
     localStorage.removeItem(key);
+
+    // Also clear pending images state
+    setPendingImages([]);
+
     setHasDraft(false);
     setDraftTimestamp(null);
   }, [currentContent]);
@@ -231,18 +257,8 @@ export const useDraft = (
         `[handleSaveContent] Sending branch: "${currentContent.branch}"`,
       );
 
-      // Get pending images
-      const parts = currentContent.filePath.split("/");
-      if (parts.length > 0) parts.pop();
-      const dirPath = parts.join("/");
-      const pendingImagesKey =
-        `pending_images_${currentContent.owner}_${currentContent.repo}_${
-          currentContent.branch || ""
-        }_${dirPath}`;
-      const pendingImagesJson = localStorage.getItem(pendingImagesKey);
-      const pendingImages = pendingImagesJson
-        ? JSON.parse(pendingImagesJson)
-        : [];
+      // Use pendingImages from state
+      // (We don't need to read from localStorage separately anymore)
 
       const res = await fetch("/api/content", {
         method: "POST",
@@ -272,15 +288,24 @@ export const useDraft = (
         clearDraft();
         setPrDescription("");
 
-        // Clear pending images
-        localStorage.removeItem(pendingImagesKey);
-
         // Update initial state to prevent "Unsaved Changes" detection
         setInitialBody(body);
         setInitialFrontMatter(frontMatter);
 
         // Fetch PR details immediately
         checkPrStatus();
+
+        // Reload content to refresh images list from remote
+        loadContent(
+          currentContent,
+          getDraftKey,
+          getPrKey,
+          setPrUrl,
+          setHasDraft,
+          setDraftTimestamp,
+          setPrDescription,
+          true, // Treat as reset to force reload
+        );
       } else {
         console.error("Failed to create PR: " + data.error);
       }
@@ -298,6 +323,9 @@ export const useDraft = (
     // but keep hasDraft state true so the UI doesn't flicker/hide immediately
     const key = getDraftKey(currentContent);
     localStorage.removeItem(key);
+
+    // Clear pending images state
+    setPendingImages([]);
 
     loadContent(
       currentContent,
@@ -354,5 +382,9 @@ export const useDraft = (
     saveContent,
     isSaving,
     resetContent,
+
+    // Pending Images State
+    pendingImages,
+    setPendingImages,
   };
 };

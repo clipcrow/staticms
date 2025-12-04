@@ -1,5 +1,5 @@
 import React from "react";
-import { Commit, Content, PrDetails } from "../types.ts";
+import { Commit, Content, FileItem, PrDetails } from "../types.ts";
 import { BreadcrumbItem, Header } from "./Header.tsx";
 import { ContentHistory } from "./ContentHistory.tsx";
 import { ContentImages } from "./ContentImages.tsx";
@@ -23,6 +23,8 @@ interface ContentEditorProps {
   setDraftTimestamp: (ts: number | null) => void;
   prDescription: string;
   setPrDescription: (desc: string) => void;
+  pendingImages: FileItem[];
+  setPendingImages: (images: FileItem[]) => void;
   isSaving: boolean;
   commits: Commit[];
   onSaveContent: () => void;
@@ -48,6 +50,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   setDraftTimestamp,
   prDescription,
   setPrDescription,
+  pendingImages,
+  setPendingImages,
   isSaving,
   commits,
   onSaveContent,
@@ -295,6 +299,10 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               currentContent={currentContent}
               setHasDraft={setHasDraft}
               setDraftTimestamp={setDraftTimestamp}
+              hasDraft={hasDraft}
+              isPrLocked={isPrLocked}
+              pendingImages={pendingImages}
+              setPendingImages={setPendingImages}
             />
           </div>
         </div>
