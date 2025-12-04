@@ -5,7 +5,7 @@ import { useRemoteContent } from "../hooks/useRemoteContent.ts";
 import { useDraft } from "../hooks/useDraft.ts";
 import { useSubscription } from "../hooks/useSubscription.ts";
 import { ContentEditor } from "../components/ContentEditor.tsx";
-import { getDraftKey, getPrKey } from "../hooks/utils.ts";
+import { getDraftKey } from "../hooks/utils.ts";
 
 interface ContentEditorWrapperProps {
   content: Content;
@@ -56,6 +56,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     resetContent,
     pendingImages,
     setPendingImages,
+    hasUnsavedChanges,
   } = useDraft(
     content,
     body,
@@ -88,11 +89,11 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     loadContent(
       content,
       getDraftKey,
-      getPrKey,
       setPrUrl,
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
+      setPendingImages,
       false,
       initialData,
     );
@@ -103,6 +104,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     setHasDraft,
     setDraftTimestamp,
     setPrDescription,
+    setPendingImages,
     initialData,
   ]);
 
@@ -140,6 +142,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       setPrDescription={setPrDescription}
       pendingImages={pendingImages}
       setPendingImages={setPendingImages}
+      hasUnsavedChanges={hasUnsavedChanges}
       isSaving={isSaving}
       commits={commits}
       onSaveContent={() => saveContent(sha)}

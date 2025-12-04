@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import jsyaml from "js-yaml";
-import { Commit, Content } from "../types.ts";
+import { Commit, Content, FileItem } from "../types.ts";
 
 export const useRemoteContent = () => {
   const [body, setBody] = useState("");
@@ -22,21 +22,25 @@ export const useRemoteContent = () => {
     async (
       content: Content,
       getDraftKey: (c: Content) => string,
-      getPrKey: (c: Content) => string,
       setPrUrl: (url: string | null) => void,
       setHasDraft: (has: boolean) => void,
       setDraftTimestamp: (ts: number | null) => void,
       setPrDescription: (desc: string) => void,
+      setPendingImages: (images: FileItem[]) => void,
       isReset: boolean = false,
       // deno-lint-ignore no-explicit-any
       initialData?: any,
+      preservePrUrl: boolean = false,
     ) => {
       if (isReset) {
         setIsResetting(true);
       } else if (!initialData) {
         setEditorLoading(true);
       }
-      setPrUrl(null); // Reset PR URL state
+
+      if (!preservePrUrl) {
+        setPrUrl(null); // Reset PR URL state
+      }
 
       const params = new URLSearchParams({
         owner: content.owner,
@@ -112,13 +116,24 @@ export const useRemoteContent = () => {
         setInitialBody(parsedBody);
         setInitialFrontMatter(parsedFM);
 
-        // Check for local draft
+        // Check for local draft (which now includes PR URL)
         const key = getDraftKey(content);
         const savedDraft = localStorage.getItem(key);
 
         if (savedDraft) {
           try {
             const draft = JSON.parse(savedDraft);
+
+            // Restore PR URL if present
+            if (draft.prUrl) {
+              setPrUrl(draft.prUrl);
+            }
+
+            // Restore pending images if present
+            if (draft.pendingImages) {
+              setPendingImages(draft.pendingImages);
+            }
+
             if (draft.type === "created") {
               setPrUrl(draft.prUrl);
               setHasDraft(true);
@@ -146,13 +161,6 @@ export const useRemoteContent = () => {
           setHasDraft(false);
           setDraftTimestamp(null);
           setPrDescription("");
-        }
-
-        // Check for existing PR URL
-        const prKey = getPrKey(content);
-        const savedPrUrl = localStorage.getItem(prKey);
-        if (savedPrUrl) {
-          setPrUrl(savedPrUrl);
         }
       } catch (e) {
         console.error(e);

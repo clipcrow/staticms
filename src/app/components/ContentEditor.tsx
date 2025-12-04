@@ -25,6 +25,7 @@ interface ContentEditorProps {
   setPrDescription: (desc: string) => void;
   pendingImages: FileItem[];
   setPendingImages: (images: FileItem[]) => void;
+  hasUnsavedChanges: boolean;
   isSaving: boolean;
   commits: Commit[];
   onSaveContent: () => void;
@@ -52,6 +53,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   setPrDescription,
   pendingImages,
   setPendingImages,
+  hasUnsavedChanges,
   isSaving,
   commits,
   onSaveContent,
@@ -125,11 +127,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             )}
             <button
               type="button"
-              className={`ui button tiny ${hasDraft ? "red" : ""} ${
+              className={`ui button tiny ${hasUnsavedChanges ? "red" : ""} ${
                 isResetting ? "loading" : ""
               }`}
               onClick={handleReset}
-              disabled={!hasDraft || loading || isSaving || isResetting}
+              disabled={!hasUnsavedChanges || loading || isSaving ||
+                isResetting}
               title="Discard local draft"
             >
               <i className="undo icon"></i>
@@ -191,103 +194,112 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
 
         <div className="four wide column">
           <div>
-            {prUrl && (
-              <div
-                className="ui message orange"
-                style={{ marginBottom: "2em" }}
-              >
-                <div className="header">
-                  <i className="circle icon orange"></i>
-                  PR Open
-                  {prDetails && (
-                    <span className="staticms-editor-pr-number">
-                      #{prDetails.number}
-                    </span>
-                  )}
-                </div>
-                {prDetails?.body && (
-                  <div className="staticms-editor-pr-body">
-                    {prDetails.body}
-                  </div>
-                )}
-                <a
-                  href={prUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="staticms-editor-view-pr-link"
-                >
-                  View Pull Request
-                </a>
-              </div>
-            )}
-
             {hasDraft && (
-              <div className="ui message gray" style={{ marginBottom: "2em" }}>
-                <div className="content">
-                  <div className="header staticms-editor-draft-header">
-                    <i className="circle icon gray"></i>
-                    Draft / PR
-                  </div>
-                  <div className="meta">
-                    {draftTimestamp
-                      ? new Date(draftTimestamp).toLocaleString()
-                      : ""}
-                  </div>
-                  <div className="description staticms-editor-draft-description">
-                    {isPrLocked && prDetails
-                      ? (
-                        <div className="ui feed">
-                          <div className="event">
-                            <div className="content">
-                              <div className="summary">
-                                <a
-                                  href={prDetails.html_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  PR #{prDetails.number}: {prDetails.title}
-                                </a>
-                                <div className="date">
-                                  {new Date(prDetails.created_at)
-                                    .toLocaleDateString()}
-                                </div>
-                              </div>
-                              <div className="extra text">
-                                {prDetails.body}
-                              </div>
-                              <div className="meta">
-                                by {prDetails.user.login}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                      : (
-                        <div className="ui form">
-                          <div className="field">
-                            <label>Description</label>
-                            <textarea
-                              rows={3}
-                              value={prDescription}
-                              onChange={(e) => setPrDescription(e.target.value)}
-                              placeholder="PR Description..."
-                            />
-                          </div>
-                          <button
-                            type="button"
-                            className={`ui primary button fluid ${
-                              isSaving ? "loading" : ""
-                            }`}
-                            onClick={onSaveContent}
-                            disabled={isSaving}
-                          >
-                            Create PR
-                          </button>
+              <>
+                {prUrl
+                  ? (
+                    <div
+                      className="ui message orange"
+                      style={{ marginBottom: "2em" }}
+                    >
+                      <div className="header">
+                        <i className="circle icon orange"></i>
+                        PR Open
+                        {prDetails && (
+                          <span className="staticms-editor-pr-number">
+                            #{prDetails.number}
+                          </span>
+                        )}
+                      </div>
+                      {prDetails?.body && (
+                        <div className="staticms-editor-pr-body">
+                          {prDetails.body}
                         </div>
                       )}
-                  </div>
-                </div>
-              </div>
+                      <a
+                        href={prUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="staticms-editor-view-pr-link"
+                      >
+                        View Pull Request
+                      </a>
+                    </div>
+                  )
+                  : (
+                    <div
+                      className="ui message gray"
+                      style={{ marginBottom: "2em" }}
+                    >
+                      <div className="content">
+                        <div className="header staticms-editor-draft-header">
+                          <i className="circle icon gray"></i>
+                          Draft / PR
+                        </div>
+                        <div className="meta">
+                          {draftTimestamp
+                            ? new Date(draftTimestamp).toLocaleString()
+                            : ""}
+                        </div>
+                        <div className="description staticms-editor-draft-description">
+                          {isPrLocked && prDetails
+                            ? (
+                              <div className="ui feed">
+                                <div className="event">
+                                  <div className="content">
+                                    <div className="summary">
+                                      <a
+                                        href={prDetails.html_url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                      >
+                                        PR #{prDetails.number}:{" "}
+                                        {prDetails.title}
+                                      </a>
+                                      <div className="date">
+                                        {new Date(prDetails.created_at)
+                                          .toLocaleDateString()}
+                                      </div>
+                                    </div>
+                                    <div className="extra text">
+                                      {prDetails.body}
+                                    </div>
+                                    <div className="meta">
+                                      by {prDetails.user.login}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                            : (
+                              <div className="ui form">
+                                <div className="field">
+                                  <label>Description</label>
+                                  <textarea
+                                    rows={3}
+                                    value={prDescription}
+                                    onChange={(e) =>
+                                      setPrDescription(e.target.value)}
+                                    placeholder="PR Description..."
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`ui primary button fluid ${
+                                    isSaving ? "loading" : ""
+                                  }`}
+                                  onClick={onSaveContent}
+                                  disabled={isSaving}
+                                >
+                                  Create PR
+                                </button>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+              </>
             )}
 
             <ContentHistory

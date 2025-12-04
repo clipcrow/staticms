@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
 import { Content, FileItem, PrDetails } from "../types.ts";
-import { getDraftKey, getPrKey } from "./utils.ts";
+import { getDraftKey } from "./utils.ts";
 
 export const useDraft = (
   currentContent: Content | null,
@@ -16,12 +16,15 @@ export const useDraft = (
   loadContent: (
     content: Content,
     getDraftKey: (c: Content) => string,
-    getPrKey: (c: Content) => string,
     setPrUrl: (url: string | null) => void,
     setHasDraft: (has: boolean) => void,
     setDraftTimestamp: (ts: number | null) => void,
     setPrDescription: (desc: string) => void,
+    setPendingImages: (images: FileItem[]) => void,
     isReset?: boolean,
+    // deno-lint-ignore no-explicit-any
+    initialData?: any,
+    preservePrUrl?: boolean,
   ) => Promise<void>,
 ) => {
   // PR State
@@ -38,16 +41,19 @@ export const useDraft = (
   // for Loading Indicators
   const [isSaving, setIsSaving] = useState(false);
 
+  // Derived State
+  const isDirty = body !== initialBody ||
+    JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
+    prDescription !== "" ||
+    pendingImages.length > 0;
+
   // PR Logic
   const clearPrState = useCallback(() => {
-    if (!currentContent) return;
-    const prKey = getPrKey(currentContent);
-    localStorage.removeItem(prKey);
     setPrUrl(null);
     setPrDescription("");
     setPrDetails(null);
     setIsPrLocked(false);
-  }, [currentContent]);
+  }, []);
 
   const checkPrStatus = useCallback(async () => {
     if (!prUrl) return null;
@@ -78,50 +84,22 @@ export const useDraft = (
     if (currentContent) {
       const key = getDraftKey(currentContent);
 
-      const isDirty = body !== initialBody ||
-        JSON.stringify(frontMatter) !== JSON.stringify(initialFrontMatter) ||
-        prDescription !== "" ||
-        pendingImages.length > 0;
-
-      if (isDirty) {
+      if (isDirty || prUrl) {
         const draft = {
           body,
           frontMatter,
           prDescription,
           pendingImages,
           timestamp: Date.now(),
+          prUrl,
         };
         localStorage.setItem(key, JSON.stringify(draft));
         setHasDraft(true);
         setDraftTimestamp(draft.timestamp);
       } else {
-        // Only remove if it's not a "created" status
-        const saved = localStorage.getItem(key);
-        let isCreatedStatus = false;
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (parsed.type === "created") isCreatedStatus = true;
-          } catch {
-            // ignore
-          }
-        }
-
-        if (!isCreatedStatus) {
-          localStorage.removeItem(key);
-          setHasDraft(false);
-          setDraftTimestamp(null);
-        } else {
-          setHasDraft(true);
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved);
-              setDraftTimestamp(parsed.timestamp);
-            } catch {
-              // ignore
-            }
-          }
-        }
+        localStorage.removeItem(key);
+        setHasDraft(false);
+        setDraftTimestamp(null);
       }
     }
   }, [
@@ -132,9 +110,16 @@ export const useDraft = (
     currentContent,
     initialBody,
     initialFrontMatter,
+    isDirty,
+    prUrl,
   ]);
 
-  // Load draft on mount (including pending images)
+  // Load draft on mount (including pending images and PR URL)
+  // Note: useRemoteContent also loads this, but we need to ensure local state is synced if needed.
+  // Actually, useRemoteContent calls loadContent which handles initialization.
+  // But we need to handle the case where we might have pendingImages which useRemoteContent doesn't handle?
+  // useRemoteContent handles body/frontMatter/prUrl.
+  // We handle pendingImages here.
   useEffect(() => {
     if (currentContent) {
       const key = getDraftKey(currentContent);
@@ -145,6 +130,8 @@ export const useDraft = (
           if (parsed.pendingImages) {
             setPendingImages(parsed.pendingImages);
           }
+          // We don't set prUrl here because loadContent (via useRemoteContent) should have done it?
+          // But if we navigate back, loadContent runs.
         } catch {
           // ignore
         }
@@ -153,21 +140,24 @@ export const useDraft = (
   }, [currentContent]);
 
   const clearDraft = useCallback(() => {
-    if (!currentContent) return;
-    const key = getDraftKey(currentContent);
-    localStorage.removeItem(key);
-
-    // Also clear pending images state
+    // Reset local changes
     setPendingImages([]);
+    setPrDescription("");
+    // We don't reset body/frontMatter here directly because we expect the caller (wrapper) to handle reset?
+    // Or we should expose a way to reset them.
+    // Actually, clearDraft is usually called when we want to discard changes.
+    // But we can't setBody here because it's passed as prop.
+    // The wrapper handles resetContent.
 
-    setHasDraft(false);
-    setDraftTimestamp(null);
-  }, [currentContent]);
+    // If we want to clear draft from storage, we rely on the useEffect.
+    // If we reset state variables, isDirty becomes false.
+    // If prUrl is null, storage is cleared.
+  }, []);
 
   const saveContent = async (sha: string) => {
     if (!currentContent) return;
     setIsSaving(true);
-    setPrUrl(null); // Clear PR URL state temporarily until new PR is created
+    // We don't clear PR URL here anymore, we update it after success.
 
     // Reconstruct content with Front Matter
     const isYaml = currentContent.filePath.endsWith(".yaml") ||
@@ -280,12 +270,19 @@ export const useDraft = (
       if (data.success) {
         setPrUrl(data.prUrl);
 
-        // Save PR URL to local storage
-        const prKey = getPrKey(currentContent);
-        localStorage.setItem(prKey, data.prUrl);
+        // Manually save to localStorage to ensure loadContent picks it up
+        // We mark it as "created" so loadContent knows to use the remote content (which we just updated)
+        // but preserve the PR URL.
+        const key = getDraftKey(currentContent);
+        const draft = {
+          prUrl: data.prUrl,
+          timestamp: Date.now(),
+          type: "created",
+        };
+        localStorage.setItem(key, JSON.stringify(draft));
 
-        // Clear draft on success
-        clearDraft();
+        // Clear draft state (local changes)
+        setPendingImages([]);
         setPrDescription("");
 
         // Update initial state to prevent "Unsaved Changes" detection
@@ -299,12 +296,14 @@ export const useDraft = (
         loadContent(
           currentContent,
           getDraftKey,
-          getPrKey,
           setPrUrl,
           setHasDraft,
           setDraftTimestamp,
           setPrDescription,
+          setPendingImages,
           true, // Treat as reset to force reload
+          undefined, // initialData
+          true, // preservePrUrl
         );
       } else {
         console.error("Failed to create PR: " + data.error);
@@ -321,6 +320,13 @@ export const useDraft = (
 
     // Manually remove from local storage to ensure loadContent doesn't pick it up
     // but keep hasDraft state true so the UI doesn't flicker/hide immediately
+    // Wait, if we unify, removing the key removes PR URL too.
+    // If we want to keep PR URL, we should not remove the key, but update it.
+    // But loadContent will read from the key.
+    // If we want loadContent to ignore the "draft" part but keep "PR" part...
+    // loadContent logic needs to be smart.
+
+    // For now, let's assume resetContent clears everything including PR link if it's a hard reset.
     const key = getDraftKey(currentContent);
     localStorage.removeItem(key);
 
@@ -330,11 +336,11 @@ export const useDraft = (
     loadContent(
       currentContent,
       getDraftKey,
-      getPrKey,
       setPrUrl,
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
+      setPendingImages,
       true,
     );
   }, [
@@ -344,6 +350,7 @@ export const useDraft = (
     setHasDraft,
     setDraftTimestamp,
     setPrDescription,
+    setPendingImages,
   ]);
 
   // Check PR Status Effect
@@ -351,7 +358,11 @@ export const useDraft = (
     if (prUrl) {
       checkPrStatus().then((status) => {
         if (status === "closed") {
-          clearDraft();
+          // If PR is closed, we clear the PR state.
+          // clearPrState() sets prUrl to null.
+          // The useEffect will then update storage (removing key if no other changes).
+          // But we might also want to reset content if it was merged?
+          // The original code called resetContent().
           resetContent();
         }
       });
@@ -359,7 +370,7 @@ export const useDraft = (
       setIsPrLocked(false);
       setPrDetails(null);
     }
-  }, [prUrl, checkPrStatus, clearDraft, resetContent]);
+  }, [prUrl, checkPrStatus, resetContent]);
 
   return {
     // PR State & Methods
@@ -386,5 +397,8 @@ export const useDraft = (
     // Pending Images State
     pendingImages,
     setPendingImages,
+
+    // New
+    hasUnsavedChanges: isDirty,
   };
 };
