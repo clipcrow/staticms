@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Content, FileItem } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
-import { getDraftKey } from "../hooks/utils.ts";
+import { getContentStatus } from "../hooks/utils.ts";
 
 export interface ArticleListProps {
   contentConfig: Content;
@@ -105,55 +105,24 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                   />
                 }
                 primaryText={file.name}
-                labels={
-                  <>
-                    {(() => {
-                      let targetPath = file.path;
-                      if (
-                        contentConfig.type === "collection-dirs" &&
-                        file.type === "dir"
-                      ) {
-                        targetPath = `${file.path}/index.md`;
-                      }
+                status={(() => {
+                  let targetPath = file.path;
+                  if (
+                    contentConfig.type === "collection-dirs" &&
+                    file.type === "dir"
+                  ) {
+                    targetPath = `${file.path}/index.md`;
+                  }
 
-                      const itemForKeys = {
-                        ...contentConfig,
-                        filePath: targetPath,
-                      };
-
-                      const draftKey = getDraftKey(itemForKeys);
-                      // TODO: PR
-                      //const hasPr = localStorage.getItem(prKey);
-                      const hasDraft = localStorage.getItem(draftKey);
-
-                      // TODO: PR
-                      //if (hasPr) {
-                      if (hasDraft) {
-                        return (
-                          <span
-                            className="ui label orange mini basic"
-                            style={{ marginLeft: "0.5em" }}
-                          >
-                            <i className="lock icon"></i>
-                            Local changes locked
-                          </span>
-                        );
-                      }
-                      if (hasDraft) {
-                        return (
-                          <span
-                            className="ui label gray mini basic"
-                            style={{ marginLeft: "0.5em" }}
-                          >
-                            <i className="edit icon"></i>
-                            Draft / PR
-                          </span>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </>
-                }
+                  return getContentStatus(
+                    contentConfig.owner,
+                    contentConfig.repo,
+                    contentConfig.branch,
+                    targetPath,
+                    file.type === "dir" &&
+                      contentConfig.type !== "collection-dirs",
+                  );
+                })()}
                 actions={
                   <button
                     type="button"

@@ -29,3 +29,76 @@ export const saveDraft = (content: Content, draft: Draft) => {
   const key = getDraftKey(content);
   localStorage.setItem(key, JSON.stringify(draft));
 };
+
+export interface ContentStatus {
+  hasDraft: boolean;
+  hasPr: boolean;
+  draftCount: number;
+  prCount: number;
+}
+
+const countByPrefix = (
+  draftPrefix: string,
+  prPrefix: string,
+): ContentStatus => {
+  let draftCount = 0;
+  let prCount = 0;
+
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key?.startsWith(draftPrefix)) draftCount++;
+    if (key?.startsWith(prPrefix)) prCount++;
+  }
+
+  return {
+    hasDraft: draftCount > 0,
+    hasPr: prCount > 0,
+    draftCount,
+    prCount,
+  };
+};
+
+export const getRepoStatus = (owner: string, repo: string): ContentStatus => {
+  const username = getUsername();
+  if (!username) {
+    return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
+  }
+
+  const draftPrefix = `draft_${username}|${owner}|${repo}|`;
+  const prPrefix = `pr_${username}|${owner}|${repo}|`;
+
+  return countByPrefix(draftPrefix, prPrefix);
+};
+
+export const getContentStatus = (
+  owner: string,
+  repo: string,
+  branch: string | undefined,
+  path: string,
+  isCollection: boolean,
+): ContentStatus => {
+  const username = getUsername();
+  if (!username) {
+    return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
+  }
+
+  const prefixBase = `${owner}|${repo}|${branch || ""}|${path}`;
+  const draftPrefix = `draft_${username}|${prefixBase}`;
+  const prPrefix = `pr_${username}|${prefixBase}`;
+
+  if (isCollection) {
+    // Collection (directory): check for prefix + "/"
+    return countByPrefix(`${draftPrefix}/`, `${prPrefix}/`);
+  } else {
+    // Single file: check exact match
+    const hasDraft = !!localStorage.getItem(draftPrefix);
+    const hasPr = !!localStorage.getItem(prPrefix);
+
+    return {
+      hasDraft,
+      hasPr,
+      draftCount: hasDraft ? 1 : 0,
+      prCount: hasPr ? 1 : 0,
+    };
+  }
+};

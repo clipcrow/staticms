@@ -1,9 +1,11 @@
 import React from "react";
+import { ContentStatus } from "../hooks/utils.ts";
 
 interface ContentListItemProps {
   icon?: React.ReactNode;
   primaryText: string;
   secondaryText?: string;
+  status?: ContentStatus;
   labels?: React.ReactNode;
   actions?: React.ReactNode;
   loading?: boolean;
@@ -17,6 +19,7 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
   icon,
   primaryText,
   secondaryText,
+  status,
   labels,
   actions,
   loading,
@@ -87,6 +90,26 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
           )}
         </div>
         <div className="staticms-content-list-labels">
+          {status?.hasPr && (
+            <span
+              className="ui label orange mini basic"
+              style={{ marginLeft: "0.5em" }}
+            >
+              <i className="lock icon"></i>
+              Local changes locked{status.prCount > 1
+                ? `: ${status.prCount}`
+                : ""}
+            </span>
+          )}
+          {status?.hasDraft && (
+            <span
+              className="ui label gray mini basic"
+              style={{ marginLeft: "0.5em" }}
+            >
+              <i className="edit icon"></i>
+              Draft / PR{status.draftCount > 1 ? `: ${status.draftCount}` : ""}
+            </span>
+          )}
           {labels}
         </div>
       </div>

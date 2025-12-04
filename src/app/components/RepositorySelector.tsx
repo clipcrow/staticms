@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Header } from "./Header.tsx";
-import { getUsername } from "../hooks/utils.ts";
+import { getRepoStatus } from "../hooks/utils.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
 
 interface RepositorySelectorProps {
@@ -61,8 +61,6 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
     };
   }, [fetchData]);
 
-  const username = getUsername();
-
   return (
     <div className="ui container">
       <Header
@@ -111,20 +109,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
               : (
                 <div className="ui relaxed divided list">
                   {repos.map((repo) => {
-                    const draftPrefix =
-                      `draft_${username}|${repo.owner.login}|${repo.name}|`;
-                    const prPrefix =
-                      `pr_${username}|${repo.owner.login}|${repo.name}|`;
-                    let draftCount = 0;
-                    let prCount = 0;
-
-                    for (let i = 0; i < localStorage.length; i++) {
-                      const key = localStorage.key(i);
-                      if (key?.startsWith(draftPrefix)) draftCount++;
-                      if (key?.startsWith(prPrefix)) prCount++;
-                    }
-                    const hasDraft = draftCount > 0;
-                    const hasPr = prCount > 0;
+                    const status = getRepoStatus(repo.owner.login, repo.name);
 
                     return (
                       <ContentListItem
@@ -132,30 +117,9 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                         icon={<i className="large github icon" />}
                         primaryText={repo.full_name}
                         secondaryText={repo.description || ""}
+                        status={status}
                         labels={
                           <>
-                            {hasPr && (
-                              <span
-                                className="ui label orange mini basic"
-                                style={{ marginLeft: "0.5em" }}
-                              >
-                                <i className="lock icon"></i>
-                                Local changes locked{prCount > 0
-                                  ? `: ${prCount}`
-                                  : ""}
-                              </span>
-                            )}
-                            {hasDraft && (
-                              <span
-                                className="ui label gray mini basic"
-                                style={{ marginLeft: "0.5em" }}
-                              >
-                                <i className="edit icon"></i>
-                                Draft / PR{draftCount > 0
-                                  ? `: ${draftCount}`
-                                  : ""}
-                              </span>
-                            )}
                             {repo.private && (
                               <i
                                 className="large lock icon"

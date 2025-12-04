@@ -1,7 +1,7 @@
 import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
-import { getDraftKey, getUsername } from "../hooks/utils.ts";
+import { getContentStatus } from "../hooks/utils.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
 
 interface ContentListProps {
@@ -71,79 +71,15 @@ export const ContentList: React.FC<ContentListProps> = ({
                           {item.branch}
                         </span>
                       )}
-                      {(() => {
-                        const username = getUsername();
-                        const prefixBase = `${item.owner}|${item.repo}|${
-                          item.branch || ""
-                        }|${item.filePath}`;
-                        const draftPrefix = `draft_${username}|${prefixBase}`;
-                        const prPrefix = `pr_${username}|${prefixBase}`;
-
-                        let prCount = 0;
-                        let draftCount = 0;
-                        let hasPr = false;
-                        let hasDraft = false;
-
-                        if (item.type?.startsWith("collection")) {
-                          // For collections, check if any key starts with the prefix + "/"
-                          // Actually, filePath is the directory.
-                          // Keys are like: draft_user|owner|repo|branch|path/to/file.md
-                          // So we check if key starts with draft_user|owner|repo|branch|path/to/dir/
-                          const collectionDraftPrefix = `${draftPrefix}/`;
-                          const collectionPrPrefix = `${prPrefix}/`;
-
-                          for (let i = 0; i < localStorage.length; i++) {
-                            const key = localStorage.key(i);
-                            if (key?.startsWith(collectionDraftPrefix)) {
-                              draftCount++;
-                            }
-                            if (key?.startsWith(collectionPrPrefix)) {
-                              prCount++;
-                            }
-                          }
-                          hasPr = prCount > 0;
-                          hasDraft = draftCount > 0;
-                        } else {
-                          // Singleton
-                          const draftKey = getDraftKey(item);
-                          // TODO: PR
-                          // hasPr = !!localStorage.getItem(prKey);
-                          hasDraft = !!localStorage.getItem(draftKey);
-                        }
-
-                        const labels = [];
-                        if (hasPr) {
-                          labels.push(
-                            <span
-                              key="pr"
-                              className="ui label orange mini basic"
-                              style={{ marginLeft: "0.5em" }}
-                            >
-                              <i className="lock icon"></i>
-                              Local changes locked{prCount > 0
-                                ? `: ${prCount}`
-                                : ""}
-                            </span>,
-                          );
-                        }
-                        if (hasDraft) {
-                          labels.push(
-                            <span
-                              key="draft"
-                              className="ui label gray mini basic"
-                              style={{ marginLeft: "0.5em" }}
-                            >
-                              <i className="edit icon"></i>
-                              Draft / PR{draftCount > 0
-                                ? `: ${draftCount}`
-                                : ""}
-                            </span>,
-                          );
-                        }
-                        return labels;
-                      })()}
                     </>
                   }
+                  status={getContentStatus(
+                    item.owner,
+                    item.repo,
+                    item.branch,
+                    item.filePath,
+                    !!item.type?.startsWith("collection"),
+                  )}
                   actions={
                     <button
                       type="button"
