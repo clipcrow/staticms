@@ -3,6 +3,7 @@ import MDEditor from "react-md-editor";
 import rehypeHighlight from "rehype-highlight";
 
 import { Content } from "../types.ts";
+import { getDraft } from "../hooks/utils.ts";
 
 interface MarkdownEditorProps {
   body: string;
@@ -20,6 +21,19 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const resolveImageSrc = (src: string) => {
     if (!src || src.startsWith("http") || src.startsWith("data:")) {
       return src;
+    }
+
+    // Check pending images first
+    const draft = getDraft(currentContent);
+    if (draft && draft.pendingImages) {
+      // Normalize src to filename for comparison if it's a relative path
+      const filename = src.split("/").pop();
+      const pendingImage = draft.pendingImages.find((img) =>
+        img.name === filename
+      );
+      if (pendingImage && pendingImage.content) {
+        return `data:image/png;base64,${pendingImage.content}`;
+      }
     }
 
     // Resolve relative path
