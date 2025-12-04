@@ -83,7 +83,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
       className="ui basic segment"
       style={{ padding: 0, marginBottom: "2em" }}
     >
-      <h4 className="ui header">Images</h4>
+      <h4 className="ui header">Images Nearby</h4>
       <div className="ui relaxed list">
         {images.map((img) => (
           <div key={img.sha} className="item">
