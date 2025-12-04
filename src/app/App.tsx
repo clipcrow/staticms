@@ -1,31 +1,53 @@
+import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
-import { Login } from "./components/Login.tsx";
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { ContentListWrapper } from "./bindings/ContentListWrapper.tsx";
 import { ContentSettingsWrapper } from "./bindings/ContentSettingsWrapper.tsx";
 import { ContentDispatcher } from "./bindings/ContentDispatcher.tsx";
 import { ArticleEditorRoute } from "./bindings/ArticleEditorRoute.tsx";
 import { NotFound } from "./components/NotFound.tsx";
+import { SilentAuthCallback } from "./components/SilentAuthCallback.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
 
 function AppContent() {
-  const { isAuthenticated, loading, login, logout, isLoggingIn, isLoggingOut } =
-    useAuth();
+  const {
+    isAuthenticated,
+    loading,
+    login,
+    loginSilently,
+    logout,
+    isLoggingIn: _isLoggingIn,
+    isLoggingOut,
+  } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   if (loading) {
     return <div className="ui active centered inline loader"></div>;
   }
 
   const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
+    useEffect(() => {
+      if (!isAuthenticated) {
+        // Try silent login first
+        loginSilently().then((success) => {
+          if (!success) {
+            // If silent login fails, redirect to login page
+            login(location.pathname + location.search);
+          }
+        });
+      }
+    }, [isAuthenticated]);
+
     if (!isAuthenticated) {
-      return (
-        <Login
-          onLogin={() => login(location.pathname)}
-          isLoggingIn={isLoggingIn}
-        />
-      );
+      return <div className="ui active centered inline loader"></div>;
     }
     return <>{element}</>;
   };
@@ -72,6 +94,7 @@ function AppContent() {
           />
         </Route>
       </Route>
+      <Route path="/silent-auth" element={<SilentAuthCallback />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
