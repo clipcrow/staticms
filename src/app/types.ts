@@ -55,3 +55,13 @@ export interface FileItem {
   sha: string;
   content?: string;
 }
+
+export interface Draft {
+  body?: string;
+  frontMatter?: Record<string, unknown> | Record<string, unknown>[];
+  prDescription?: string;
+  pendingImages?: FileItem[];
+  timestamp?: number;
+  prUrl?: string | null;
+  type?: string;
+}

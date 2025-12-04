@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
 import { Content, FileItem, PrDetails } from "../types.ts";
-import { getDraftKey } from "./utils.ts";
+import { getDraft, getDraftKey } from "./utils.ts";
 
 export const useDraft = (
   currentContent: Content | null,
@@ -99,9 +99,20 @@ export const useDraft = (
         setHasDraft(true);
         setDraftTimestamp(draft.timestamp);
       } else {
-        localStorage.removeItem(key);
-        setHasDraft(false);
-        setDraftTimestamp(null);
+        // Only remove if it's not a "created" status
+        const draft = getDraft(currentContent);
+        const isCreatedStatus = draft?.type === "created";
+
+        if (!isCreatedStatus) {
+          localStorage.removeItem(key);
+          setHasDraft(false);
+          setDraftTimestamp(null);
+        } else {
+          setHasDraft(true);
+          if (draft) {
+            setDraftTimestamp(draft.timestamp || null);
+          }
+        }
       }
     }
   }, [
@@ -126,19 +137,13 @@ export const useDraft = (
   // We handle pendingImages here.
   useEffect(() => {
     if (currentContent) {
-      const key = getDraftKey(currentContent);
-      const saved = localStorage.getItem(key);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.pendingImages) {
-            setPendingImages(parsed.pendingImages);
-          }
-          if (parsed.prUrl) {
-            setPrUrl(parsed.prUrl);
-          }
-        } catch {
-          // ignore
+      const draft = getDraft(currentContent);
+      if (draft) {
+        if (draft.pendingImages) {
+          setPendingImages(draft.pendingImages);
+        }
+        if (draft.prUrl) {
+          setPrUrl(draft.prUrl);
         }
       } else {
         // Reset PR URL if no draft found (important for navigation)
