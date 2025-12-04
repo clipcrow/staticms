@@ -69,20 +69,26 @@ Staticms
 - **Draft Restoration**:
   - `useDraft` フックが `localStorage` をチェック
   - キー形式: `draft_<user>|<owner>|<repo>|<branch>|<filePath>`
-  - ドラフト存在時: リモート内容をドラフト内容で上書きし、`hasDraft` フラグを
-    true に設定
-- **PR Restoration**:
-  - `localStorage` (`pr_<user>|...`) をチェックし、既存の PR URL を復元
+  - ドラフト存在時:
+    - リモート内容をドラフト内容で上書きし、`hasDraft` フラグを true に設定
+    - ドラフト内に保存された `prUrl` があれば復元
+    - ドラフト内に保存された `pendingImages` を復元
+- **Image Preview**:
+  - `MarkdownEditor` は画像パス解決時にドラフト内の `pendingImages`
+    を優先的に参照
+  - アップロード待ちの画像もプレビュー可能
 
 ## 3. 編集と保存 (Editing & Saving)
 
 ### 3.1 ドラフト自動保存 (Auto Save Draft)
 
 - **Hook**: `useDraft`
-- **Trigger**: `body`, `frontMatter`, `prDescription` の変更
+- **Trigger**: `body`, `frontMatter`, `prDescription`, `pendingImages` の変更
 - **Logic**:
   - 初期ロード時の内容 (`initialBody`, `initialFrontMatter`) と比較
-  - 変更あり (`isDirty`): `localStorage` に保存
+  - 変更あり (`isDirty`) または `prUrl` が存在する場合:
+    - `body`, `frontMatter`, `prDescription`, `pendingImages`, `prUrl`
+      をまとめて `localStorage` に保存
   - 変更なし: `localStorage` から削除 (ただし `created`
     タイプの新規作成ドラフトは維持)
 
@@ -100,15 +106,18 @@ Staticms
 - **Trigger**: 保存ボタン -> `useDraft: saveContent`
 - **Client**:
   - Front Matter と Body を結合 (YAML/Markdown)
+  - `pendingImages` の画像データを含めてリクエスト
   - `POST /api/content`
 - **Server**:
   - 専用ブランチ (`staticms-update-<timestamp>`) を作成
-  - ファイルをコミット
+  - 画像ファイルとコンテンツファイルをコミット
   - プルリクエストを作成
 - **Client**:
   - レスポンスから `prUrl` を取得
-  - `localStorage` に `prUrl` を保存 (`pr_<user>|...`)
-  - ドラフトを削除
+  - `localStorage` のドラフトオブジェクトを更新:
+    - `prUrl` を保存
+    - `pendingImages` をクリア
+    - `type: "created"` を設定（ロード時にリモート内容を優先するため）
   - `initialBody` 等を更新して "Unsaved Changes" 状態を解除
   - PR ステータスをポーリング開始
 
@@ -122,7 +131,7 @@ Staticms
 - **Logic**:
   - `open`: 編集ロック (`isPrLocked = true`)
   - `merged` / `closed`:
-    - ローカルの PR 情報をクリア
+    - ローカルの PR 情報 (`prUrl`) をクリア
     - コンテンツをリセット (`resetContent`) し、リモートの最新状態を再取得
 
 ### 4.2 リアルタイム更新 (Server-Sent Events)
@@ -196,11 +205,10 @@ Staticms
 
 ### 7.2 Browser localStorage
 
-| Key                 | 内容                   | 生成タイミング                               | 破棄タイミング                                                       |
-| :------------------ | :--------------------- | :------------------------------------------- | :------------------------------------------------------------------- |
-| `staticms_user`     | ログインユーザー名     | ログイン成功後の初回データ取得時 (`useAuth`) | ログアウト時、または認証チェック失敗時                               |
-| `draft_<user>\|...` | 編集中のドラフトデータ | エディタで変更発生時、または新規記事作成時   | 保存成功時、変更破棄時、または変更を取り消して保存済み状態に戻った時 |
-| `pr_<user>\|...`    | 作成したPRのURL        | 保存 (PR作成) 成功時                         | PRのマージ/クローズを検知した時                                      |
+| Key                 | 内容                                    | 生成タイミング                               | 破棄タイミング                                           |
+| :------------------ | :-------------------------------------- | :------------------------------------------- | :------------------------------------------------------- |
+| `staticms_user`     | ログインユーザー名                      | ログイン成功後の初回データ取得時 (`useAuth`) | ログアウト時、または認証チェック失敗時                   |
+| `draft_<user>\|...` | ドラフトデータ (本文, FM, 画像, PR URL) | エディタで変更発生時、新規作成時、PR作成時   | 変更破棄時、または変更を取り消して保存済み状態に戻った時 |
 
 ### 6.3 Server Deno KV
 
