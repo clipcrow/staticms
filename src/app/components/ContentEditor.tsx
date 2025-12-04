@@ -122,7 +122,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 style={{ marginRight: "1em" }}
               >
                 <i className="lock icon"></i>
-                PR Open
+                Local changes locked
               </div>
             )}
             <button
@@ -132,7 +132,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               }`}
               onClick={handleReset}
               disabled={!hasUnsavedChanges || loading || isSaving ||
-                isResetting}
+                isResetting || !!prUrl}
               title="Discard local draft"
             >
               <i className="undo icon"></i>

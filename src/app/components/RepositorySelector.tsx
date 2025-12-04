@@ -153,7 +153,9 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                                 style={{ marginLeft: "0.5em" }}
                               >
                                 <i className="lock icon"></i>
-                                PR Open: {prCount}
+                                Local changes locked{prCount > 0
+                                  ? `: ${prCount}`
+                                  : ""}
                               </span>
                             )}
                             {hasDraft && (
@@ -162,7 +164,9 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
                                 style={{ marginLeft: "0.5em" }}
                               >
                                 <i className="edit icon"></i>
-                                Draft / PR: {draftCount}
+                                Draft / PR{draftCount > 0
+                                  ? `: ${draftCount}`
+                                  : ""}
                               </span>
                             )}
                             {repo.private && (

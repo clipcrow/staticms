@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Content, FileItem } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
-import { getDraftKey, getPrKey } from "../hooks/utils.ts";
+import { getDraftKey } from "../hooks/utils.ts";
 
 export interface ArticleListProps {
   contentConfig: Content;
@@ -121,19 +121,21 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                         filePath: targetPath,
                       };
 
-                      const prKey = getPrKey(itemForKeys);
                       const draftKey = getDraftKey(itemForKeys);
-                      const hasPr = localStorage.getItem(prKey);
+                      // TODO: PR
+                      //const hasPr = localStorage.getItem(prKey);
                       const hasDraft = localStorage.getItem(draftKey);
 
-                      if (hasPr) {
+                      // TODO: PR
+                      //if (hasPr) {
+                      if (hasDraft) {
                         return (
                           <span
                             className="ui label orange mini basic"
                             style={{ marginLeft: "0.5em" }}
                           >
                             <i className="lock icon"></i>
-                            PR Open
+                            Local changes locked
                           </span>
                         );
                       }

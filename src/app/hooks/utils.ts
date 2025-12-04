@@ -5,14 +5,6 @@ export const getUsername = (): string => {
   return localStorage.getItem("staticms_user") ?? "";
 };
 
-export const getPrKey = (content: Content) => {
-  const user = getUsername();
-  // Format: pr_<username>|<owner>|<repo>|<branch>|<filePath>
-  return `pr_${user}|${content.owner}|${content.repo}|${
-    content.branch || ""
-  }|${content.filePath}`;
-};
-
 export const getDraftKey = (content: Content) => {
   const user = getUsername();
   // Format: draft_<username>|<owner>|<repo>|<branch>|<filePath>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
-import { getDraftKey, getPrKey, getUsername } from "../hooks/utils.ts";
+import { getDraftKey, getUsername } from "../hooks/utils.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
 
 interface ContentListProps {
@@ -105,9 +105,9 @@ export const ContentList: React.FC<ContentListProps> = ({
                           hasDraft = draftCount > 0;
                         } else {
                           // Singleton
-                          const prKey = getPrKey(item);
                           const draftKey = getDraftKey(item);
-                          hasPr = !!localStorage.getItem(prKey);
+                          // TODO: PR
+                          // hasPr = !!localStorage.getItem(prKey);
                           hasDraft = !!localStorage.getItem(draftKey);
                         }
 
@@ -120,7 +120,9 @@ export const ContentList: React.FC<ContentListProps> = ({
                               style={{ marginLeft: "0.5em" }}
                             >
                               <i className="lock icon"></i>
-                              PR Open{prCount > 0 ? `: ${prCount}` : ""}
+                              Local changes locked{prCount > 0
+                                ? `: ${prCount}`
+                                : ""}
                             </span>,
                           );
                         }
