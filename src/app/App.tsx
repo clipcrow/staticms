@@ -1,13 +1,5 @@
 import { createRoot } from "react-dom/client";
-import {
-  BrowserRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Login } from "./components/Login.tsx";
 import { RepositorySelector } from "./components/RepositorySelector.tsx";
 import { ContentListWrapper } from "./bindings/ContentListWrapper.tsx";
@@ -16,14 +8,6 @@ import { ContentDispatcher } from "./bindings/ContentDispatcher.tsx";
 import { ArticleEditorRoute } from "./bindings/ArticleEditorRoute.tsx";
 import { NotFound } from "./components/NotFound.tsx";
 import { useAuth } from "./hooks/useAuth.ts";
-
-function RequireAuth({ isAuthenticated }: { isAuthenticated: boolean }) {
-  const location = useLocation();
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-  return <Outlet />;
-}
 
 function AppContent() {
   const { isAuthenticated, loading, login, logout, isLoggingIn, isLoggingOut } =
@@ -34,38 +18,58 @@ function AppContent() {
     return <div className="ui active centered inline loader"></div>;
   }
 
+  const ProtectedRoute = ({ element }: { element: React.ReactNode }) => {
+    if (!isAuthenticated) {
+      return (
+        <Login
+          onLogin={() => login(location.pathname)}
+          isLoggingIn={isLoggingIn}
+        />
+      );
+    }
+    return <>{element}</>;
+  };
+
   return (
     <Routes>
       <Route
-        path="/login"
-        element={isAuthenticated
-          ? <Navigate to="/" replace />
-          : <Login onLogin={login} isLoggingIn={isLoggingIn} />}
+        path="/"
+        element={
+          <ProtectedRoute
+            element={
+              <RepositorySelector
+                onSelect={(repoFullName) => {
+                  navigate(`/${repoFullName}`);
+                }}
+                onLogout={logout}
+                isLoggingOut={isLoggingOut}
+              />
+            }
+          />
+        }
       />
-      <Route element={<RequireAuth isAuthenticated={isAuthenticated} />}>
+      <Route path="/:owner/:repo">
         <Route
-          path="/"
-          element={
-            <RepositorySelector
-              onSelect={(repoFullName) => {
-                navigate(`/${repoFullName}`);
-              }}
-              onLogout={logout}
-              isLoggingOut={isLoggingOut}
-            />
-          }
+          index
+          element={<ProtectedRoute element={<ContentListWrapper />} />}
         />
-        <Route path="/:owner/:repo">
-          <Route index element={<ContentListWrapper />} />
-          <Route path="add" element={<ContentSettingsWrapper />} />
-          <Route path="edit" element={<ContentSettingsWrapper />} />
-          <Route path=":contentId">
-            <Route index element={<ContentDispatcher />} />
-            <Route
-              path=":articleId"
-              element={<ArticleEditorRoute />}
-            />
-          </Route>
+        <Route
+          path="add"
+          element={<ProtectedRoute element={<ContentSettingsWrapper />} />}
+        />
+        <Route
+          path="edit"
+          element={<ProtectedRoute element={<ContentSettingsWrapper />} />}
+        />
+        <Route path=":contentId">
+          <Route
+            index
+            element={<ProtectedRoute element={<ContentDispatcher />} />}
+          />
+          <Route
+            path=":articleId"
+            element={<ProtectedRoute element={<ArticleEditorRoute />} />}
+          />
         </Route>
       </Route>
       <Route path="*" element={<NotFound />} />

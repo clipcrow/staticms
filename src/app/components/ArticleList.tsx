@@ -6,7 +6,6 @@ import { getDraftKey, getPrKey } from "../hooks/utils.ts";
 
 export interface ArticleListProps {
   contentConfig: Content;
-  onBack: () => void;
   onSelectArticle: (path: string) => void;
   files: FileItem[];
   loading: boolean;
@@ -17,7 +16,6 @@ export interface ArticleListProps {
 
 export const ArticleList: React.FC<ArticleListProps> = ({
   contentConfig,
-  onBack: _onBack,
   onSelectArticle,
   files,
   loading,
@@ -77,7 +75,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
               >
                 <button
                   type="button"
-                  className={`ui green button ${isCreating ? "loading" : ""}`}
+                  className={`ui primary button ${isCreating ? "loading" : ""}`}
                   onClick={handleCreateArticle}
                   disabled={isCreating || !newArticleName.trim()}
                 >

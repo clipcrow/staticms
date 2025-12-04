@@ -30,7 +30,7 @@ export const ContentList: React.FC<ContentListProps> = ({
         rightContent={
           <button
             type="button"
-            className="ui green button"
+            className="ui primary button"
             onClick={() => onAddNewContentToRepo(owner, repo)}
           >
             <i className="plus icon"></i>

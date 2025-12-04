@@ -25,10 +25,6 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
     fetchFiles();
   }, [fetchFiles]);
 
-  const handleBack = () => {
-    navigate(`/${content.owner}/${content.repo}`);
-  };
-
   const handleSelectArticle = async (path: string) => {
     // Encode collection and article IDs
     const encodedCollectionId = encodeURIComponent(content.filePath);
@@ -72,7 +68,6 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
   return (
     <ArticleList
       contentConfig={content}
-      onBack={handleBack}
       onSelectArticle={handleSelectArticle}
       files={files}
       loading={loading}
