@@ -232,7 +232,7 @@ router.get("/api/auth/login", async (ctx) => {
       httpOnly: true,
       secure: false, // Set to true in production
       sameSite: "lax",
-      maxAge: 300, // 5 minutes
+      maxAge: 60 * 60 * 24 * 7, // 1 week
     });
   }
 
