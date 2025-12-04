@@ -68,6 +68,14 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     fetchImages();
   }, [currentContent]);
 
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const getImageUrl = (path: string) => {
+    const encodedPath = encodeURIComponent(path);
+    const branch = currentContent.branch || "";
+    return `/api/content?owner=${currentContent.owner}&repo=${currentContent.repo}&filePath=${encodedPath}&branch=${branch}&media=true`;
+  };
+
   if (loading) {
     return (
       <div className="ui basic segment" style={{ marginBottom: "2em" }}>
@@ -79,21 +87,52 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   if (images.length === 0) return null;
 
   return (
-    <div
-      className="ui basic segment"
-      style={{ padding: 0, marginBottom: "2em" }}
-    >
-      <h4 className="ui header">Images Nearby</h4>
-      <div className="ui relaxed list">
-        {images.map((img) => (
-          <div key={img.sha} className="item">
-            <i className="image icon"></i>
-            <div className="content">
-              {img.name}
+    <>
+      <div
+        className="ui basic segment"
+        style={{ padding: 0, marginBottom: "2em" }}
+      >
+        <h4 className="ui header">Images Nearby</h4>
+        <div className="ui relaxed list">
+          {images.map((img) => (
+            <div
+              key={img.sha}
+              className="item"
+              style={{ cursor: "pointer" }}
+              onClick={() => setPreviewImage(getImageUrl(img.path))}
+            >
+              <i className="image icon"></i>
+              <div className="content">
+                {img.name}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {previewImage && (
+        <div
+          className="ui dimmer modals page transition visible active staticms-image-preview-dimmer"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div
+            className="ui modal active staticms-image-preview-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="image content staticms-image-preview-content">
+              <i
+                className="close icon staticms-image-preview-close"
+                onClick={() => setPreviewImage(null)}
+              />
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="staticms-image-preview-image"
+              />
             </div>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
