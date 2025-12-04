@@ -617,15 +617,39 @@ router.get("/api/content", async (ctx) => {
     } else {
       // Content is base64 encoded
       const rawContent = atob(data.content.replace(/\n/g, ""));
-      const content = new TextDecoder().decode(
-        Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
-      );
-      ctx.response.body = {
-        type: "file",
-        content,
-        sha: data.sha,
-        branch: targetBranch,
-      };
+
+      const media = ctx.request.url.searchParams.get("media") === "true";
+      if (media) {
+        const uint8Array = Uint8Array.from(rawContent, (c) => c.charCodeAt(0));
+        ctx.response.body = uint8Array;
+
+        // Set Content-Type based on file extension
+        const ext = data.name.split(".").pop()?.toLowerCase();
+        const mimeTypes: Record<string, string> = {
+          "png": "image/png",
+          "jpg": "image/jpeg",
+          "jpeg": "image/jpeg",
+          "gif": "image/gif",
+          "svg": "image/svg+xml",
+          "webp": "image/webp",
+          // "pdf": "application/pdf",
+        };
+        if (ext && mimeTypes[ext]) {
+          ctx.response.headers.set("Content-Type", mimeTypes[ext]);
+        }
+        // Cache control for media
+        ctx.response.headers.set("Cache-Control", "public, max-age=3600");
+      } else {
+        const content = new TextDecoder().decode(
+          Uint8Array.from(rawContent, (c) => c.charCodeAt(0)),
+        );
+        ctx.response.body = {
+          type: "file",
+          content,
+          sha: data.sha,
+          branch: targetBranch,
+        };
+      }
     }
   } catch (e) {
     const errorMessage = (e as Error).message;

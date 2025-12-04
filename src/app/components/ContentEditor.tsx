@@ -176,6 +176,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
               body={body}
               setBody={setBody}
               isPrLocked={isPrLocked}
+              currentContent={currentContent}
             />
           )}
         </div>
