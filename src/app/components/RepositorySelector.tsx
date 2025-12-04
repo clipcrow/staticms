@@ -29,23 +29,41 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchData = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/user/repos");
+      if (response.ok) {
+        const data = await response.json();
+        setRepos(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch repositories", e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchData = async () => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const eventSource = new EventSource("/api/events");
+    eventSource.onmessage = (event) => {
       try {
-        const response = await fetch("/api/user/repos");
-        if (response.ok) {
-          const data = await response.json();
-          setRepos(data);
+        const data = JSON.parse(event.data);
+        if (data.type === "repository_update") {
+          console.log("Repository update received, refreshing list...");
+          fetchData();
         }
       } catch (e) {
-        console.error("Failed to fetch repositories", e);
-      } finally {
-        setLoading(false);
+        console.error("Error parsing SSE event", e);
       }
     };
-
-    fetchData();
-  }, []);
+    return () => {
+      eventSource.close();
+    };
+  }, [fetchData]);
 
   const username = getUsername();
 
@@ -59,15 +77,27 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
           },
         ]}
         rightContent={
-          <button
-            type="button"
-            className={`ui button ${isLoggingOut ? "loading" : ""}`}
-            onClick={onLogout}
-            disabled={isLoggingOut}
-          >
-            <i className="sign out icon"></i>
-            Logout
-          </button>
+          <div style={{ display: "flex", gap: "0.5em" }}>
+            <a
+              // @ts-ignore: injected by esbuild
+              href={process.env.STATICMS_GITHUB_APP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="ui button primary"
+            >
+              <i className="plus icon"></i>
+              Add Repository
+            </a>
+            <button
+              type="button"
+              className={`ui button ${isLoggingOut ? "loading" : ""}`}
+              onClick={onLogout}
+              disabled={isLoggingOut}
+            >
+              <i className="sign out icon"></i>
+              Logout
+            </button>
+          </div>
         }
       />
 

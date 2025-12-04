@@ -373,12 +373,12 @@ router.get("/api/user/repos", async (ctx) => {
   }
 });
 
-const PUBLIC_URL = Deno.env.get("PUBLIC_URL");
+const STATICMS_PUBLIC_URL = Deno.env.get("STATICMS_PUBLIC_URL");
 const clients = new Set<ServerSentEventTarget>();
 
 async function setupWebhook(owner: string, repo: string, _userToken?: string) {
-  if (!PUBLIC_URL) {
-    console.warn("PUBLIC_URL not set. Skipping WebHook setup.");
+  if (!STATICMS_PUBLIC_URL) {
+    console.warn("STATICMS_PUBLIC_URL not set. Skipping WebHook setup.");
     return;
   }
 
@@ -391,7 +391,7 @@ async function setupWebhook(owner: string, repo: string, _userToken?: string) {
       {},
       token,
     );
-    const hookUrl = `${PUBLIC_URL}/api/webhook`;
+    const hookUrl = `${STATICMS_PUBLIC_URL}/api/webhook`;
     // deno-lint-ignore no-explicit-any
     const exists = hooks.find((h: Record<string, any>) =>
       h.config.url === hookUrl
@@ -498,6 +498,27 @@ router.post("/api/webhook", async (ctx) => {
         action: payload.action,
         repo: payload.repository.full_name,
         prUrl: payload.pull_request.html_url,
+      });
+      for (const client of clients) {
+        client.dispatchMessage(message);
+      }
+    } else if (event === "installation_repositories") {
+      const payload = await ctx.request.body.json();
+      const message = JSON.stringify({
+        type: "repository_update",
+        action: payload.action,
+        repositories_added: payload.repositories_added,
+        repositories_removed: payload.repositories_removed,
+      });
+      for (const client of clients) {
+        client.dispatchMessage(message);
+      }
+    } else if (event === "installation") {
+      const payload = await ctx.request.body.json();
+      // When an installation is created or deleted, we should update the repo list
+      const message = JSON.stringify({
+        type: "repository_update",
+        action: payload.action,
       });
       for (const client of clients) {
         client.dispatchMessage(message);
