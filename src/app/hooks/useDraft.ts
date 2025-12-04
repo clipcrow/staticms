@@ -16,7 +16,6 @@ export const useDraft = (
   loadContent: (
     content: Content,
     getDraftKey: (c: Content) => string,
-    setPrUrl: (url: string | null) => void,
     setHasDraft: (has: boolean) => void,
     setDraftTimestamp: (ts: number | null) => void,
     setPrDescription: (desc: string) => void,
@@ -24,7 +23,6 @@ export const useDraft = (
     isReset?: boolean,
     // deno-lint-ignore no-explicit-any
     initialData?: any,
-    preservePrUrl?: boolean,
   ) => Promise<void>,
 ) => {
   // PR State
@@ -37,9 +35,11 @@ export const useDraft = (
   const [hasDraft, setHasDraft] = useState(false);
   const [draftTimestamp, setDraftTimestamp] = useState<number | null>(null);
   const [pendingImages, setPendingImages] = useState<FileItem[]>([]);
+  const [isDraftLoaded, setIsDraftLoaded] = useState(false);
 
   // for Loading Indicators
   const [isSaving, setIsSaving] = useState(false);
+  const [isResettingLocal, setIsResettingLocal] = useState(false);
 
   // Derived State
   const isDirty = body !== initialBody ||
@@ -81,6 +81,8 @@ export const useDraft = (
 
   // Draft Logic
   useEffect(() => {
+    if (!isDraftLoaded || isResettingLocal) return;
+
     if (currentContent) {
       const key = getDraftKey(currentContent);
 
@@ -112,6 +114,8 @@ export const useDraft = (
     initialFrontMatter,
     isDirty,
     prUrl,
+    isDraftLoaded,
+    isResettingLocal,
   ]);
 
   // Load draft on mount (including pending images and PR URL)
@@ -130,12 +134,18 @@ export const useDraft = (
           if (parsed.pendingImages) {
             setPendingImages(parsed.pendingImages);
           }
-          // We don't set prUrl here because loadContent (via useRemoteContent) should have done it?
-          // But if we navigate back, loadContent runs.
+          if (parsed.prUrl) {
+            setPrUrl(parsed.prUrl);
+          }
         } catch {
           // ignore
         }
+      } else {
+        // Reset PR URL if no draft found (important for navigation)
+        setPrUrl(null);
+        setPendingImages([]);
       }
+      setIsDraftLoaded(true);
     }
   }, [currentContent]);
 
@@ -296,14 +306,12 @@ export const useDraft = (
         loadContent(
           currentContent,
           getDraftKey,
-          setPrUrl,
           setHasDraft,
           setDraftTimestamp,
           setPrDescription,
           setPendingImages,
           true, // Treat as reset to force reload
           undefined, // initialData
-          true, // preservePrUrl
         );
       } else {
         console.error("Failed to create PR: " + data.error);
@@ -315,8 +323,10 @@ export const useDraft = (
     }
   };
 
-  const resetContent = useCallback(() => {
+  const resetContent = useCallback(async () => {
     if (!currentContent) return;
+
+    setIsResettingLocal(true);
 
     // Manually remove from local storage to ensure loadContent doesn't pick it up
     // but keep hasDraft state true so the UI doesn't flicker/hide immediately
@@ -333,16 +343,17 @@ export const useDraft = (
     // Clear pending images state
     setPendingImages([]);
 
-    loadContent(
+    await loadContent(
       currentContent,
       getDraftKey,
-      setPrUrl,
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
       setPendingImages,
       true,
     );
+
+    setIsResettingLocal(false);
   }, [
     currentContent,
     loadContent,
@@ -351,6 +362,7 @@ export const useDraft = (
     setDraftTimestamp,
     setPrDescription,
     setPendingImages,
+    setIsResettingLocal,
   ]);
 
   // Check PR Status Effect

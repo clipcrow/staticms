@@ -89,7 +89,6 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     loadContent(
       content,
       getDraftKey,
-      setPrUrl,
       setHasDraft,
       setDraftTimestamp,
       setPrDescription,
@@ -100,7 +99,6 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
   }, [
     content,
     loadContent,
-    setPrUrl,
     setHasDraft,
     setDraftTimestamp,
     setPrDescription,

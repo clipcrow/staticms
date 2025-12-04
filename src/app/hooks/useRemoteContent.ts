@@ -22,7 +22,6 @@ export const useRemoteContent = () => {
     async (
       content: Content,
       getDraftKey: (c: Content) => string,
-      setPrUrl: (url: string | null) => void,
       setHasDraft: (has: boolean) => void,
       setDraftTimestamp: (ts: number | null) => void,
       setPrDescription: (desc: string) => void,
@@ -30,16 +29,11 @@ export const useRemoteContent = () => {
       isReset: boolean = false,
       // deno-lint-ignore no-explicit-any
       initialData?: any,
-      preservePrUrl: boolean = false,
     ) => {
       if (isReset) {
         setIsResetting(true);
       } else if (!initialData) {
         setEditorLoading(true);
-      }
-
-      if (!preservePrUrl) {
-        setPrUrl(null); // Reset PR URL state
       }
 
       const params = new URLSearchParams({
@@ -124,18 +118,12 @@ export const useRemoteContent = () => {
           try {
             const draft = JSON.parse(savedDraft);
 
-            // Restore PR URL if present
-            if (draft.prUrl) {
-              setPrUrl(draft.prUrl);
-            }
-
             // Restore pending images if present
             if (draft.pendingImages) {
               setPendingImages(draft.pendingImages);
             }
 
             if (draft.type === "created") {
-              setPrUrl(draft.prUrl);
               setHasDraft(true);
               setDraftTimestamp(draft.timestamp);
               setPrDescription(draft.description || "");
