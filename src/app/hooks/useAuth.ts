@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
@@ -61,13 +60,15 @@ export const useAuth = () => {
     }
   }, []);
 
-  const login = useCallback((returnTo?: string) => {
+  const login = useCallback((returnTo?: string, forceLogin = false) => {
     setIsLoggingIn(true);
     // Use a small timeout to allow UI to update before redirecting
     setTimeout(() => {
-      const url = returnTo
-        ? `/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`
-        : "/api/auth/login";
+      const params = new URLSearchParams();
+      if (returnTo) params.set("returnTo", returnTo);
+      if (forceLogin) params.set("prompt", "login");
+
+      const url = `/api/auth/login?${params.toString()}`;
       globalThis.location.href = url;
     }, 10);
   }, []);
@@ -111,29 +112,12 @@ export const useAuth = () => {
     });
   }, []);
 
-  const logout = useCallback(async () => {
-    setIsLoggingOut(true);
-    try {
-      await fetch("/api/auth/logout");
-      setIsAuthenticated(false);
-      setUsername(null);
-      localStorage.removeItem("staticms_user");
-      // Navigation to login will happen automatically because isAuthenticated becomes false
-    } catch (e) {
-      console.error("Logout failed", e);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  }, []);
-
   return {
     isAuthenticated,
-    isLoggingOut,
     isLoggingIn,
     loading,
     login,
     loginSilently,
-    logout,
     username,
   };
 };

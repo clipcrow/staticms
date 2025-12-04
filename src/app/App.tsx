@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
@@ -22,12 +22,23 @@ function AppContent() {
     loading,
     login,
     loginSilently,
-    logout,
     isLoggingIn: _isLoggingIn,
-    isLoggingOut,
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [hasSyncedWithGitHub, setHasSyncedWithGitHub] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated && !hasSyncedWithGitHub) {
+      setHasSyncedWithGitHub(true);
+      // Attempt to sync with GitHub session in the background.
+      // If the user has switched accounts on GitHub, this will update the Staticms session.
+      loginSilently().catch(() => {
+        // If silent login fails (e.g. not logged in to GitHub), ignore.
+        // We keep the current Staticms session valid.
+      });
+    }
+  }, [isAuthenticated, hasSyncedWithGitHub, loginSilently]);
 
   if (loading) {
     return <div className="ui active centered inline loader"></div>;
@@ -63,8 +74,6 @@ function AppContent() {
                 onSelect={(repoFullName) => {
                   navigate(`/${repoFullName}`);
                 }}
-                onLogout={logout}
-                isLoggingOut={isLoggingOut}
               />
             }
           />

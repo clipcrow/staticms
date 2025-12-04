@@ -5,8 +5,6 @@ import { ContentListItem } from "./ContentListItem.tsx";
 
 interface RepositorySelectorProps {
   onSelect: (repoFullName: string) => void;
-  onLogout: () => void;
-  isLoggingOut?: boolean;
 }
 
 interface Repository {
@@ -23,8 +21,6 @@ interface Repository {
 
 export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
   onSelect,
-  onLogout,
-  isLoggingOut,
 }) => {
   const [repos, setRepos] = useState<Repository[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,15 +85,6 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
               <i className="plus icon"></i>
               Add Repository
             </a>
-            <button
-              type="button"
-              className={`ui button ${isLoggingOut ? "loading" : ""}`}
-              onClick={onLogout}
-              disabled={isLoggingOut}
-            >
-              <i className="sign out icon"></i>
-              Logout
-            </button>
           </div>
         }
       />

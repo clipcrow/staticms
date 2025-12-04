@@ -207,18 +207,6 @@ async function getSessionToken(ctx: Context): Promise<string | null> {
   return session.value as string | null;
 }
 
-async function deleteSession(ctx: Context) {
-  const sessionId = await ctx.cookies.get("session_id");
-  console.log(`[deleteSession] Logout requested. Session ID: ${sessionId}`);
-  if (sessionId) {
-    await kv.delete(["sessions", sessionId]);
-    console.log(`[deleteSession] Deleted session from KV: ${sessionId}`);
-    await ctx.cookies.delete("session_id", { path: "/" });
-  } else {
-    console.log("[deleteSession] No session ID found in cookies");
-  }
-}
-
 // Auth Routes
 router.get("/api/auth/login", async (ctx) => {
   if (!GITHUB_CLIENT_ID) {
@@ -236,8 +224,16 @@ router.get("/api/auth/login", async (ctx) => {
     });
   }
 
-  const redirectUrl =
+  const prompt = ctx.request.url.searchParams.get("prompt");
+  let redirectUrl =
     `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&scope=repo,user,read:org`;
+
+  // GitHub does not support prompt=login, but prompt=consent forces the authorization screen,
+  // which prevents silent automatic login.
+  if (prompt === "login") {
+    redirectUrl += "&prompt=consent";
+  }
+
   ctx.response.redirect(redirectUrl);
 });
 
@@ -308,12 +304,6 @@ router.get("/api/auth/callback", async (ctx) => {
     console.error("Auth error details:", e);
     ctx.throw(500, "Authentication failed");
   }
-});
-
-router.get("/api/auth/logout", async (ctx) => {
-  await deleteSession(ctx);
-  ctx.response.headers.set("Cache-Control", "no-store");
-  ctx.response.body = { success: true };
 });
 
 router.get("/api/user", async (ctx) => {
