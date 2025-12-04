@@ -79,7 +79,8 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
         rightContent={
           <div style={{ display: "flex", gap: "0.5em" }}>
             <a
-              // @ts-ignore: injected by esbuild
+              // Set by esbuild
+              // deno-lint-ignore no-process-global
               href={process.env.STATICMS_GITHUB_APP_URL}
               target="_blank"
               rel="noreferrer"
