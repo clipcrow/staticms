@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
   useEffect(() => {
@@ -61,7 +60,6 @@ export const useAuth = () => {
   }, []);
 
   const login = useCallback((returnTo?: string, forceLogin = false) => {
-    setIsLoggingIn(true);
     // Use a small timeout to allow UI to update before redirecting
     setTimeout(() => {
       const params = new URLSearchParams();
@@ -74,7 +72,6 @@ export const useAuth = () => {
   }, []);
 
   const loginSilently = useCallback((): Promise<boolean> => {
-    setIsLoggingIn(true);
     return new Promise((resolve) => {
       const iframe = document.createElement("iframe");
       iframe.style.display = "none";
@@ -114,7 +111,6 @@ export const useAuth = () => {
 
   return {
     isAuthenticated,
-    isLoggingIn,
     loading,
     login,
     loginSilently,

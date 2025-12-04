@@ -22,7 +22,6 @@ function AppContent() {
     loading,
     login,
     loginSilently,
-    isLoggingIn: _isLoggingIn,
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
