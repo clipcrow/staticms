@@ -29,7 +29,7 @@ export const ContentListWrapper: React.FC = () => {
     setLoadingItemIndex(index);
     try {
       let fetchPath = content.filePath;
-      if (content.type === "singleton-index") {
+      if (content.type === "singleton-dir") {
         fetchPath = `${content.filePath}/index.md`;
       }
       const encodedFetchPath = encodeURIComponent(fetchPath);

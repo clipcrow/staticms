@@ -26,7 +26,7 @@ export const SingletonEditorRoute: React.FC = () => {
 
   const contentToRender = useMemo(() => {
     if (!currentContent) return null;
-    if (currentContent.type === "singleton-index") {
+    if (currentContent.type === "singleton-dir") {
       return {
         ...currentContent,
         filePath: `${currentContent.filePath}/index.md`,

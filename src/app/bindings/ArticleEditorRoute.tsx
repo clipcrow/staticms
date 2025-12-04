@@ -69,7 +69,7 @@ export const ArticleEditorRoute: React.FC = () => {
     ...currentContent,
     filePath: fullPath,
     name: undefined, // Let the editor figure out the name from path
-    type: "singleton", // It's a single file now
+    type: "singleton-file", // It's a single file now
     collectionName: currentContent.name || currentContent.filePath,
     collectionPath: currentContent.filePath,
     // Fields are inherited from the collection config

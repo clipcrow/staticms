@@ -36,7 +36,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
   const getUiBinding = () => {
     if (
-      formData.type === "singleton-index" ||
+      formData.type === "singleton-dir" ||
       formData.type === "collection-dirs"
     ) {
       return "directory";
@@ -51,7 +51,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
     if (newType === "singleton") {
       setFormData({
         ...formData,
-        type: uiBinding === "directory" ? "singleton-index" : "singleton",
+        type: uiBinding === "directory" ? "singleton-dir" : "singleton-file",
       });
     } else {
       setFormData({
@@ -67,7 +67,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
     if (uiType === "singleton") {
       setFormData({
         ...formData,
-        type: newBinding === "directory" ? "singleton-index" : "singleton",
+        type: newBinding === "directory" ? "singleton-dir" : "singleton-file",
       });
     } else {
       setFormData({
@@ -242,7 +242,8 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                 setFormData({ ...formData, fields: newFields });
               }}
               editableKeys
-              disableValues={formData.type === "singleton" || !formData.type}
+              disableValues={formData.type === "singleton-file" ||
+                !formData.type}
               valuePlaceholder={formData.type === "collection-files" ||
                   formData.type === "collection-dirs"
                 ? "Default value for new articles"

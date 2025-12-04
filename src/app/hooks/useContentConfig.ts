@@ -17,7 +17,7 @@ export const useContentConfig = () => {
           const contentsWithFields = data.contents.map((c: Content) => ({
             ...c,
             fields: c.fields || [],
-            type: c.type || "singleton",
+            type: c.type || "singleton-file",
           }));
           setContents(contentsWithFields);
         }
@@ -56,7 +56,7 @@ export const useContentConfig = () => {
         }
         const checkRes = await fetch(`/api/content?${params.toString()}`);
         if (checkRes.status === 404) {
-          if (newContent.type === "singleton" || !newContent.type) {
+          if (newContent.type === "singleton-file" || !newContent.type) {
             alert("Content path not found in the repository.");
             setIsSavingConfig(false);
             return false;
@@ -70,7 +70,7 @@ export const useContentConfig = () => {
           const data = await checkRes.json();
           if (
             data.type === "dir" &&
-            (newContent.type === "singleton" || !newContent.type)
+            (newContent.type === "singleton-file" || !newContent.type)
           ) {
             // If it's a directory and type is singleton, append index.md
             const newFilePath = newContent.filePath.endsWith("/")

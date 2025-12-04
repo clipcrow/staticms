@@ -10,8 +10,8 @@ export interface Content {
   filePath: string;
   name?: string;
   type?:
-    | "singleton"
-    | "singleton-index"
+    | "singleton-file"
+    | "singleton-dir"
     | "collection-files"
     | "collection-dirs";
   fields: Field[];
@@ -47,13 +47,6 @@ export interface PrDetails {
   created_at: string;
   html_url: string;
 }
-
-export type ViewState =
-  | "content-list"
-  | "content-editor"
-  | "content-settings"
-  | "repository-settings"
-  | "article-list";
 
 export interface FileItem {
   name: string;

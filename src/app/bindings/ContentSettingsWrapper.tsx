@@ -23,7 +23,7 @@ export const ContentSettingsWrapper: React.FC = () => {
     owner: owner || "",
     repo: repo || "",
     filePath: "",
-    type: "singleton",
+    type: "singleton-file",
     fields: [],
   });
 
@@ -52,10 +52,26 @@ export const ContentSettingsWrapper: React.FC = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const getCanonicalPath = (c: Content) => {
+      if (c.type === "singleton-dir") {
+        return c.filePath.endsWith("/")
+          ? `${c.filePath}index.md`
+          : `${c.filePath}/index.md`;
+      }
+      return c.filePath;
+    };
+
+    const newCanonicalPath = getCanonicalPath(formData);
+
     const isDuplicate = contents.some((c) => {
       if (c.owner !== owner || c.repo !== repo) return false;
-      if (c.filePath === formData.filePath) {
-        if (!filePath) return true;
+
+      const existingCanonicalPath = getCanonicalPath(c);
+
+      if (existingCanonicalPath === newCanonicalPath) {
+        if (!filePath) return true; // Creating new content
+        // Editing existing content: ignore if it's the same content we are editing
+        // We compare original file paths to identify if it's the same config entry
         if (c.filePath === decodeURIComponent(filePath)) return false;
         return true;
       }
