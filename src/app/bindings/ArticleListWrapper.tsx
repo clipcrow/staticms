@@ -45,7 +45,7 @@ export const ArticleListWrapper: React.FC<ArticleListWrapperProps> = ({
     const params = new URLSearchParams({
       owner: content.owner,
       repo: content.repo,
-      filePath: encodedArticleId,
+      filePath: path,
       allowMissing: "true",
     });
     if (content.branch) {
