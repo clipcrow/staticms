@@ -29,7 +29,6 @@
     "react/jsx-runtime": "npm:react@^19.2.0/jsx-runtime",
     "js-yaml": "npm:js-yaml@4.1.1",
     "react-md-editor": "npm:@uiw/react-md-editor@^4.0.4",
-    "rehype-highlight": "npm:rehype-highlight@^6.0.0",
-    "highlight.js/styles/github.css": "npm:highlight.js@^11.9.0/styles/github.css"
+    "rehype-highlight": "npm:rehype-highlight@^6.0.0"
   }
 }
