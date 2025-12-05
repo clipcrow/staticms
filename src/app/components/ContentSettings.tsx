@@ -110,11 +110,9 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           { label: editingIndex !== null ? "Edit Content" : "Add Content" },
         ]}
       />
-      <div className="ui segment">
-        <form
-          onSubmit={onSave}
-          className="ui form staticms-settings-form"
-        >
+
+      <form onSubmit={onSave} className="ui form">
+        <div className="ui segment">
           <div className="field">
             <label>Content Name (Optional)</label>
             <input
@@ -220,67 +218,67 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
               Leave empty to use the repository's default branch.
             </small>
           </div>
+        </div>
 
-          <div className="field">
-            <label>Front Matter</label>
-            <FrontMatterItemPanel
-              fields={formData.fields.map((f) => ({
+        <div className="field">
+          <label>Front Matter Template</label>
+          <FrontMatterItemPanel
+            fields={formData.fields.map((f) => ({
+              ...f,
+              value: f.defaultValue || "",
+            }))}
+            itemIndex={0}
+            currentContent={{ ...formData, fields: [] }}
+            isPrLocked={loading}
+            onUpdateFields={(_index, newFields) => {
+              const updatedFields = newFields.map((f) => ({
                 ...f,
-                value: f.defaultValue || "",
-              }))}
-              itemIndex={0}
-              currentContent={{ ...formData, fields: [] }}
-              isPrLocked={loading}
-              onUpdateFields={(_index, newFields) => {
-                const updatedFields = newFields.map((f) => ({
-                  ...f,
-                  defaultValue: f.value,
-                  value: "",
-                }));
-                setFormData({ ...formData, fields: updatedFields });
-              }}
-              editableKeys
-              disableValues={formData.type === "singleton-file" ||
-                !formData.type}
-              valuePlaceholder={formData.type === "collection-files" ||
-                  formData.type === "collection-dirs"
-                ? "Default value for new articles"
-                : undefined}
-            />
-          </div>
+                defaultValue: f.value,
+                value: "",
+              }));
+              setFormData({ ...formData, fields: updatedFields });
+            }}
+            editableKeys
+            disableValues={formData.type === "singleton-file" ||
+              !formData.type}
+            valuePlaceholder={formData.type === "collection-files" ||
+                formData.type === "collection-dirs"
+              ? "Default value for new articles"
+              : undefined}
+          />
+        </div>
 
-          <div className="actions staticms-settings-actions">
+        <div className="actions">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="ui button"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className={`ui primary button ${loading ? "loading" : ""}`}
+            disabled={loading}
+          >
+            {editingIndex !== null ? "Update" : "Add"}
+          </button>
+          {editingIndex !== null && (
             <button
               type="button"
-              onClick={onCancel}
-              className="ui button"
+              onClick={onDelete}
+              className={`ui button negative right floated ${
+                loading ? "loading" : ""
+              }`}
               disabled={loading}
             >
-              Cancel
+              <i className="trash icon"></i>
+              Delete
             </button>
-            <button
-              type="submit"
-              className={`ui primary button ${loading ? "loading" : ""}`}
-              disabled={loading}
-            >
-              {editingIndex !== null ? "Update" : "Add"}
-            </button>
-            {editingIndex !== null && (
-              <button
-                type="button"
-                onClick={onDelete}
-                className={`ui button negative right floated ${
-                  loading ? "loading" : ""
-                }`}
-                disabled={loading}
-              >
-                <i className="trash icon"></i>
-                Delete
-              </button>
-            )}
-          </div>
-        </form>
-      </div>
+          )}
+        </div>
+      </form>
     </div>
   );
 };

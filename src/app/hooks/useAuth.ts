@@ -4,37 +4,6 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const userRes = await fetch("/api/user");
-        if (userRes.ok) {
-          const data = await userRes.json();
-          setIsAuthenticated(true);
-          const login = data.login || data.username || "";
-          setUsername(login);
-          if (login) {
-            localStorage.setItem("staticms_user", login);
-          }
-        } else {
-          console.warn(
-            "[useAuth] Auth check failed with status:",
-            userRes.status,
-          );
-          localStorage.removeItem("staticms_user");
-          setIsAuthenticated(false);
-        }
-      } catch (e) {
-        console.error("[useAuth] Auth check error", e);
-        // On network error, we might want to retry, but for now we just fail
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-    checkAuth();
-  }, []);
-
   // Expose checkAuth for manual calls
   const checkAuth = useCallback(async () => {
     try {
@@ -48,6 +17,10 @@ export const useAuth = () => {
           localStorage.setItem("staticms_user", login);
         }
       } else {
+        console.warn(
+          "[useAuth] Auth check failed with status:",
+          userRes.status,
+        );
         localStorage.removeItem("staticms_user");
         setIsAuthenticated(false);
       }
@@ -58,6 +31,10 @@ export const useAuth = () => {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const login = useCallback((returnTo?: string, forceLogin = false) => {
     // Use a small timeout to allow UI to update before redirecting

@@ -26,15 +26,6 @@ export const getDraft = (content: Content, username?: string): Draft | null => {
   }
 };
 
-export const saveDraft = (
-  content: Content,
-  draft: Draft,
-  username?: string,
-) => {
-  const key = getDraftKey(content, username);
-  localStorage.setItem(key, JSON.stringify(draft));
-};
-
 export interface ContentStatus {
   hasDraft: boolean;
   hasPr: boolean;

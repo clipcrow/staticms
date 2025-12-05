@@ -89,7 +89,7 @@ export const RepositorySelector: React.FC<RepositorySelectorProps> = ({
 
       {loading
         ? (
-          <div className="ui segment staticms-repo-selector-loading-segment">
+          <div className="ui segment">
             <div className="ui active inverted dimmer">
               <div className="ui loader"></div>
             </div>

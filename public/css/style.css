@@ -70,96 +70,8 @@
   vertical-align: middle !important;
 }
 
-.staticms-settings-header-title-container {
-  display: flex;
-  align-items: center;
-}
-
-.staticms-settings-header-title {
-  font-weight: bold !important;
-  font-size: 1.2em !important;
-}
-
-.staticms-settings-form {
-  margin-top: 2em !important;
-}
-
 .staticms-settings-help-text {
   color: rgba(0, 0, 0, 0.6) !important;
-}
-
-.staticms-settings-row {
-  padding-bottom: 0.5em !important;
-  padding-top: 0.5em !important;
-}
-
-.staticms-settings-delete-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.staticms-settings-delete-button {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #db2828 !important;
-  padding: 0 !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.staticms-settings-trash-icon {
-  margin: 0 !important;
-}
-
-.staticms-settings-actions {
-  margin-top: 5em !important;
-}
-
-.staticms-editor-back-button {
-  display: flex;
-  align-items: center;
-  padding: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  cursor: pointer;
-  color: #4183c4 !important;
-  margin-right: 0.5em !important;
-}
-
-.staticms-editor-collection-button {
-  display: inline-flex !important;
-  align-items: center;
-  padding: 0 !important;
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  cursor: pointer;
-  color: #4183c4 !important;
-  margin: 0 0.5em !important;
-}
-
-.staticms-editor-repo-name {
-  font-weight: bold !important;
-}
-
-.staticms-editor-branch-label {
-  margin-right: 0.5em !important;
-}
-
-.staticms-editor-separator {
-  margin: 0 0.5em !important;
-  color: rgba(0, 0, 0, 0.4) !important;
-}
-
-.staticms-editor-file-name {
-  font-weight: bold !important;
-  font-size: 1.2em !important;
 }
 
 .staticms-editor-pr-label {
@@ -189,34 +101,6 @@
   margin-top: 1em !important;
 }
 
-.staticms-repo-selector-loading-segment {
-  min-height: 200px !important;
-}
-
-.staticms-login-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.staticms-login-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding-top: 15vh !important;
-}
-
-.staticms-login-inner {
-  width: 100%;
-  max-width: 450px;
-}
-
-.staticms-app-loader {
-  margin-top: 4em !important;
-}
-
 /* Increase markdown editor toolbar button size */
 .w-md-editor-toolbar li > button {
   width: 32px !important;
@@ -226,10 +110,6 @@
 .w-md-editor-toolbar li > button svg {
   width: 18px !important;
   height: 18px !important;
-}
-
-.staticms-content-list-secondary-text {
-  color: rgba(0, 0, 0, 0.5);
 }
 
 .staticms-image-preview-dimmer {
