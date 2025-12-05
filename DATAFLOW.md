@@ -235,9 +235,10 @@ Staticms
   2. リクエストが成功 (`200 OK`) した場合、レスポンスの JSON をパースします。
   3. `login` または `username` フィールドからユーザー名を抽出します。
   4. 有効なユーザー名が見つかった場合、それを `localStorage` に保存します:
-     ```typescript
-     localStorage.setItem("staticms_user", login);
-     ```
+
+  ```typescript
+  localStorage.setItem("staticms_user", login);
+  ```
 
 #### 2. 読み取り (使用)
 
@@ -245,7 +246,11 @@ Staticms
 - **関数:** `getUsername()`
 - **プロセス:**
   - 値を取得します: `localStorage.getItem("staticms_user")`。
-  - 設定されていない場合は、ユーザー名または空文字を返します。
+  - 設定されていない場合は、空文字を返します。
+  - **注意:** `getUsername` は同期的に `localStorage`
+    のみを読み取ります。Reactコンポーネント内では、`useAuth` フックから
+    `username` を取得し、それを `getDraftKey`
+    などのヘルパー関数に渡すことが推奨されます。
 - **利用者 (Consumers):**
   - `getDraftKey(content)`:
     ユーザー名を使用して、ドラフトを保存するための一意のキーを生成します (例:
@@ -263,6 +268,7 @@ Staticms
     レスポンス)。
 - **プロセス:**
   - 古いユーザーデータが残らないようにキーを削除します:
-    ```typescript
-    localStorage.removeItem("staticms_user");
-    ```
+
+  ```typescript
+  localStorage.removeItem("staticms_user");
+  ```

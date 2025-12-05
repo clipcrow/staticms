@@ -80,7 +80,12 @@ export const FrontMatterListEditor: React.FC<FrontMatterListEditorProps> = ({
   return (
     <div className="ui form">
       <div>
-        <div className="staticms-fm-add-top-container">
+        <div
+          style={{
+            textAlign: "right",
+            marginBottom: "1em",
+          }}
+        >
           <button
             type="button"
             className="ui icon button primary circular"
@@ -109,7 +114,12 @@ export const FrontMatterListEditor: React.FC<FrontMatterListEditorProps> = ({
             onDeleteItem={handleDeleteItem}
           />
         ))}
-        <div className="staticms-fm-add-bottom-container">
+        <div
+          style={{
+            textAlign: "right",
+            marginTop: "1em",
+          }}
+        >
           <button
             type="button"
             className="ui icon button primary circular"

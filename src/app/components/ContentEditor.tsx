@@ -164,46 +164,30 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         }
       />
 
-      <div className="ui grid staticms-editor-grid">
+      <div className="ui grid">
         <div className="twelve wide column">
-          <div
-            className={`staticms-editor-fm-segment ${
-              isYaml
-                ? "staticms-editor-fm-segment-yaml"
-                : "staticms-editor-fm-segment-md"
-            }`}
-          >
-            <div
-              style={{
-                flex: 1,
-                minHeight: 0,
-              }}
-            >
-              {Array.isArray(frontMatter)
-                ? (
-                  <FrontMatterListEditor
-                    frontMatter={frontMatter}
-                    setFrontMatter={setFrontMatter as (
-                      fm: Record<string, unknown>[],
-                    ) => void}
-                    currentContent={currentContent}
-                    isPrLocked={isPrLocked}
-                  />
-                )
-                : (
-                  <FrontMatterItemEditor
-                    frontMatter={frontMatter as Record<string, unknown>}
-                    setFrontMatter={setFrontMatter as (
-                      fm: Record<string, unknown>,
-                    ) => void}
-                    currentContent={currentContent}
-                    isPrLocked={isPrLocked}
-                  />
-                )}
-            </div>
-          </div>
+          {Array.isArray(frontMatter)
+            ? (
+              <FrontMatterListEditor
+                frontMatter={frontMatter}
+                setFrontMatter={setFrontMatter as (
+                  fm: Record<string, unknown>[],
+                ) => void}
+                currentContent={currentContent}
+                isPrLocked={isPrLocked}
+              />
+            )
+            : (
+              <FrontMatterItemEditor
+                frontMatter={frontMatter as Record<string, unknown>}
+                setFrontMatter={setFrontMatter as (
+                  fm: Record<string, unknown>,
+                ) => void}
+                currentContent={currentContent}
+                isPrLocked={isPrLocked}
+              />
+            )}
 
-          {/* Tab Menu */}
           {!isYaml && (
             <MarkdownEditor
               body={body}
@@ -215,130 +199,127 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         </div>
 
         <div className="four wide column">
-          <div>
-            {hasDraft && (
-              <>
-                {prUrl
-                  ? (
-                    <div
-                      className="ui message orange"
-                      style={{ marginBottom: "2em" }}
-                    >
-                      <div className="header">
-                        <i className="circle icon orange"></i>
-                        PR Open
-                        {prDetails && (
-                          <span className="staticms-editor-pr-number">
-                            #{prDetails.number}
-                          </span>
-                        )}
-                      </div>
-                      {prDetails?.body && (
-                        <div className="staticms-editor-pr-body">
-                          {prDetails.body}
-                        </div>
+          {hasDraft && (
+            <>
+              {prUrl
+                ? (
+                  <div
+                    className="ui message orange"
+                    style={{ marginBottom: "2em" }}
+                  >
+                    <div className="header">
+                      <i className="circle icon orange"></i>
+                      PR Open
+                      {prDetails && (
+                        <span className="staticms-editor-pr-number">
+                          #{prDetails.number}
+                        </span>
                       )}
-                      <a
-                        href={prUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="staticms-editor-view-pr-link"
-                      >
-                        View Pull Request
-                      </a>
                     </div>
-                  )
-                  : (
-                    <div
-                      className="ui message gray"
-                      style={{ marginBottom: "2em" }}
+                    {prDetails?.body && (
+                      <div className="staticms-editor-pr-body">
+                        {prDetails.body}
+                      </div>
+                    )}
+                    <a
+                      href={prUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="staticms-editor-view-pr-link"
                     >
-                      <div className="content">
-                        <div className="header staticms-editor-draft-header">
-                          <i className="circle icon gray"></i>
-                          Draft / PR
-                        </div>
-                        <div className="meta">
-                          {draftTimestamp
-                            ? new Date(draftTimestamp).toLocaleString()
-                            : ""}
-                        </div>
-                        <div className="description staticms-editor-draft-description">
-                          {isPrLocked && prDetails
-                            ? (
-                              <div className="ui feed">
-                                <div className="event">
-                                  <div className="content">
-                                    <div className="summary">
-                                      <a
-                                        href={prDetails.html_url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        PR #{prDetails.number}:{" "}
-                                        {prDetails.title}
-                                      </a>
-                                      <div className="date">
-                                        {new Date(prDetails.created_at)
-                                          .toLocaleDateString()}
-                                      </div>
+                      View Pull Request
+                    </a>
+                  </div>
+                )
+                : (
+                  <div
+                    className="ui message gray"
+                    style={{ marginBottom: "2em" }}
+                  >
+                    <div className="content">
+                      <div className="header staticms-editor-draft-header">
+                        <i className="circle icon gray"></i>
+                        Draft / PR
+                      </div>
+                      <div className="meta">
+                        {draftTimestamp
+                          ? new Date(draftTimestamp).toLocaleString()
+                          : ""}
+                      </div>
+                      <div className="description staticms-editor-draft-description">
+                        {isPrLocked && prDetails
+                          ? (
+                            <div className="ui feed">
+                              <div className="event">
+                                <div className="content">
+                                  <div className="summary">
+                                    <a
+                                      href={prDetails.html_url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      PR #{prDetails.number}: {prDetails.title}
+                                    </a>
+                                    <div className="date">
+                                      {new Date(prDetails.created_at)
+                                        .toLocaleDateString()}
                                     </div>
-                                    <div className="extra text">
-                                      {prDetails.body}
-                                    </div>
-                                    <div className="meta">
-                                      by {prDetails.user.login}
-                                    </div>
+                                  </div>
+                                  <div className="extra text">
+                                    {prDetails.body}
+                                  </div>
+                                  <div className="meta">
+                                    by {prDetails.user.login}
                                   </div>
                                 </div>
                               </div>
-                            )
-                            : (
-                              <div className="ui form">
-                                <div className="field">
-                                  <label>Description</label>
-                                  <textarea
-                                    rows={3}
-                                    value={prDescription}
-                                    onChange={(e) =>
-                                      setPrDescription(e.target.value)}
-                                    placeholder="PR Description..."
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  className={`ui primary button fluid ${
-                                    isSaving ? "loading" : ""
-                                  }`}
-                                  onClick={onSaveContent}
-                                  disabled={isSaving}
-                                >
-                                  Create PR
-                                </button>
+                            </div>
+                          )
+                          : (
+                            <div className="ui form">
+                              <div className="field">
+                                <label>Description</label>
+                                <textarea
+                                  rows={3}
+                                  value={prDescription}
+                                  onChange={(e) =>
+                                    setPrDescription(e.target.value)}
+                                  placeholder="PR Description..."
+                                />
                               </div>
-                            )}
-                        </div>
+                              <button
+                                type="button"
+                                className={`ui primary button fluid ${
+                                  isSaving ? "loading" : ""
+                                }`}
+                                onClick={onSaveContent}
+                                disabled={isSaving}
+                              >
+                                Create PR
+                              </button>
+                            </div>
+                          )}
                       </div>
                     </div>
-                  )}
-              </>
-            )}
+                  </div>
+                )}
+            </>
+          )}
 
-            <ContentHistory
-              commits={commits}
-              currentContent={currentContent}
-            />
+          <ContentHistory
+            commits={commits}
+            currentContent={currentContent}
+          />
 
-            <ContentImages
-              currentContent={currentContent}
-              setHasDraft={setHasDraft}
-              setDraftTimestamp={setDraftTimestamp}
-              hasDraft={hasDraft}
-              isPrLocked={isPrLocked}
-              pendingImages={pendingImages}
-              setPendingImages={setPendingImages}
-            />
-          </div>
+          <ContentImages
+            currentContent={currentContent}
+            setHasDraft={setHasDraft}
+            setDraftTimestamp={setDraftTimestamp}
+            hasDraft={hasDraft}
+            isPrLocked={isPrLocked}
+            pendingImages={pendingImages}
+            setPendingImages={setPendingImages}
+          />
         </div>
       </div>
     </div>

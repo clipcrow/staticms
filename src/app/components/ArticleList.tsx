@@ -3,6 +3,7 @@ import { Content, FileItem } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "../hooks/utils.ts";
+import { useAuth } from "../hooks/useAuth.ts";
 
 export interface ArticleListProps {
   contentConfig: Content;
@@ -25,6 +26,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
 }) => {
   const [newArticleName, setNewArticleName] = useState("");
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
+  const { username } = useAuth();
 
   const handleCreateArticle = () => {
     try {
@@ -104,7 +106,9 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     }`}
                   />
                 }
-                primaryText={file.name}
+                primaryText={contentConfig.type === "collection-files"
+                  ? file.name.replace(/\.md$/, "")
+                  : file.name}
                 status={(() => {
                   let targetPath = file.path;
                   if (
@@ -121,6 +125,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     targetPath,
                     file.type === "dir" &&
                       contentConfig.type !== "collection-dirs",
+                    username || undefined,
                   );
                 })()}
                 actions={

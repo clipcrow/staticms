@@ -166,32 +166,6 @@
   margin-left: 1em !important;
 }
 
-.staticms-editor-grid {
-  flex: 1;
-  margin: 0 !important;
-  width: 100% !important;
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  align-items: stretch;
-}
-
-.staticms-editor-fm-segment {
-  min-height: 0;
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 0
-    !important; /* Remove padding from segment to let inner div scroll fully */
-  border: none !important; /* Optional: remove border if it interferes */
-}
-
-.staticms-editor-fm-segment-yaml {
-  flex: 1;
-}
-
-.staticms-editor-fm-segment-md {
-  flex-shrink: 0;
-}
-
 .staticms-editor-pr-number {
   font-weight: normal !important;
   margin-left: 0.5em !important;
@@ -212,85 +186,6 @@
 }
 
 .staticms-editor-draft-description {
-  margin-top: 1em !important;
-}
-
-.staticms-editor-reset-container {
-  margin-top: 0.5em !important;
-  text-align: center;
-}
-
-.staticms-editor-reset-button {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #db2828 !important;
-}
-
-.staticms-fm-add-top-container {
-  text-align: right;
-  margin-bottom: 1em !important;
-}
-
-.staticms-fm-item-segment {
-  margin-bottom: 1em !important;
-}
-
-.staticms-fm-row {
-  padding-bottom: 0.5em !important;
-  padding-top: 0.5em !important;
-}
-
-.staticms-fm-delete-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.staticms-fm-delete-button {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #db2828 !important;
-  padding: 0 !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-.staticms-fm-trash-icon {
-  margin: 0 !important;
-}
-
-.staticms-fm-value-wrapper {
-  display: flex;
-  align-items: center;
-}
-
-.staticms-fm-value-wrapper .ui.input {
-  flex: 1;
-}
-
-.staticms-fm-delete-button-inline {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #db2828 !important;
-  padding: 0 0 0 0.25em !important;
-  margin: 0 !important;
-  flex-shrink: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: auto !important;
-  width: auto !important;
-}
-
-.staticms-fm-add-bottom-container {
-  text-align: right;
   margin-top: 1em !important;
 }
 

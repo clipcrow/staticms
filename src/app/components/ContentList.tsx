@@ -3,6 +3,7 @@ import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { getContentStatus } from "../hooks/utils.ts";
 import { ContentListItem } from "./ContentListItem.tsx";
+import { useAuth } from "../hooks/useAuth.ts";
 
 interface ContentListProps {
   contents: Content[];
@@ -22,6 +23,7 @@ export const ContentList: React.FC<ContentListProps> = ({
   loadingItemIndex,
 }) => {
   const [owner, repo] = selectedRepo.split("/");
+  const { username } = useAuth();
 
   return (
     <div className="ui container">
@@ -79,6 +81,7 @@ export const ContentList: React.FC<ContentListProps> = ({
                     item.branch,
                     item.filePath,
                     !!item.type?.startsWith("collection"),
+                    username || undefined,
                   )}
                   actions={
                     <button

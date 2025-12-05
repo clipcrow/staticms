@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Content, FileItem } from "../types.ts";
 import { getUsername } from "./utils.ts";
+import { useAuth } from "./useAuth.ts";
 
 export const useCollection = (contentConfig: Content | null): {
   files: FileItem[];
@@ -13,6 +14,7 @@ export const useCollection = (contentConfig: Content | null): {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { username } = useAuth();
 
   const [isCreating, setIsCreating] = useState(false);
 
@@ -74,7 +76,7 @@ export const useCollection = (contentConfig: Content | null): {
       }
 
       // Merge with drafts from localStorage
-      const user = getUsername();
+      const user = username || getUsername();
       const draftPrefix =
         `draft_${user}|${contentConfig.owner}|${contentConfig.repo}|${
           contentConfig.branch || ""
@@ -150,7 +152,7 @@ export const useCollection = (contentConfig: Content | null): {
     } finally {
       setLoading(false);
     }
-  }, [contentConfig]);
+  }, [contentConfig, username]);
 
   const createArticle = useCallback((newArticleName: string) => {
     if (!contentConfig) return;
@@ -196,7 +198,7 @@ export const useCollection = (contentConfig: Content | null): {
       }
 
       // Create draft in localStorage instead of creating file on GitHub
-      const user = getUsername();
+      const user = username || getUsername();
       const draftKey =
         `draft_${user}|${contentConfig.owner}|${contentConfig.repo}|${
           contentConfig.branch || ""
@@ -220,7 +222,7 @@ export const useCollection = (contentConfig: Content | null): {
     } finally {
       setIsCreating(false);
     }
-  }, [contentConfig, files]);
+  }, [contentConfig, files, username]);
 
   return { files, loading, error, fetchFiles, createArticle, isCreating };
 };

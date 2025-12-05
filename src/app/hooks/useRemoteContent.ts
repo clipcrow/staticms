@@ -21,7 +21,7 @@ export const useRemoteContent = () => {
   const loadContent = useCallback(
     async (
       content: Content,
-      getDraftKey: (c: Content) => string,
+      getDraftKey: (c: Content, u?: string) => string,
       setHasDraft: (has: boolean) => void,
       setDraftTimestamp: (ts: number | null) => void,
       setPrDescription: (desc: string) => void,
@@ -30,6 +30,7 @@ export const useRemoteContent = () => {
       // deno-lint-ignore no-explicit-any
       initialData?: any,
       onBackToCollection?: () => void,
+      username?: string,
     ) => {
       if (isReset) {
         setIsResetting(true);
@@ -120,7 +121,7 @@ export const useRemoteContent = () => {
         setInitialFrontMatter(parsedFM);
 
         // Check for local draft (which now includes PR URL)
-        const key = getDraftKey(content);
+        const key = getDraftKey(content, username);
         const savedDraft = localStorage.getItem(key);
 
         if (savedDraft) {

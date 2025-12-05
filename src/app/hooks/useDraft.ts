@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import jsyaml from "js-yaml";
 import { Content, FileItem, PrDetails } from "../types.ts";
 import { getDraft, getDraftKey } from "./utils.ts";
+import { useAuth } from "./useAuth.ts";
 
 export const useDraft = (
   currentContent: Content | null,
@@ -15,7 +16,7 @@ export const useDraft = (
   ) => void,
   loadContent: (
     content: Content,
-    getDraftKey: (c: Content) => string,
+    getDraftKey: (c: Content, u?: string) => string,
     setHasDraft: (has: boolean) => void,
     setDraftTimestamp: (ts: number | null) => void,
     setPrDescription: (desc: string) => void,
@@ -24,6 +25,7 @@ export const useDraft = (
     // deno-lint-ignore no-explicit-any
     initialData?: any,
     onBackToCollection?: () => void,
+    username?: string,
   ) => Promise<void>,
   onBackToCollection?: () => void,
 ) => {
@@ -42,6 +44,8 @@ export const useDraft = (
   // for Loading Indicators
   const [isSaving, setIsSaving] = useState(false);
   const [isResettingLocal, setIsResettingLocal] = useState(false);
+
+  const { username } = useAuth();
 
   // Derived State
   const isDirty = body !== initialBody ||
@@ -86,7 +90,7 @@ export const useDraft = (
     if (!isDraftLoaded || isResettingLocal) return;
 
     if (currentContent) {
-      const key = getDraftKey(currentContent);
+      const key = getDraftKey(currentContent, username || undefined);
 
       if (isDirty || prUrl) {
         const draft = {
@@ -102,7 +106,7 @@ export const useDraft = (
         setDraftTimestamp(draft.timestamp);
       } else {
         // Only remove if it's not a "created" status
-        const draft = getDraft(currentContent);
+        const draft = getDraft(currentContent, username || undefined);
         const isCreatedStatus = draft?.type === "created";
 
         if (!isCreatedStatus) {
@@ -129,6 +133,7 @@ export const useDraft = (
     prUrl,
     isDraftLoaded,
     isResettingLocal,
+    username,
   ]);
 
   // Load draft on mount (including pending images and PR URL)
@@ -139,7 +144,7 @@ export const useDraft = (
   // We handle pendingImages here.
   useEffect(() => {
     if (currentContent) {
-      const draft = getDraft(currentContent);
+      const draft = getDraft(currentContent, username || undefined);
       if (draft) {
         if (draft.pendingImages) {
           setPendingImages(draft.pendingImages);
@@ -154,7 +159,7 @@ export const useDraft = (
       }
       setIsDraftLoaded(true);
     }
-  }, [currentContent]);
+  }, [currentContent, username]);
 
   const clearDraft = useCallback(() => {
     // Reset local changes
@@ -290,7 +295,7 @@ export const useDraft = (
         // Manually save to localStorage to ensure loadContent picks it up
         // We mark it as "created" so loadContent knows to use the remote content (which we just updated)
         // but preserve the PR URL.
-        const key = getDraftKey(currentContent);
+        const key = getDraftKey(currentContent, username || undefined);
         const draft = {
           prUrl: data.prUrl,
           timestamp: Date.now(),
@@ -319,6 +324,8 @@ export const useDraft = (
           setPendingImages,
           true, // Treat as reset to force reload
           undefined, // initialData
+          onBackToCollection,
+          username || undefined,
         );
       } else {
         console.error("Failed to create PR: " + data.error);
@@ -344,7 +351,7 @@ export const useDraft = (
     // loadContent logic needs to be smart.
 
     // For now, let's assume resetContent clears everything including PR link if it's a hard reset.
-    const key = getDraftKey(currentContent);
+    const key = getDraftKey(currentContent, username || undefined);
     localStorage.removeItem(key);
 
     // Clear pending images state
@@ -360,6 +367,7 @@ export const useDraft = (
       true,
       undefined,
       onBackToCollection,
+      username || undefined,
     );
 
     setIsResettingLocal(false);
@@ -373,6 +381,7 @@ export const useDraft = (
     setPendingImages,
     setIsResettingLocal,
     onBackToCollection,
+    username,
   ]);
 
   // Check PR Status Effect

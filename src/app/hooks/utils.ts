@@ -1,20 +1,21 @@
 import { Content, Draft } from "../types.ts";
 
 // Retrieve the logged‑in username saved by useAuth (or empty string if not set)
+// Retrieve the logged‑in username saved by useAuth (or empty string if not set)
 export const getUsername = (): string => {
   return localStorage.getItem("staticms_user") ?? "";
 };
 
-export const getDraftKey = (content: Content) => {
-  const user = getUsername();
+export const getDraftKey = (content: Content, username?: string) => {
+  const user = username || getUsername();
   // Format: draft_<username>|<owner>|<repo>|<branch>|<filePath>
   return `draft_${user}|${content.owner}|${content.repo}|${
     content.branch || ""
   }|${content.filePath}`;
 };
 
-export const getDraft = (content: Content): Draft | null => {
-  const key = getDraftKey(content);
+export const getDraft = (content: Content, username?: string): Draft | null => {
+  const key = getDraftKey(content, username);
   const saved = localStorage.getItem(key);
   if (!saved) return null;
   try {
@@ -25,8 +26,12 @@ export const getDraft = (content: Content): Draft | null => {
   }
 };
 
-export const saveDraft = (content: Content, draft: Draft) => {
-  const key = getDraftKey(content);
+export const saveDraft = (
+  content: Content,
+  draft: Draft,
+  username?: string,
+) => {
+  const key = getDraftKey(content, username);
   localStorage.setItem(key, JSON.stringify(draft));
 };
 
@@ -58,14 +63,18 @@ const countByPrefix = (
   };
 };
 
-export const getRepoStatus = (owner: string, repo: string): ContentStatus => {
-  const username = getUsername();
-  if (!username) {
+export const getRepoStatus = (
+  owner: string,
+  repo: string,
+  username?: string,
+): ContentStatus => {
+  const user = username || getUsername();
+  if (!user) {
     return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
   }
 
-  const draftPrefix = `draft_${username}|${owner}|${repo}|`;
-  const prPrefix = `pr_${username}|${owner}|${repo}|`;
+  const draftPrefix = `draft_${user}|${owner}|${repo}|`;
+  const prPrefix = `pr_${user}|${owner}|${repo}|`;
 
   return countByPrefix(draftPrefix, prPrefix);
 };
@@ -76,15 +85,16 @@ export const getContentStatus = (
   branch: string | undefined,
   path: string,
   isCollection: boolean,
+  username?: string,
 ): ContentStatus => {
-  const username = getUsername();
-  if (!username) {
+  const user = username || getUsername();
+  if (!user) {
     return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
   }
 
   const prefixBase = `${owner}|${repo}|${branch || ""}|${path}`;
-  const draftPrefix = `draft_${username}|${prefixBase}`;
-  const prPrefix = `pr_${username}|${prefixBase}`;
+  const draftPrefix = `draft_${user}|${prefixBase}`;
+  const prPrefix = `pr_${user}|${prefixBase}`;
 
   if (isCollection) {
     // Collection (directory): check for prefix + "/"

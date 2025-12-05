@@ -21,11 +21,11 @@ export const ContentHistory: React.FC<ContentHistoryProps> = ({
                 <a href={commit.html_url} target="_blank" rel="noreferrer">
                   {commit.message}
                 </a>
-                <div className="date">
-                  {new Date(commit.date).toLocaleDateString()}
-                </div>
               </div>
               <div className="meta">
+                <span className="date">
+                  {new Date(commit.date).toLocaleDateString()}
+                </span>{" "}
                 by {commit.author}
               </div>
             </div>
