@@ -1,5 +1,5 @@
 import React from "react";
-import { Content } from "../types.ts";
+import { Content, Field } from "../types.ts";
 import { FrontMatterItemPanel } from "./FrontMatterItemPanel.tsx";
 
 interface FrontMatterListEditorProps {
@@ -41,10 +41,18 @@ export const FrontMatterListEditor: React.FC<FrontMatterListEditorProps> = ({
     setDraggedItemIndex(null);
   };
 
-  const handleUpdateItem = (
+  const handleUpdateFields = (
     index: number,
-    newItem: Record<string, unknown>,
+    newFields: Field[],
   ) => {
+    const newItem = newFields.reduce(
+      (acc, field) => ({
+        ...acc,
+        [field.name]: field.value,
+      }),
+      {} as Record<string, unknown>,
+    );
+
     const newFrontMatter = [...frontMatter];
     newFrontMatter[index] = newItem;
     setFrontMatter(newFrontMatter);
@@ -86,7 +94,10 @@ export const FrontMatterListEditor: React.FC<FrontMatterListEditorProps> = ({
         {frontMatter.map((item, itemIndex) => (
           <FrontMatterItemPanel
             key={itemIndex}
-            item={item}
+            fields={Object.entries(item).map(([name, value]) => ({
+              name,
+              value: String(value || ""),
+            }))}
             itemIndex={itemIndex}
             currentContent={currentContent}
             isPrLocked={isPrLocked}
@@ -94,7 +105,7 @@ export const FrontMatterListEditor: React.FC<FrontMatterListEditorProps> = ({
             onDragStart={handleDragStart}
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
-            onUpdateItem={handleUpdateItem}
+            onUpdateFields={handleUpdateFields}
             onDeleteItem={handleDeleteItem}
           />
         ))}

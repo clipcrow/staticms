@@ -1,5 +1,5 @@
 import React from "react";
-import { Content } from "../types.ts";
+import { Content, Field } from "../types.ts";
 import { FrontMatterItemPanel } from "./FrontMatterItemPanel.tsx";
 
 interface FrontMatterEditorProps {
@@ -15,21 +15,33 @@ export const FrontMatterItemEditor: React.FC<FrontMatterEditorProps> = ({
   currentContent,
   isPrLocked,
 }) => {
-  const handleUpdateItem = (
+  const fields: Field[] = Object.entries(frontMatter).map(([name, value]) => ({
+    name,
+    value: String(value || ""),
+  }));
+
+  const handleUpdateFields = (
     _index: number,
-    newItem: Record<string, unknown>,
+    newFields: Field[],
   ) => {
-    setFrontMatter(newItem);
+    const newFrontMatter = newFields.reduce(
+      (acc, field) => ({
+        ...acc,
+        [field.name]: field.value,
+      }),
+      {} as Record<string, unknown>,
+    );
+    setFrontMatter(newFrontMatter);
   };
 
   return (
     <div className="ui form">
       <FrontMatterItemPanel
-        item={frontMatter}
+        fields={fields}
         itemIndex={0}
         currentContent={currentContent}
         isPrLocked={isPrLocked}
-        onUpdateItem={handleUpdateItem}
+        onUpdateFields={handleUpdateFields}
       />
     </div>
   );

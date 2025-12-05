@@ -224,22 +224,20 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           <div className="field">
             <label>Front Matter</label>
             <FrontMatterItemPanel
-              item={formData.fields.reduce(
-                (acc, field) => ({
-                  ...acc,
-                  [field.name]: field.defaultValue || "",
-                }),
-                {} as Record<string, unknown>,
-              )}
+              fields={formData.fields.map((f) => ({
+                ...f,
+                value: f.defaultValue || "",
+              }))}
               itemIndex={0}
               currentContent={{ ...formData, fields: [] }}
               isPrLocked={loading}
-              onUpdateItem={(_index, newItem) => {
-                const newFields = Object.keys(newItem).map((name) => ({
-                  name,
-                  defaultValue: newItem[name] as string,
+              onUpdateFields={(_index, newFields) => {
+                const updatedFields = newFields.map((f) => ({
+                  ...f,
+                  defaultValue: f.value,
+                  value: "",
                 }));
-                setFormData({ ...formData, fields: newFields });
+                setFormData({ ...formData, fields: updatedFields });
               }}
               editableKeys
               disableValues={formData.type === "singleton-file" ||

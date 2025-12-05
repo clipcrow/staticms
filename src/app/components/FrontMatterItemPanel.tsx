@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Content } from "../types.ts";
+import { Content, Field } from "../types.ts";
 
 interface FrontMatterItemPanelProps {
-  item: Record<string, unknown>;
+  fields: Field[];
   itemIndex: number;
   currentContent: Content;
   isPrLocked: boolean;
@@ -10,7 +10,7 @@ interface FrontMatterItemPanelProps {
   onDragStart?: (index: number) => void;
   onDragOver?: (index: number) => void;
   onDragEnd?: () => void;
-  onUpdateItem: (index: number, newItem: Record<string, unknown>) => void;
+  onUpdateFields: (index: number, newFields: Field[]) => void;
   onDeleteItem?: (index: number) => void;
   editableKeys?: boolean;
   disableValues?: boolean;
@@ -18,7 +18,7 @@ interface FrontMatterItemPanelProps {
 }
 
 export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
-  item,
+  fields,
   itemIndex,
   currentContent,
   isPrLocked,
@@ -26,7 +26,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
   onDragStart,
   onDragOver,
   onDragEnd,
-  onUpdateItem,
+  onUpdateFields,
   onDeleteItem,
   editableKeys = false,
   disableValues = false,
@@ -34,37 +34,48 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
 }) => {
   const [newFieldName, setNewFieldName] = useState("");
 
-  const configuredKeys = currentContent.fields?.map((f) => f.name) || [];
-  const itemKeys = Object.keys(item);
-  const unconfiguredKeys = itemKeys.filter((k) => !configuredKeys.includes(k));
+  const configuredFieldNames = currentContent.fields?.map((f) => f.name) || [];
+  const unconfiguredFields = fields.filter((f) =>
+    !configuredFieldNames.includes(f.name)
+  );
+
+  // Create a map for easy access to values of configured fields
+  const fieldMap = new Map(fields.map((f) => [f.name, f]));
 
   const handleAddField = () => {
     if (!newFieldName || !newFieldName.trim()) return;
-    const newItem = {
-      ...item,
-      [newFieldName]: "",
+    const newField: Field = {
+      name: newFieldName,
+      value: "",
     };
-    onUpdateItem(itemIndex, newItem);
+    onUpdateFields(itemIndex, [...fields, newField]);
     setNewFieldName("");
   };
 
-  const handleDeleteField = (key: string) => {
-    const newItem = { ...item };
-    delete newItem[key];
-    onUpdateItem(itemIndex, newItem);
+  const handleDeleteField = (name: string) => {
+    const newFields = fields.filter((f) => f.name !== name);
+    onUpdateFields(itemIndex, newFields);
   };
 
-  const handleRenameField = (oldKey: string, newKey: string) => {
-    if (oldKey === newKey) return;
-    const newItem: Record<string, unknown> = {};
-    Object.keys(item).forEach((key) => {
-      if (key === oldKey) {
-        newItem[newKey] = item[oldKey];
-      } else {
-        newItem[key] = item[key];
-      }
-    });
-    onUpdateItem(itemIndex, newItem);
+  const handleRenameField = (oldName: string, newName: string) => {
+    if (oldName === newName) return;
+    const newFields = fields.map((f) =>
+      f.name === oldName ? { ...f, name: newName } : f
+    );
+    onUpdateFields(itemIndex, newFields);
+  };
+
+  const handleUpdateValue = (name: string, value: string) => {
+    const existingField = fields.find((f) => f.name === name);
+    let newFields;
+    if (existingField) {
+      newFields = fields.map((f) => f.name === name ? { ...f, value } : f);
+    } else {
+      // Should not happen for configured fields if they are initialized properly,
+      // but if a configured field is missing from 'fields', we add it.
+      newFields = [...fields, { name, value }];
+    }
+    onUpdateFields(itemIndex, newFields);
   };
 
   const isDraggable = Boolean(
@@ -88,41 +99,40 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
     >
       <div className="ui grid middle aligned">
         {/* Configured Fields */}
-        {currentContent.fields?.map((field, index) => (
-          <div
-            key={`configured-${itemIndex}-${index}`}
-            className="row staticms-fm-row"
-          >
-            <div className="four wide column">
-              <strong>{field.name}</strong>
-            </div>
-            <div className="twelve wide column">
-              <div className="ui input fluid">
-                <input
-                  type="text"
-                  value={(item[field.name] as string) || ""}
-                  onChange={(e) => {
-                    const newItem = {
-                      ...item,
-                      [field.name]: e.target.value,
-                    };
-                    onUpdateItem(itemIndex, newItem);
-                  }}
-                  readOnly={isPrLocked || disableValues}
-                  disabled={isPrLocked || disableValues}
-                  placeholder={disableValues
-                    ? "Value will be set in editor"
-                    : valuePlaceholder || ""}
-                />
+        {currentContent.fields?.map((configField, index) => {
+          const field = fieldMap.get(configField.name) ||
+            { name: configField.name, value: "" };
+          return (
+            <div
+              key={`configured-${itemIndex}-${index}`}
+              className="row staticms-fm-row"
+            >
+              <div className="four wide column">
+                <strong>{configField.name}</strong>
+              </div>
+              <div className="twelve wide column">
+                <div className="ui input fluid">
+                  <input
+                    type="text"
+                    value={field.value}
+                    onChange={(e) =>
+                      handleUpdateValue(field.name, e.target.value)}
+                    readOnly={isPrLocked || disableValues}
+                    disabled={isPrLocked || disableValues}
+                    placeholder={disableValues
+                      ? "Value will be set in editor"
+                      : valuePlaceholder || ""}
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Unconfigured Fields */}
-        {unconfiguredKeys.map((key) => (
+        {unconfiguredFields.map((field) => (
           <div
-            key={`unconfigured-${itemIndex}-${key}`}
+            key={`unconfigured-${itemIndex}-${field.name}`}
             className="row staticms-fm-row"
           >
             <div className="four wide column">
@@ -131,13 +141,14 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                   <div className="ui input fluid">
                     <input
                       type="text"
-                      value={key}
-                      onChange={(e) => handleRenameField(key, e.target.value)}
+                      value={field.name}
+                      onChange={(e) =>
+                        handleRenameField(field.name, e.target.value)}
                       disabled={isPrLocked}
                     />
                   </div>
                 )
-                : <strong>{key}</strong>}
+                : <strong>{field.name}</strong>}
             </div>
             <div className="twelve wide column">
               <div className="staticms-fm-value-wrapper">
@@ -148,14 +159,9 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                 >
                   <input
                     type="text"
-                    value={(item[key] as string) || ""}
-                    onChange={(e) => {
-                      const newItem = {
-                        ...item,
-                        [key]: e.target.value,
-                      };
-                      onUpdateItem(itemIndex, newItem);
-                    }}
+                    value={field.value}
+                    onChange={(e) =>
+                      handleUpdateValue(field.name, e.target.value)}
                     readOnly={isPrLocked || disableValues}
                     disabled={isPrLocked || disableValues}
                     placeholder={disableValues
@@ -166,7 +172,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                 <button
                   type="button"
                   className="ui red icon button staticms-fm-delete-button-inline"
-                  onClick={() => handleDeleteField(key)}
+                  onClick={() => handleDeleteField(field.name)}
                   disabled={isPrLocked}
                   title="Delete Field"
                 >

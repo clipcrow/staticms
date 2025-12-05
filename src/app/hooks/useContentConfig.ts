@@ -1,4 +1,4 @@
-import { Content } from "../types.ts";
+import { Content, Field } from "../types.ts";
 import { useCallback, useEffect, useState } from "react";
 
 export const useContentConfig = () => {
@@ -16,7 +16,10 @@ export const useContentConfig = () => {
           // Ensure fields array exists for older configs
           const contentsWithFields = data.contents.map((c: Content) => ({
             ...c,
-            fields: c.fields || [],
+            fields: (c.fields || []).map((f: Partial<Field>) => ({
+              ...f,
+              value: f.value || "",
+            })),
             type: c.type || "singleton-file",
           }));
           setContents(contentsWithFields);
