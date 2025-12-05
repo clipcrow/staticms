@@ -99,14 +99,32 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         encodeURIComponent(currentContent.collectionPath || "")
       }`,
     });
+    let label = currentContent.name;
+    if (!label) {
+      const parts = currentContent.filePath.split("/");
+      const fileName = parts.pop() || "";
+
+      if (currentContent.type === "singleton-dir" && fileName === "index.md") {
+        label = parts.pop() || "";
+      } else {
+        label = fileName;
+      }
+    }
     breadcrumbs.push({
-      label: currentContent.name ||
-        currentContent.filePath.split("/").pop() ||
-        "",
+      label,
     });
   } else {
+    let label = currentContent.name;
+    if (!label) {
+      label = currentContent.filePath;
+      if (
+        currentContent.type === "singleton-dir" && label.endsWith("/index.md")
+      ) {
+        label = label.slice(0, -8);
+      }
+    }
     breadcrumbs.push({
-      label: currentContent.name || currentContent.filePath,
+      label,
     });
   }
 

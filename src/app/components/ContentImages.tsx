@@ -144,7 +144,25 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
         style={{ padding: 0, marginBottom: "2em" }}
       >
         <h4 className="ui header">Images Nearby</h4>
-        <div className="ui message info">No images found.</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.5em",
+            backgroundColor: "#fafafa",
+            borderRadius: "4px",
+            color: "#999",
+            marginBottom: "1em",
+            border: "1px solid #eee",
+          }}
+        >
+          <i
+            className="image outline icon"
+            style={{ marginRight: "0.5em", fontSize: "1.2em" }}
+          ></i>
+          <span>No images found nearby</span>
+        </div>
         <input
           type="file"
           ref={fileInputRef}
