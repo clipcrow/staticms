@@ -216,3 +216,53 @@ Staticms
 | :--------------------- | :-------------------- | :------------------------------ | :-------------------------------------------------------------------- | :----------------------------- |
 | `sessions/<sessionId>` | GitHub Access Token   | ログイン成功時 (Callback)       | ログアウト時 (`deleteSession`)、または TTL (1週間) 経過による自動削除 | セッションIDとトークンの紐付け |
 | `config`               | コンテンツ設定 (JSON) | 設定保存時 (`POST /api/config`) | 明示的な破棄なし (上書き更新)                                         | 全ユーザー共有の設定           |
+
+## 8. `localStorage` 内の `staticms_user`
+
+`localStorage` の `staticms_user`
+キーには、現在認証されているユーザーのユーザー名が保存されます。これは、ローカルドラフトやその他のユーザー固有データを名前空間で区切り、複数のユーザーが同じブラウザを使用した場合の競合を防ぐために重要です。
+
+### ライフサイクル (Lifecycle)
+
+#### 1. 作成と更新 (ログイン/認証チェック)
+
+- **場所:** `src/app/hooks/useAuth.ts`
+- **トリガー:**
+  - アプリの初期化時 (`useAuth` 内の `useEffect` 経由)。
+  - 手動の認証チェック時 (`checkAuth` 経由)。
+- **プロセス:**
+  1. アプリが `/api/user` からユーザープロファイルを取得します。
+  2. リクエストが成功 (`200 OK`) した場合、レスポンスの JSON をパースします。
+  3. `login` または `username` フィールドからユーザー名を抽出します。
+  4. 有効なユーザー名が見つかった場合、それを `localStorage` に保存します:
+     ```typescript
+     localStorage.setItem("staticms_user", login);
+     ```
+
+#### 2. 読み取り (使用)
+
+- **場所:** `src/app/hooks/utils.ts`
+- **関数:** `getUsername()`
+- **プロセス:**
+  - 値を取得します: `localStorage.getItem("staticms_user")`。
+  - 設定されていない場合は、ユーザー名または空文字を返します。
+- **利用者 (Consumers):**
+  - `getDraftKey(content)`:
+    ユーザー名を使用して、ドラフトを保存するための一意のキーを生成します (例:
+    `draft_username|owner|repo|...`)。
+  - `getRepoStatus(owner, repo)`:
+    ユーザー名を使用して、リポジトリリストのドラフト/PRカウントをフィルタリングします。
+  - `getContentStatus(...)`:
+    ユーザー名を使用して、特定のファイルまたはコレクションのドラフト/PRを確認します。
+
+#### 3. 削除 (ログアウト/認証失敗)
+
+- **場所:** `src/app/hooks/useAuth.ts`
+- **トリガー:**
+  - 認証チェックが失敗した場合 (例: `/api/user` からの `401 Unauthorized`
+    レスポンス)。
+- **プロセス:**
+  - 古いユーザーデータが残らないようにキーを削除します:
+    ```typescript
+    localStorage.removeItem("staticms_user");
+    ```

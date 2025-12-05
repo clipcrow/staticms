@@ -736,12 +736,16 @@ router.post("/api/content", async (ctx) => {
         console.log(`[POST /api/content] Branch ${baseBranch} exists.`);
       } catch (e) {
         const errorMessage = (e as Error).message;
-        console.log(
-          `[POST /api/content] Branch check error: ${errorMessage}`,
-        );
-        if (
-          errorMessage.includes("404") || errorMessage.includes("Not Found")
-        ) {
+        const is404 = errorMessage.includes("404") ||
+          errorMessage.includes("Not Found");
+
+        if (!is404) {
+          console.log(
+            `[POST /api/content] Branch check error: ${errorMessage}`,
+          );
+        }
+
+        if (is404) {
           console.log(`Base branch ${baseBranch} not found. Creating...`);
           try {
             const repoData = await githubRequest(
@@ -865,10 +869,15 @@ router.post("/api/content", async (ctx) => {
           );
           imgSha = imgRes.sha;
         } catch (e) {
+          const errorMessage = (e as Error).message;
           // Image doesn't exist, that's fine. But log it just in case it's not a 404.
-          console.log(
-            `[POST /api/content] Image check failed (likely new): ${e}`,
-          );
+          if (
+            !errorMessage.includes("404") && !errorMessage.includes("Not Found")
+          ) {
+            console.log(
+              `[POST /api/content] Image check failed (likely new): ${e}`,
+            );
+          }
         }
 
         await githubRequest(
