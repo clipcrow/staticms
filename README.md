@@ -1,7 +1,7 @@
 # Staticms
 
 **Staticms** は、GitHubの自分のリポジトリをストレージとするヘッドレスCMSです。
-DenoとReactで構築されており、GitHub
+[Deno](https://deno.land/)と[React](https://react.dev/)で構築されており、GitHub
 Appとして動作することで、リポジトリ内のMarkdownやYAMLファイルを直感的なUIで編集・管理できます。
 
 ## 特徴
@@ -14,12 +14,14 @@ Appとして動作することで、リポジトリ内のMarkdownやYAMLファ�
   Requestとして作成されるため、レビュープロセスに自然に組み込めます。
 - **柔軟な設定**:
   フロントマターのスキーマを自由に定義でき、様々な静的サイトジェネレーター（Hugo,
-  Jekyll, Next.jsなど。そしてLume！）に対応可能です。
+  Jekyll, Next.jsなど。そして[Lume](https://lume.land/)！）に対応可能です。
 - **GitHub App認証**: セキュアな認証と、細かい権限管理が可能です。
 - **ローカル下書き保存**:
   編集中の内容はブラウザのローカルストレージに自動保存され、誤ってタブを閉じても作業を再開できます。
 - **コミット履歴**:
   ファイルの変更履歴（コミットログ）をエディタ内で確認できます。
+- **GitHub風のUI**:
+  GitHubのUIを模して、直感的な操作が可能です。デザインは似た感じの[Semantic-UI](https://semantic-ui.com/)を利用しています。
 
 ## 詳細な操作手順
 
@@ -81,7 +83,7 @@ Appとして動作することで、リポジトリ内のMarkdownやYAMLファ�
     - **YAMLリスト編集**:
       ルートが配列のYAMLファイル（Singleton）を開いた場合は、アイテムを追加・削除できるリストエディタが表示されます。1つのファイル内に複数のデータ定義を列挙する場合に使用します。
   - **Markdown Body**:
-    本文をMarkdown形式で記述します。リアルタイムプレビューが可能です。
+    本文をMarkdown形式で記述します。リアルタイムプレビューが可能です。[react-md-editor](https://github.com/uiwjs/react-md-editor)を利用しています。
 - **右ペイン（情報・ツール）**:
   - **Draft / PR Status**: プルリクエストの作成やステータス確認ができます。
   - **Images Nearby**:

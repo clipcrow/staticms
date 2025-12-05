@@ -1,7 +1,7 @@
 {
   "lock": false,
   "tasks": {
-    "build": "deno run -A build.ts",
+    "build": "deno bundle src/app/App.tsx --output public/js/bundle.js",
     "serve": "deno run --unstable-kv --allow-net --allow-read --allow-write --allow-env serve.ts"
   },
   "compilerOptions": {
@@ -17,8 +17,6 @@
     "types": ["@types/react", "@types/react-dom"]
   },
   "imports": {
-    "esbuild": "https://deno.land/x/esbuild@v0.20.2/mod.js",
-    "esbuild_deno_loader": "jsr:@luca/esbuild-deno-loader@^0.10.3",
     "@oak/oak": "jsr:@oak/oak@^17.2.0",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.5",
     "@std/path": "jsr:@std/path@^1.1.3",
