@@ -30,7 +30,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
     try {
       const path = createArticle(newArticleName);
       if (path) {
-        onSelectArticle(path);
+        onSelectArticle(decodeURIComponent(path));
       }
     } catch (e) {
       console.error(e);
@@ -62,7 +62,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     onChange={(e) => setNewArticleName(e.target.value)}
                     disabled={isCreating}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                         handleCreateArticle();
                       }
                     }}
@@ -146,9 +146,11 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                       contentConfig.type === "collection-dirs" &&
                       file.type === "dir"
                     ) {
-                      await onSelectArticle(`${file.path}/index.md`);
+                      await onSelectArticle(
+                        decodeURIComponent(`${file.path}/index.md`),
+                      );
                     } else {
-                      await onSelectArticle(file.path);
+                      await onSelectArticle(decodeURIComponent(file.path));
                     }
                   } finally {
                     setLoadingPath(null);

@@ -105,9 +105,12 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
       const fileName = parts.pop() || "";
 
       if (currentContent.type === "singleton-dir" && fileName === "index.md") {
-        label = parts.pop() || "";
+        label = decodeURIComponent(parts.pop() || "");
       } else {
-        label = fileName;
+        label = decodeURIComponent(fileName);
+        if (label.endsWith(".md")) {
+          label = label.slice(0, -3);
+        }
       }
     }
     breadcrumbs.push({

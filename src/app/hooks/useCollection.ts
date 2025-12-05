@@ -47,14 +47,27 @@ export const useCollection = (contentConfig: Content | null): {
       if (data.type === "dir" && Array.isArray(data.files)) {
         if (contentConfig.type === "collection-files") {
           // Filter for .md files only, exclude directories
-          fetchedFiles = data.files.filter((f: FileItem) =>
-            f.type === "file" && f.name.endsWith(".md")
-          );
+          fetchedFiles = data.files
+            .filter((f: FileItem) =>
+              f.type === "file" && f.name.endsWith(".md")
+            )
+            .map((f: FileItem) => ({
+              ...f,
+              name: decodeURIComponent(f.name),
+            }));
         } else if (contentConfig.type === "collection-dirs") {
           // Filter for directories only
-          fetchedFiles = data.files.filter((f: FileItem) => f.type === "dir");
+          fetchedFiles = data.files
+            .filter((f: FileItem) => f.type === "dir")
+            .map((f: FileItem) => ({
+              ...f,
+              name: decodeURIComponent(f.name),
+            }));
         } else {
-          fetchedFiles = data.files;
+          fetchedFiles = data.files.map((f: FileItem) => ({
+            ...f,
+            name: decodeURIComponent(f.name),
+          }));
         }
       } else {
         setError("Not a directory or empty");
@@ -87,7 +100,7 @@ export const useCollection = (contentConfig: Content | null): {
           if (contentConfig.type === "collection-files") {
             // Expecting "filename.md"
             if (!relativePath.includes("/")) {
-              name = relativePath;
+              name = decodeURIComponent(relativePath);
               type = "file";
               isValidDraft = true;
             }
@@ -95,7 +108,7 @@ export const useCollection = (contentConfig: Content | null): {
             // Expecting "dirname/index.md"
             const parts = relativePath.split("/");
             if (parts.length === 2 && parts[1] === "index.md") {
-              name = parts[0];
+              name = decodeURIComponent(parts[0]);
               type = "dir";
               isValidDraft = true;
             }
@@ -143,13 +156,6 @@ export const useCollection = (contentConfig: Content | null): {
     if (!contentConfig) return;
     if (!newArticleName.trim()) return;
 
-    // Basic validation for file/folder name
-    if (!/^[a-zA-Z0-9-_]+$/.test(newArticleName)) {
-      throw new Error(
-        "Article name can only contain letters, numbers, hyphens, and underscores.",
-      );
-    }
-
     // Check for duplicates
     const duplicate = files.some((f) => {
       if (contentConfig.type === "collection-files") {
@@ -176,15 +182,15 @@ export const useCollection = (contentConfig: Content | null): {
         basePath = basePath.substring(0, basePath.length - 1);
       }
 
+      const encodedName = encodeURIComponent(newArticleName);
+
       let path = "";
       if (contentConfig.type === "collection-files") {
-        path = basePath
-          ? `${basePath}/${newArticleName}.md`
-          : `${newArticleName}.md`;
+        path = basePath ? `${basePath}/${encodedName}.md` : `${encodedName}.md`;
       } else if (contentConfig.type === "collection-dirs") {
         path = basePath
-          ? `${basePath}/${newArticleName}/index.md`
-          : `${newArticleName}/index.md`;
+          ? `${basePath}/${encodedName}/index.md`
+          : `${encodedName}/index.md`;
       } else {
         throw new Error("Invalid content type for article creation");
       }

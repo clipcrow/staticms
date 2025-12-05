@@ -55,13 +55,30 @@ export const ArticleEditorRoute: React.FC = () => {
     return <div>Invalid Article ID</div>;
   }
 
-  const decodedArticlePath = decodeURIComponent(articleId);
-
   // Reconstruct full path
-  let fullPath = decodedArticlePath;
+  // We re-encode the articleId because the file on disk is expected to be URL encoded
+  // while react-router decodes the params.
+  let encodedArticlePath = "";
+
+  if (
+    currentContent.type === "collection-dirs" &&
+    articleId.endsWith("/index.md")
+  ) {
+    // For collection-dirs, we expect "dirname/index.md".
+    // We want to encode "dirname" but keep "/index.md" as is,
+    // so that ContentEditor can recognize it as an index file.
+    const dirName = articleId.slice(0, -9);
+    encodedArticlePath = `${encodeURIComponent(dirName)}/index.md`;
+  } else {
+    // For collection-files or other cases, the whole articleId is the filename (including extension).
+    // We encode the whole thing to handle special characters (including slashes) in the filename.
+    encodedArticlePath = encodeURIComponent(articleId);
+  }
+
+  let fullPath = encodedArticlePath;
   if (decodedPath) {
     const prefix = decodedPath.endsWith("/") ? decodedPath : `${decodedPath}/`;
-    fullPath = `${prefix}${decodedArticlePath}`;
+    fullPath = `${prefix}${encodedArticlePath}`;
   }
 
   // Construct a virtual content object for the article
