@@ -21,8 +21,10 @@ export const useAuth = () => {
           "[useAuth] Auth check failed with status:",
           userRes.status,
         );
-        localStorage.removeItem("staticms_user");
-        setIsAuthenticated(false);
+        if (userRes.status === 401 || userRes.status === 403) {
+          localStorage.removeItem("staticms_user");
+          setIsAuthenticated(false);
+        }
       }
     } catch (e) {
       console.error("[useAuth] Auth check error", e);
