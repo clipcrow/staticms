@@ -26,6 +26,21 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+
+      // Check for duplicates
+      const isDuplicate = [...images, ...pendingImages].some(
+        (img) => img.name === file.name,
+      );
+
+      if (isDuplicate) {
+        alert("An image with this name already exists.");
+        // Reset input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result as string;
@@ -160,7 +175,8 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
           <i
             className="image outline icon"
             style={{ marginRight: "0.5em", fontSize: "1.2em" }}
-          ></i>
+          >
+          </i>
           <span>No images found nearby</span>
         </div>
         <input
