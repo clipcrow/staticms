@@ -137,8 +137,8 @@ export const useRemoteContent = () => {
               setHasDraft(true);
               setDraftTimestamp(draft.timestamp);
               setPrDescription(draft.description || "");
-              setBody(parsedBody); // Should be empty for new file
-              setFrontMatter(parsedFM); // Should be empty for new file
+              setBody(draft.body || parsedBody); // Use draft body (archetype) if available
+              setFrontMatter(draft.frontMatter || parsedFM); // Use draft FM if available
             } else {
               // Restore from draft
               setBody(draft.body);

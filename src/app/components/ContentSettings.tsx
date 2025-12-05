@@ -2,6 +2,7 @@ import React from "react";
 import { Content } from "../types.ts";
 import { Header } from "./Header.tsx";
 import { FrontMatterItemPanel } from "./FrontMatterItemPanel.tsx";
+import { MarkdownEditor } from "./MarkdownEditor.tsx";
 
 interface ContentSettingsProps {
   formData: Content;
@@ -111,8 +112,8 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
         ]}
       />
 
-      <form onSubmit={onSave} className="ui form">
-        <div className="ui segment">
+      <form onSubmit={onSave}>
+        <div className="ui segment ui form">
           <div className="field">
             <label>Content Name (Optional)</label>
             <input
@@ -220,34 +221,64 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
           </div>
         </div>
 
-        <div className="field">
-          <label>Front Matter Template</label>
-          <FrontMatterItemPanel
-            fields={formData.fields.map((f) => ({
-              ...f,
-              value: f.defaultValue || "",
-            }))}
-            itemIndex={0}
-            currentContent={{ ...formData, fields: [] }}
-            isPrLocked={loading}
-            onUpdateFields={(_index, newFields) => {
-              const updatedFields = newFields.map((f) => ({
+        <div className="ui segment ui form">
+          <div className="field">
+            <label>Front Matter Template</label>
+            <FrontMatterItemPanel
+              fields={formData.fields.map((f) => ({
                 ...f,
-                defaultValue: f.value,
-                value: "",
-              }));
-              setFormData({ ...formData, fields: updatedFields });
-            }}
-            editableKeys
-            disableValues={formData.type === "singleton-file" ||
-              !formData.type}
-            valuePlaceholder={formData.type === "collection-files" ||
-                formData.type === "collection-dirs"
-              ? "Default value for new articles"
-              : undefined}
-          />
+                value: f.defaultValue || "",
+              }))}
+              itemIndex={0}
+              currentContent={{ ...formData, fields: [] }}
+              isPrLocked={loading}
+              onUpdateFields={(_index, newFields) => {
+                const updatedFields = newFields.map((f) => ({
+                  ...f,
+                  defaultValue: f.value,
+                  value: "",
+                }));
+                setFormData({ ...formData, fields: updatedFields });
+              }}
+              editableKeys
+              disableValues={formData.type === "singleton-file" ||
+                !formData.type}
+              valuePlaceholder={formData.type === "collection-files" ||
+                  formData.type === "collection-dirs"
+                ? "Default value for new articles"
+                : undefined}
+            />
+          </div>
         </div>
 
+        {uiType === "collection" && (
+          <div style={{ marginTop: "1em" }}>
+            <label
+              style={{
+                fontWeight: "bold",
+                display: "block",
+                marginBottom: "0.5em",
+              }}
+            >
+              Archetype
+            </label>
+            <div style={{ border: "1px solid #ddd", borderRadius: "4px" }}>
+              <MarkdownEditor
+                body={formData.archetype || ""}
+                setBody={(val) => setFormData({ ...formData, archetype: val })}
+                isPrLocked={loading}
+                currentContent={formData}
+                height={200}
+              />
+            </div>
+            <small
+              className="staticms-settings-help-text"
+              style={{ display: "block", marginTop: "0.5em" }}
+            >
+              Default markdown content for new articles.
+            </small>
+          </div>
+        )}
         <div className="actions">
           <button
             type="button"

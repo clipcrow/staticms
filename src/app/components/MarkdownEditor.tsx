@@ -10,6 +10,7 @@ interface MarkdownEditorProps {
   setBody: (body: string) => void;
   isPrLocked: boolean;
   currentContent: Content;
+  height?: number;
 }
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -17,6 +18,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   setBody,
   isPrLocked,
   currentContent,
+  height = 600,
 }) => {
   const resolveImageSrc = (src: string) => {
     if (!src || src.startsWith("http") || src.startsWith("data:")) {
@@ -69,6 +71,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     <>
       {/* @ts-ignore: MDEditor type compatibility issue with Deno/React 19 */}
       <MDEditor
+        data-color-mode="light"
         value={body}
         onChange={(val: string | undefined) =>
           !isPrLocked && setBody(val || "")}
@@ -91,7 +94,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
             ),
           },
         }}
-        height={600}
+        height={height}
         visibleDragbar={!isPrLocked}
         hideToolbar={isPrLocked}
       />

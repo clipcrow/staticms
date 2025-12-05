@@ -18,6 +18,7 @@ export interface Content {
   fields: Field[];
   collectionName?: string;
   collectionPath?: string;
+  archetype?: string;
 }
 
 export interface Config {

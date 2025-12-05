@@ -210,7 +210,7 @@ export const useCollection = (contentConfig: Content | null): {
       }, {} as Record<string, unknown>);
 
       const draftData = {
-        body: "",
+        body: contentConfig.archetype || "",
         frontMatter: initialFrontMatter,
         prDescription: `Create article ${newArticleName}`,
         timestamp: Date.now(),

@@ -297,6 +297,8 @@ export const useDraft = (
         // but preserve the PR URL.
         const key = getDraftKey(currentContent, username || undefined);
         const draft = {
+          body,
+          frontMatter,
           prUrl: data.prUrl,
           timestamp: Date.now(),
           type: "created",
@@ -324,7 +326,7 @@ export const useDraft = (
           setPendingImages,
           true, // Treat as reset to force reload
           undefined, // initialData
-          onBackToCollection,
+          undefined, // onBackToCollection - Do not navigate back on 404 as we have a PR
           username || undefined,
         );
       } else {
