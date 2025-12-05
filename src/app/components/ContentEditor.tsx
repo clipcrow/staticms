@@ -67,6 +67,89 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
   const isYaml = currentContent.filePath.endsWith(".yaml") ||
     currentContent.filePath.endsWith(".yml");
 
+  const [nearbyImages, setNearbyImages] = React.useState<FileItem[]>([]);
+
+  const handleAddImage = (file: File) => {
+    // Check for duplicates
+    const isDuplicate = [...nearbyImages, ...pendingImages].some(
+      (img) => img.name === file.name,
+    );
+
+    if (isDuplicate) {
+      alert("An image with this name already exists.");
+      return null;
+    }
+
+    const reader = new FileReader();
+    return new Promise<string | null>((resolve) => {
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        // Extract base64 content
+        const content = result.split(",")[1];
+
+        const parts = currentContent.filePath.split("/");
+        if (parts.length > 0) parts.pop();
+        const dirPath = parts.join("/");
+        const fullPath = dirPath ? `${dirPath}/${file.name}` : file.name;
+
+        const newImage: FileItem = {
+          name: file.name,
+          path: fullPath,
+          type: "file",
+          sha: "pending-" + Date.now(),
+          content: content,
+        };
+
+        setPendingImages([...pendingImages, newImage]);
+        setHasDraft(true);
+        setDraftTimestamp(Date.now());
+        resolve(file.name);
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  React.useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const parts = currentContent.filePath.split("/");
+        if (parts.length > 0) {
+          parts.pop();
+        }
+        const dirPath = parts.join("/") || ".";
+
+        const params = new URLSearchParams({
+          owner: currentContent.owner,
+          repo: currentContent.repo,
+          filePath: dirPath,
+        });
+        if (currentContent.branch) {
+          params.append("branch", currentContent.branch);
+        }
+
+        const res = await fetch(`/api/content?${params.toString()}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.type === "dir" && Array.isArray(data.files)) {
+            const imageFiles = data.files.filter((f: FileItem) => {
+              if (f.type !== "file") return false;
+              const ext = f.name.split(".").pop()?.toLowerCase();
+              return ["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(
+                ext || "",
+              );
+            });
+            setNearbyImages(imageFiles);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch images", e);
+      }
+    };
+
+    fetchImages();
+  }, [currentContent, hasDraft]);
+
   const handleReset = () => {
     if (
       globalThis.confirm(
@@ -164,40 +247,7 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
         }
       />
 
-      <div className="ui grid">
-        <div className="twelve wide column">
-          {Array.isArray(frontMatter)
-            ? (
-              <FrontMatterListEditor
-                frontMatter={frontMatter}
-                setFrontMatter={setFrontMatter as (
-                  fm: Record<string, unknown>[],
-                ) => void}
-                currentContent={currentContent}
-                isPrLocked={isPrLocked}
-              />
-            )
-            : (
-              <FrontMatterItemEditor
-                frontMatter={frontMatter as Record<string, unknown>}
-                setFrontMatter={setFrontMatter as (
-                  fm: Record<string, unknown>,
-                ) => void}
-                currentContent={currentContent}
-                isPrLocked={isPrLocked}
-              />
-            )}
-
-          {!isYaml && (
-            <MarkdownEditor
-              body={body}
-              setBody={setBody}
-              isPrLocked={isPrLocked}
-              currentContent={currentContent}
-            />
-          )}
-        </div>
-
+      <div className="ui stackable tablet reversed computer reversed grid">
         <div className="four wide column">
           {hasDraft && (
             <>
@@ -306,20 +356,54 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
             </>
           )}
 
-          <ContentHistory
-            commits={commits}
-            currentContent={currentContent}
-          />
-
           <ContentImages
             currentContent={currentContent}
-            setHasDraft={setHasDraft}
-            setDraftTimestamp={setDraftTimestamp}
-            hasDraft={hasDraft}
             isPrLocked={isPrLocked}
             pendingImages={pendingImages}
-            setPendingImages={setPendingImages}
+            images={nearbyImages}
+            onAddImage={handleAddImage}
           />
+
+          <div className="staticms-hide-mobile">
+            <ContentHistory
+              commits={commits}
+              currentContent={currentContent}
+            />
+          </div>
+        </div>
+
+        <div className="twelve wide column">
+          {Array.isArray(frontMatter)
+            ? (
+              <FrontMatterListEditor
+                frontMatter={frontMatter}
+                setFrontMatter={setFrontMatter as (
+                  fm: Record<string, unknown>[],
+                ) => void}
+                currentContent={currentContent}
+                isPrLocked={isPrLocked}
+              />
+            )
+            : (
+              <FrontMatterItemEditor
+                frontMatter={frontMatter as Record<string, unknown>}
+                setFrontMatter={setFrontMatter as (
+                  fm: Record<string, unknown>,
+                ) => void}
+                currentContent={currentContent}
+                isPrLocked={isPrLocked}
+              />
+            )}
+
+          {!isYaml && (
+            <MarkdownEditor
+              body={body}
+              setBody={setBody}
+              isPrLocked={isPrLocked}
+              currentContent={currentContent}
+              onImageUpload={handleAddImage}
+            />
+          )}
         </div>
       </div>
     </div>

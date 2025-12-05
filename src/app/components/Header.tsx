@@ -72,7 +72,7 @@ export const Header = ({
           </div>
         )}
       </div>
-      <div>
+      <div className="staticms-header-right">
         {rightContent}
       </div>
     </div>

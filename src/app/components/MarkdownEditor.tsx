@@ -11,6 +11,8 @@ interface MarkdownEditorProps {
   isPrLocked: boolean;
   currentContent: Content;
   height?: number;
+  // ... props ...
+  onImageUpload?: (file: File) => Promise<string | null> | null;
 }
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -19,7 +21,79 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   isPrLocked,
   currentContent,
   height = 600,
+  onImageUpload,
 }) => {
+  // ... resolveImageSrc ...
+
+  const insertTextAtCursor = (text: string, target: HTMLTextAreaElement) => {
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    const value = target.value;
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    setBody(newValue);
+    // Note: Cursor position update in React controlled input is tricky,
+    // might jump to end. But usually acceptable for paste.
+  };
+
+  const handlePaste = async (
+    event: React.ClipboardEvent<HTMLTextAreaElement>,
+  ) => {
+    if (!onImageUpload) return;
+    const items = event.clipboardData.items;
+    for (const item of items) {
+      if (item.type.startsWith("image/")) {
+        const file = item.getAsFile();
+        if (file) {
+          event.preventDefault();
+          const fileName = await onImageUpload(file);
+          if (fileName) {
+            const imageMarkdown = `![${fileName}](${fileName})`;
+            insertTextAtCursor(imageMarkdown, event.currentTarget);
+          }
+        }
+      }
+    }
+  };
+
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    if (!onImageUpload) return;
+    const files = event.dataTransfer.files;
+    // Check if any file is an image
+    let hasImage = false;
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        hasImage = true;
+        break;
+      }
+    }
+    if (!hasImage) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Find textarea to insert text
+    const textarea = event.currentTarget.querySelector("textarea");
+
+    for (const file of files) {
+      if (file.type.startsWith("image/")) {
+        const fileName = await onImageUpload(file);
+        if (fileName) {
+          const imageMarkdown = `![${fileName}](${fileName})`;
+          if (textarea) {
+            insertTextAtCursor(imageMarkdown, textarea);
+          } else {
+            // Fallback if textarea not found (unlikely)
+            // Use functional update if setBody supports it, or append to current body prop
+            // Casting setBody to any to support functional update if useState setter
+            // deno-lint-ignore no-explicit-any
+            (setBody as any)((prev: string) => prev + "\n" + imageMarkdown);
+          }
+        }
+      }
+    }
+  };
+  // ... render ...
+
   const resolveImageSrc = (src: string) => {
     if (!src || src.startsWith("http") || src.startsWith("data:")) {
       return src;
@@ -76,6 +150,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         onChange={(val: string | undefined) =>
           !isPrLocked && setBody(val || "")}
         preview={isPrLocked ? "preview" : "edit"}
+        onPaste={handlePaste}
+        onDrop={handleDrop}
         previewOptions={{
           rehypePlugins: [[rehypeHighlight, {
             detect: true,

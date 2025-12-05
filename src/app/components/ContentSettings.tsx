@@ -279,7 +279,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
             </small>
           </div>
         )}
-        <div className="actions">
+        <div className="actions staticms-settings-actions">
           <button
             type="button"
             onClick={onCancel}

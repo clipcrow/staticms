@@ -74,6 +74,10 @@
   color: rgba(0, 0, 0, 0.6) !important;
 }
 
+.staticms-settings-actions {
+  margin-top: 1em !important;
+}
+
 .staticms-editor-pr-label {
   margin-left: 1em !important;
 }
@@ -166,4 +170,31 @@
   max-height: 80vh;
   object-fit: contain;
   border-radius: 4px;
+}
+
+@media only screen and (max-width: 767px) {
+  .staticms-header-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .staticms-header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 1em;
+  }
+
+  .staticms-header-children {
+    border-left: none;
+    padding-left: 0;
+    margin-top: 0.5em;
+  }
+
+  .staticms-header-right {
+    align-self: flex-end;
+  }
+
+  .staticms-hide-mobile {
+    display: none !important;
+  }
 }
