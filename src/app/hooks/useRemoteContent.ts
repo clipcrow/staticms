@@ -29,6 +29,7 @@ export const useRemoteContent = () => {
       isReset: boolean = false,
       // deno-lint-ignore no-explicit-any
       initialData?: any,
+      onBackToCollection?: () => void,
     ) => {
       if (isReset) {
         setIsResetting(true);
@@ -66,6 +67,14 @@ export const useRemoteContent = () => {
           // New file
           setSha("");
           setLoadedBranch(content.branch || "");
+
+          // If we are resetting and the file is 404 (doesn't exist remotely),
+          // it means we just discarded the draft of a new file.
+          // We should navigate back to the collection list.
+          if (isReset && onBackToCollection) {
+            onBackToCollection();
+            return;
+          }
         } else if (data.content) {
           rawContent = data.content;
           setSha(data.sha);

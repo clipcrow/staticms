@@ -152,7 +152,8 @@ export const ContentEditor: React.FC<ContentEditorProps> = ({
                 isResetting ? "loading" : ""
               }`}
               onClick={handleReset}
-              disabled={!hasUnsavedChanges || loading || isSaving ||
+              disabled={(!hasUnsavedChanges && !hasDraft) || loading ||
+                isSaving ||
                 isResetting || !!prUrl}
               title="Discard local draft"
             >

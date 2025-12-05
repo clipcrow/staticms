@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Content } from "../types.ts";
 import { useRemoteContent } from "../hooks/useRemoteContent.ts";
@@ -36,6 +36,29 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     isResetting,
   } = useRemoteContent();
 
+  const handleBack = useCallback(() => {
+    navigate(`/${content.owner}/${content.repo}`);
+  }, [navigate, content.owner, content.repo]);
+
+  const handleBackToCollection = useCallback(() => {
+    if (content.collectionPath) {
+      // Navigate to collection
+      // We need to encode the collection path
+      const encodedCollectionPath = encodeURIComponent(content.collectionPath);
+      navigate(
+        `/${content.owner}/${content.repo}/${encodedCollectionPath}`,
+      );
+    } else {
+      handleBack();
+    }
+  }, [
+    content.collectionPath,
+    content.owner,
+    content.repo,
+    navigate,
+    handleBack,
+  ]);
+
   const {
     prUrl,
     setPrUrl,
@@ -66,6 +89,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     setInitialBody,
     setInitialFrontMatter,
     loadContent,
+    content.collectionPath ? handleBackToCollection : handleBack,
   );
 
   useSubscription({
@@ -95,6 +119,7 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
       setPendingImages,
       false,
       initialData,
+      content.collectionPath ? handleBackToCollection : handleBack,
     );
   }, [
     content,
@@ -104,24 +129,9 @@ export const ContentEditorWrapper: React.FC<ContentEditorWrapperProps> = ({
     setPrDescription,
     setPendingImages,
     initialData,
+    handleBackToCollection,
+    handleBack,
   ]);
-
-  const handleBack = () => {
-    navigate(`/${content.owner}/${content.repo}`);
-  };
-
-  const handleBackToCollection = () => {
-    if (content.collectionPath) {
-      // Navigate to collection
-      // We need to encode the collection path
-      const encodedCollectionPath = encodeURIComponent(content.collectionPath);
-      navigate(
-        `/${content.owner}/${content.repo}/${encodedCollectionPath}`,
-      );
-    } else {
-      handleBack();
-    }
-  };
 
   return (
     <ContentEditor

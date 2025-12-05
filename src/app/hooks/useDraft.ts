@@ -23,7 +23,9 @@ export const useDraft = (
     isReset?: boolean,
     // deno-lint-ignore no-explicit-any
     initialData?: any,
+    onBackToCollection?: () => void,
   ) => Promise<void>,
+  onBackToCollection?: () => void,
 ) => {
   // PR State
   const [prUrl, setPrUrl] = useState<string | null>(null);
@@ -356,6 +358,8 @@ export const useDraft = (
       setPrDescription,
       setPendingImages,
       true,
+      undefined,
+      onBackToCollection,
     );
 
     setIsResettingLocal(false);
@@ -368,6 +372,7 @@ export const useDraft = (
     setPrDescription,
     setPendingImages,
     setIsResettingLocal,
+    onBackToCollection,
   ]);
 
   // Check PR Status Effect
