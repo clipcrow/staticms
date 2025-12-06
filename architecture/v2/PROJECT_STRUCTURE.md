@@ -126,3 +126,33 @@ Deno v2.4+ の `deno bundle` (または `deno_esbuild`)
 - **Production**: `deno task build`
   - `src/app/main.tsx` をエントリーポイントとして `public/js/bundle.js` を生成。
   - React 19, Semantic UI を適切にバンドルに含める。
+
+## 5. Coding Standards & Best Practices
+
+Staticms v2 プロジェクトにおける開発の掟です。
+
+1. **Zero Lint Errors**:
+   - Deno のリンター (`deno lint`) が報告するエラーや警告は放置しません。
+   - どうしても抑制が必要な場合は、コードコメント等で理由を明示的に記述します。
+
+2. **Adherence to Guidelines**:
+   - `architecture/v2/` 以下の設計資料、および `src/testing/README.md`
+     に記載されたテストプラクティスを遵守します。
+   - 特に「ロジックと表示の分離 (Container/Presenter)」「テストの
+     Co-location」は徹底します。
+
+3. **Continuous Improvement**:
+   - 既存のガイドラインよりも優れた解決策や、新しいDeno便利機能が見つかった場合は、独断で実装せず、**まず設計のアップデートを提案**
+     してください。
+   - 提案が承認され次第、`architecture/`
+     配下のドキュメントを更新し、実装に反映させます（Documentation First）。
+
+4. **Language Policy**:
+   - **UI**: 英語のみ (`English`).
+     GitHubへのリスペクトも込め、国際化（i18n）は行いません。
+   - **Content**:
+     ユーザーが入力するコンテンツ（記事本文、コミットメッセージ等）は **日本語
+     (Japanese)**
+     を第一級市民として扱います。IME入力や文字コードの問題が発生しないよう注意します。
+   - **Documentation**: 設計書、README等のドキュメントは、開発者に合わせて
+     **日本語** で記述します。

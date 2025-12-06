@@ -1,0 +1,12 @@
+$primary-color: #2185d0; // Semantic UI Blue
+
+body {
+  background-color: #f0f0f0;
+}
+
+.custom-button {
+  background-color: $primary-color;
+  &:hover {
+    background-color: darken($primary-color, 10%);
+  }
+}
