@@ -1,5 +1,5 @@
 import { withBrowser } from "./setup.ts";
-import { assert, assertEquals } from "@std/assert";
+import { assert } from "@std/assert";
 
 Deno.test("US-02: Content Navigation Flow", async () => {
   await withBrowser(async (browser) => {
@@ -23,7 +23,7 @@ Deno.test("US-02: Content Navigation Flow", async () => {
     // We expect a header that shows the repo name "user/my-repo"
     await page.waitForSelector(".content-browser-header", { timeout: 5000 });
 
-    const url = await page.evaluate(() => window.location.href);
+    const url = await page.evaluate(() => globalThis.location.href);
     const headerText = await page.evaluate(() =>
       document.querySelector(".content-browser-header")?.textContent
     );
