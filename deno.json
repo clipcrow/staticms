@@ -21,6 +21,10 @@
       "dom.asynciterable",
       "deno.ns",
       "deno.unstable"
+    ],
+    "types": [
+      "@types/react",
+      "@types/react-dom"
     ]
   },
   "imports": {
