@@ -5,3 +5,6 @@
 
 .DS_Store
 Thumbs.db
+# Build artifacts
+public/js/bundle.js
+public/styles/main.css

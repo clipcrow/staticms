@@ -14,8 +14,13 @@ Staticms v2 では、UIの一貫性と開発効率を両立するため、Semant
    に限定します。Featureコンポーネント等の上位層では、これらの Primitive
    Components を組み合わせることで UI
    を構築し、クラス名を直接記述することを避けます。
+
 3. **Container / Presenter Pattern**:
    ロジック（状態管理、データ取得）と表示（スタイル、レイアウト）を明確に分離します。
+4. **Light Mode Only**: UI
+   は常にライトモードで提供します。ダークモードはサポートせず、`prefers-color-scheme`
+   メディアクエリへの応答もしません。これは Markdown エディタ (CodeMirror 等)
+   のシンタックスハイライトにおける可読性を最優先するためです。
 
 ## 2. Directory Structure Review
 

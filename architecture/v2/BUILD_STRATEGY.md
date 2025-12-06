@@ -5,73 +5,60 @@ Staticms v2
 特に `deno bundle` (v1系Legacy) の廃止に伴い、Deno
 v2系での標準的なバンドル手法を確立します。
 
-## 1. frontend Build (Bundling)
+## 1. Frontend Build (Bundling)
 
 React アプリケーション (`src/app/`) をブラウザで実行可能な単一の JS
-ファイルに変換します。 Staticms v2 では外部ツールへの依存を減らし、**Deno
-標準のバンドル機能** を全面的に採用します。
+ファイルに変換します。 当初 `deno bundle` の採用を検討しましたが、Deno v2.5.6
+環境における動作検証の結果、不安定（OSエラー）であったため、より確実な
+**`esbuild`** を採用します。
 
-### 1.1 Support Strategy: Deno Native Bundle
+### 1.1 Tool Selection: `esbuild`
 
-Deno v2.4 以降で刷新された `deno bundle` (および Runtime API) を使用します。
-これにより、`deno.json` の設定（Import Map
-等）をそのまま再利用でき、設定の二重管理を防ぎます。
+Deno エコシステムで広く使われている `deno_esbuild` (`@luca/esbuild-deno-loader`)
+を使用して、Deno のモジュール解決と `esbuild`
+の高速なバンドル機能を組み合わせます。
 
 ### 1.2 Build Script (`scripts/build.ts`)
 
-`deno task build` で実行されるビルドスクリプトを作成します。 Deno の Runtime API
-を使用してバンドル処理をプログラム的に制御します。
+`deno task build` で実行されるビルドスクリプトです。
 
 ```typescript
-// scripts/build.ts (Concept)
+// scripts/build.ts
+import * as esbuild from "esbuild";
+import { denoPlugins } from "deno_esbuild";
 
-// 注意: 実際のAPIシグネチャは Deno のバージョンに依存します。
-// 必要に応じて `deno bundle` CLIコマンドをサブプロセスで実行する形式も検討します。
-
-const isDev = Deno.args.includes("--dev");
-const entryPoint = new URL("../src/app/main.tsx", import.meta.url);
-const outPath = new URL("../public/js/bundle.js", import.meta.url);
-
-console.log(`Bundling ${entryPoint} to ${outPath}...`);
-
-// CLIコマンドとして実行する場合の例
-const command = new Deno.Command(Deno.execPath(), {
-  args: [
-    "bundle",
-    "--unstable-jsx", // 必要に応じてフラグ追加
-    entryPoint.pathname,
-    outPath.pathname,
-  ],
-});
-
-const output = await command.output();
-
-if (output.code === 0) {
-  console.log("Build successful!");
-} else {
-  console.error("Build failed:");
-  console.error(new TextDecoder().decode(output.stderr));
-  if (!isDev) Deno.exit(1);
+try {
+  console.log("Building...");
+  await esbuild.build({
+    plugins: [
+      ...denoPlugins({
+        configPath: new URL("../deno.json", import.meta.url).pathname,
+      }),
+    ],
+    entryPoints: ["./src/app/main.tsx"],
+    outfile: "./public/js/bundle.js",
+    bundle: true,
+    format: "esm",
+    platform: "browser",
+    jsx: "automatic",
+    logLevel: "info",
+  });
+  console.log("Build success");
+} catch (e) {
+  console.error("Build failed:", e);
+  Deno.exit(1);
+} finally {
+  esbuild.stop();
 }
 ```
 
 ### 1.3 Development Watch Mode
 
-`deno task dev` では、Deno のネイティブなファイル監視機能と `bundle`
-を組み合わせます。
+`deno task dev` (`scripts/dev.ts`) では、以下のプロセスを並行して管理します。
 
-```bash
-# deno.json
-"dev": "deno run -A scripts/dev.ts"
-```
-
-`scripts/dev.ts` では以下のフローを制御します：
-
-1. **Watch & Bundle**: ソースコードの変更を検知し、都度 `bundle` を実行して
-   `public/js/bundle.js` を更新する。
-2. **Server**: バックエンドサーバーを起動しておく。
-3. (Optional) フロントエンドに更新通知を送る（Live Reload /
-   HMR）仕組みは、今後の拡張として検討する。シンプルさを優先し、まずは手動リロードを許容する。
+1. **Frontend Bundle**: ソースコード変更検知時に `scripts/build.ts` を実行。
+2. **SCSS Build**: `scripts/build_css.ts` を実行。
+3. **Server**: バックエンドサーバーを起動 (`deno run --watch`)。
 
 ## 2. Server Runtime
 
