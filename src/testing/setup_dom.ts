@@ -1,4 +1,4 @@
-import { afterEach, beforeAll } from "@std/testing/bdd";
+import { afterEach } from "@std/testing/bdd";
 import { cleanup } from "@testing-library/react";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
