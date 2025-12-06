@@ -1,5 +1,10 @@
-import { RepositorySelector } from "@/app/features/content-browser/RepositorySelector.tsx";
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./AppRoutes.tsx";
 
 export function App() {
-  return <RepositorySelector />;
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
 }

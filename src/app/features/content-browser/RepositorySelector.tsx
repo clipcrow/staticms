@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 interface Repository {
@@ -36,9 +37,9 @@ export function RepositorySelector() {
           <div className="item repo-item" key={repo.id} role="listitem">
             <i className="large github middle aligned icon"></i>
             <div className="content">
-              <a className="header" href={`/repo/${repo.full_name}`}>
+              <Link className="header" to={`/repo/${repo.full_name}`}>
                 {repo.full_name}
-              </a>
+              </Link>
               <div className="description">{repo.description}</div>
             </div>
           </div>

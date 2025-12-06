@@ -41,10 +41,22 @@ app.use(async (ctx, next) => {
       index: "index.html",
     });
   } catch {
-    // Fallback to index.html for SPA routing (if file not found)
-    // For now, simple 404 is fine as we don't have client-side routing logic yet.
-    // In future, we might serve index.html here.
-    await next();
+    // SPA Fallback: If static file not found, serve index.html for non-asset routes
+    if (
+      !ctx.request.url.pathname.startsWith("/api") &&
+      !ctx.request.url.pathname.match(/\.(js|css|png|jpg|ico)$/)
+    ) {
+      try {
+        await ctx.send({
+          root: `${Deno.cwd()}/public`,
+          path: "index.html",
+        });
+      } catch {
+        await next();
+      }
+    } else {
+      await next();
+    }
   }
 });
 
