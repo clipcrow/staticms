@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { FileItem, useDraft } from "@/app/hooks/useDraft.ts";
@@ -7,6 +7,13 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const { owner, repo, collectionName, articleName } = useParams();
   const { config } = useContentConfig(owner, repo);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const [saving, setSaving] = useState(false);
+  const [prInfo, setPrInfo] = useState<
+    { prUrl: string; prNumber: number } | null
+  >(
+    null,
+  );
 
   const collection = config?.collections.find((c) => c.name === collectionName);
 
@@ -39,6 +46,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   };
 
   const handleImageUpload = (files: FileList | null) => {
+    if (prInfo) return; // Locked
     if (!files || files.length === 0) return;
 
     const file = files[0];
@@ -51,7 +59,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         name: file.name,
         type: "file",
         content: content,
-        path: `images/${file.name}`, // Provisional path strategy
+        path: `images/${file.name}`,
       };
 
       setDraft((prev) => ({
@@ -64,6 +72,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   };
 
   const onPaste = (e: React.ClipboardEvent) => {
+    if (prInfo) return; // Locked
     if (e.clipboardData.files.length > 0) {
       e.preventDefault();
       handleImageUpload(e.clipboardData.files);
@@ -72,6 +81,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    if (prInfo) return; // Locked
     if (e.dataTransfer.files.length > 0) {
       handleImageUpload(e.dataTransfer.files);
     }
@@ -88,13 +98,73 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     }
   };
 
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/repo/${owner}/${repo}/pr`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draft,
+          filePath,
+          collectionName,
+          baseBranch: "main",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create PR");
+      }
+      const data = await res.json();
+      setPrInfo({ prUrl: data.prUrl, prNumber: data.prNumber });
+      // Ideally show toast
+    } catch (e) {
+      alert("Error saving: " + (e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="ui container content-editor" style={{ marginTop: "2em" }}>
-      <h2 className="ui header">
-        {mode === "new" ? "New" : "Edit"} {collection.label}
-      </h2>
-      <div className="ui form">
-        {collection.fields.map((field) => {
+      <div
+        className="ui flex"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "1em",
+        }}
+      >
+        <h2 className="ui header" style={{ margin: 0 }}>
+          {mode === "new" ? "New" : "Edit"} {collection.label}
+        </h2>
+        <div>
+          {prInfo && (
+            <a
+              href={prInfo.prUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{ marginRight: "1em" }}
+            >
+              PR #{prInfo.prNumber} Open{" "}
+              <i className="external alternate icon"></i>
+            </a>
+          )}
+          <button
+            type="button"
+            className={`ui primary button ${saving ? "loading" : ""}`}
+            onClick={handleSave}
+            disabled={saving || !!prInfo}
+          >
+            {prInfo ? "Locked (PR Created)" : "Save"}
+          </button>
+        </div>
+      </div>
+
+      <div className={`ui form ${prInfo ? "disabled" : ""}`}>
+        {collection.fields.map((field: any) => {
           const value = field.name === "body"
             ? draft.body
             : draft.frontMatter[field.name] || "";
@@ -118,6 +188,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
                     onDrop={field.name === "body" || field.widget === "markdown"
                       ? onDrop
                       : undefined}
+                    disabled={!!prInfo}
                   />
                 )
                 : (
@@ -126,6 +197,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
                     name={field.name}
                     value={value as string}
                     onChange={(e) => handleChange(field.name, e.target.value)}
+                    disabled={!!prInfo}
                   />
                 )}
             </div>
@@ -133,7 +205,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         })}
       </div>
 
-      {/* Preview of pending images (Optional/Debug) */}
       {draft.pendingImages && draft.pendingImages.length > 0 && (
         <div className="ui segment">
           <h4 className="ui header">Pending Images</h4>

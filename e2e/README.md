@@ -59,6 +59,56 @@ Reactはリスト項目に一意な `key`
 - **コンソールログ**: `page.on("console", ...)`
   を使用してブラウザのコンソールログをDenoのターミナルにプロキシ出力することで、フロントエンドのエラーやロジックのトレースを確認できます。
 
+### 5. React Controlled Inputs の操作
+
+React 16以降、`input` や `textarea` に対する `value`
+プロパティのsetterがオーバーライドされており、プログラムから単に
+`el.value = 'foo'`
+としてもReactの状態更新（OnChangeイベント）が発火しないことがあります。
+
+- **解決策**:
+  ネイティブのプロパティディスクリプタを使用して値を設定し、その後でイベントをディスパッチします。
+  ```typescript
+  const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+    globalThis.window.HTMLInputElement.prototype,
+    "value",
+  )?.set;
+  nativeInputValueSetter?.call(el, value);
+  el.dispatchEvent(new Event("input", { bubbles: true }));
+  ```
+
+### 6. Astral の Console Event Listener
+
+Astral の `Page` オブジェクトは Puppeteer
+と完全に同じAPIではなく、`page.on("console", ...)`
+は存在しない場合があります（バージョンによる）。代わりに標準的な
+`addEventListener` を使用します。
+
+- **解決策**:
+  ```typescript
+  // deno-lint-ignore no-explicit-any
+  page.addEventListener("console", (e: any) => {
+    console.log(`[Browser] ${e.detail.text}`);
+  });
+  ```
+
+### 7. Drag & Drop シミュレーション
+
+ヘッドレスブラウザでドラッグ＆ドロップ（特にファイルアップロード）をテストする場合、`DataTransfer`
+オブジェクトを作成し、`DragEvent` を手動で発火させるのが最も確実です。
+
+- **解決策**:
+  ```typescript
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file); // Fileオブジェクト
+  const event = new DragEvent("drop", {
+    bubbles: true,
+    cancelable: true,
+    dataTransfer: dataTransfer,
+  });
+  targetElement.dispatchEvent(event);
+  ```
+
 ## 技術スタックの評価
 
 今回のE2Eテスト実装において採用した技術スタック（Deno +
