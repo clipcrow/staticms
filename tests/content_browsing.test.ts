@@ -12,7 +12,7 @@ Deno.test("US-03: Content Browsing", async () => {
     await page.waitForSelector(repoLinkSelector);
 
     // Get the first repo text to verify later
-    const repoName = await page.evaluate(() => {
+    const _repoName = await page.evaluate(() => {
       const el = document.querySelector(".repo-item");
       return el?.querySelector(".header")?.textContent?.trim();
     });

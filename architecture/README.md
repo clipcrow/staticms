@@ -12,39 +12,30 @@ v2」を作ることにした。
 
 ### Phase 1: 仕様分析とドキュメント化 (完了)
 
-既存コードの振る舞いを分析し、詳細な仕様書として `architecture/v1/`
-以下に集約した。 これにより、何を作るべきか（What）が明確になった。
+**[Staticms V2 Documents](./v2/README.md)**
 
-**成果物一覧 (v1)**:
+新しいドキュメント体系は `architecture/v2/` 以下に集約されています。
 
-- [**System Overview**](./v1/SYSTEM_OVERVIEW.md):
-  システム全体構成図とデータフロー概要。
-- [**GitHub Integration Spec**](./v1/GITHUB_SPEC.md): 認証戦略とPR作成フロー。
-- [**Server API Spec**](./v1/SERVER_API.md): エンドポイント定義。
-- [**Data Model**](./v1/DATA_MODEL.md): KV, LocalStorage, Config スキーマ。
-- [**Frontend Spec**](./v1/FRONTEND_SPEC.md): コンポーネント構造とルーティング。
-- [**User Stories**](./v1/USER_STORIES.md):
-  E2Eテストのシナリオの元となるユーザーストーリー。
+- **[Project Definition](./v2/PROJECT.md)**: 製品ビジョンとコアコンセプト。
+- **[User Stories](./v2/USER_STORIES.md)**: 要件定義とE2Eテストシナリオ。
+- **[UI Design](./v2/UI_DESIGN.md)**: 画面遷移図とUI仕様。
+- **[Test Plan](./v2/TEST_PLAN.md)**: Astral/HappyDOMを用いたテスト戦略。
+- **[Project Structure](./v2/PROJECT_STRUCTURE.md)**:
+  ディレクトリ構成とモジュール設計。
+- **[Build Strategy](./v2/BUILD_STRATEGY.md)**: ビルドパイプライン。
 
-### Phase 2: Staticms2 アーキテクチャ設計
+### Phase 2: Staticms2 アーキテクチャ設計 (完了)
 
-新プロジェクト `Staticms2` の土台を設計する。
+新プロジェクト `Staticms V2` の土台設計は完了し、実装フェーズへ移行済みです。
 
 - **技術選定**:
-  - **Bundler**: `deno bundle` (Runtime API or CLI) の活用。Deno v2.4+
-    の新機能を積極的に採用する。
-  - **CSS**: **Semantic-UI** を継続採用。`ui icon button`
-    のような言語的記述の強みを活かし、独自スタイル追加時もこの思想（Semantic
-    CSS）を踏襲する。必要に応じてSCSS等のプリプロセッサ導入を検討。
-  - **E2E Test**: Deno向け次世代ヘッドレスブラウザツール
-    **[Astral](https://jsr.io/@astral/astral)** を採用。
-  - **Unit Test**: `deno test` + `testing-library` + `HappyDOM` (既存資産
-    `/src/testing` を全面的に活用)。
+  - **Bundler**: `esbuild` (Deno bundle廃止に伴う変更)。
+  - **CSS**: **Semantic-UI**。
+  - **E2E Test**: **Astral**。
+  - **Unit Test**: `deno test` + `testing-library` + `HappyDOM`。
 
-- **ディレクトリ構造刷新**:
-  - `src/` 以下の再構成。Container/Presenter
-    パターンを意識したコンポーネント配置。
-  - テスト容易性を高めるDI（依存性注入）パターンの標準化。
+- **ディレクトリ構造**: `src/` 以下を Clean Architecture と Feature-based Folder
+  Structure を組み合わせた構成に刷新。
 
 ### Phase 3: 基盤構築とE2Eテスト作成
 

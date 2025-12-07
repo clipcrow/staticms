@@ -47,7 +47,7 @@ Pull Request 作成時および `main` ブランチへのマージ時に自動�
 
 ### 3.1 E2E Scenarios (Astral)
 
-`architecture/v1/USER_STORIES.md`
+`architecture/v2/USER_STORIES.md`
 の各シナリオをそのままテストケースとして実装します。 外部サービス (GitHub API)
 への依存については、以下のいずれかの戦略を採ります：
 

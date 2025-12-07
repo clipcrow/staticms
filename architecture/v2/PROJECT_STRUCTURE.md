@@ -95,7 +95,7 @@ src/app/components/common/
 ディレクトリに配置します。
 
 - **ツール**: **Astral** (Deno Headless Browser)
-- **対象**: `architecture/v1/USER_STORIES.md` で定義されたシナリオ。
+- **対象**: `architecture/v2/USER_STORIES.md` で定義されたシナリオ。
 - **実行**: `deno task test:e2e` (予定)
 
 ```
@@ -160,6 +160,6 @@ Staticms v2 プロジェクトにおける開発の掟です。
 5. **Import Paths**:
    - ソースコード (`src/`) 内のインポートでは、`deno.json` で定義された Path
      Alias (`@/`) を積極的に使用します。
-   - 深い相対パス（例:
-     `../../../components/Button.tsx`）は避け、`@/app/components/Button.tsx`
-     のようにルートからのパスで記述することで、可読性とリファクタリング耐性を高めます。
+   - **絶対パスのみ** 使用してください。相対パスは禁止します。 (例:
+     `../../components/Button.tsx` ではなく `@/app/components/Button.tsx`
+     を使用)

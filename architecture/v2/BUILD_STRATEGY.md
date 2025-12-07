@@ -1,22 +1,18 @@
 # Build & Deployment Strategy
 
 Staticms v2
-では、標準技術への回帰とDenoエコシステムの最大活用を掲げ、可能な限りシンプルかつ将来性のあるビルドパイプラインを構築します。
-特に `deno bundle` (v1系Legacy) の廃止に伴い、Deno
-v2系での標準的なバンドル手法を確立します。
+では、Denoエコシステムの標準的なツールを活用し、シンプルで堅牢なビルドパイプラインを構築します。
 
 ## 1. Frontend Build (Bundling)
 
 React アプリケーション (`src/app/`) をブラウザで実行可能な単一の JS
-ファイルに変換します。 当初 `deno bundle` の採用を検討しましたが、Deno v2.5.6
-環境における動作検証の結果、不安定（OSエラー）であったため、より確実な
-**`esbuild`** を採用します。
+ファイルに変換するため、**`esbuild`** を採用します。
 
 ### 1.1 Tool Selection: `esbuild`
 
-Deno エコシステムで広く使われている `deno_esbuild` (`@luca/esbuild-deno-loader`)
-を使用して、Deno のモジュール解決と `esbuild`
-の高速なバンドル機能を組み合わせます。
+Deno エコシステムで広く使われている **`deno_esbuild`**
+(`@luca/esbuild-deno-loader`) を使用して、Deno のモジュール解決と `esbuild`
+の高速なバンドル機能を組み合わせます。これにより、npmパッケージとDenoモジュールの混在が可能になります。
 
 ### 1.2 Build Script (`scripts/build.ts`)
 

@@ -47,3 +47,26 @@ collections:
     ctx.response.type = "text/yaml";
   }
 };
+// POST /api/repo/:owner/:repo/config
+export const saveRepoConfig = async (
+  ctx: RouterContext<"/api/repo/:owner/:repo/config">,
+) => {
+  const { repo } = ctx.params;
+
+  // We expect raw YAML body. Oak's request.body is a method in older/some versions but in standard Request it's a getter.
+  // Oak's ctx.request.body() returns a Body object.
+  // We want text.
+  const body = ctx.request.body;
+  if (body.type() !== "text") {
+    ctx.response.status = 400;
+    ctx.response.body = "Invalid body type";
+    return;
+  }
+  const configYaml = await body.text();
+
+  console.log(`[MockAPI] Saving config for ${repo}`);
+  MOCK_CONFIGS[repo] = configYaml;
+
+  ctx.response.status = 200;
+  ctx.response.body = { success: true };
+};

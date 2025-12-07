@@ -3,7 +3,7 @@ import { green, yellow } from "@std/fmt/colors";
 
 import { listRepositories } from "@/server/api/repositories.ts";
 import { getContent } from "@/server/api/content.ts";
-import { getRepoConfig } from "@/server/api/config.ts";
+import { getRepoConfig, saveRepoConfig } from "@/server/api/config.ts";
 
 const app = new Application();
 const router = new Router();
@@ -30,6 +30,7 @@ router.get("/api/health", (ctx) => {
 
 router.get("/api/repositories", listRepositories);
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
+router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 
 app.use(router.routes());

@@ -63,15 +63,22 @@ Collection）を選び、編集作業に進む **So that**
 ### Scenarios
 
 1. **Add Content Definition**:
-   - ダッシュボード（リポジトリ内）から「Add
-     Content」を選択し、新しいコンテンツ定義を作成できる。
-   - Type (Collection/Singleton), Name, Folder/File path, Fields
-     などをフォーム形式で入力し、保存する。
-   - 保存された設定は Deno KV に永続化される。
+   - ダッシュボード（リポジリ内）から「Add New Content」を選択する。
+   - 画面遷移はせず、URLクエリパラメータ `?action=add`
+     が付与され、設定追加画面が表示される（View切替）。
+   - Type (Collection/Singleton), Name, Path, Fields などを入力し保存。
+   - 保存後、Deno KV に永続化され、ダッシュボードのリストに即座に反映される。
+
 2. **Edit Content Definition**:
-   - 既存のコンテンツ定義を選択し、設定内容（ラベルやフィールド定義など）を変更できる。
+   - ダッシュボードで既存コンテンツの「Config」ボタン、または Article List
+     の「Settings」リンクを選択する。
+   - URLクエリパラメータ `?action=edit&target=:collectionName`
+     が付与され、設定編集画面が表示される。
+   - 設定内容を変更して保存できる。
+
 3. **Delete Content Definition**:
-   - 不要になったコンテンツ定義を削除できる。
+   - 編集画面 (`?action=edit...`)
+     内にある「Delete」ボタンから、定義を削除できる。
    - ※ 実際のGitHub上のファイルは削除されない（設定のみの削除）。
 
 ## US-05: Content Editing & Draft (編集とドラフト)
