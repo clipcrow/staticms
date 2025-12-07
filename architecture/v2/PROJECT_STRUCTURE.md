@@ -15,7 +15,7 @@ staticms2/
 │   ├── server/            # バックエンド (Deno / Oak)
 │   ├── testing/           # テストユーティリティ (Unit Test Helpers)
 │   └── shared/            # 共通型定義・ユーティリティ (Client/Server共用)
-├── tests/                 # E2E テスト (Astral scenarios)
+├── e2e/                   # E2E テスト (Astral scenarios)
 ├── deno.json              # Deno 設定・タスク定義
 └── README.md
 ```
@@ -91,9 +91,9 @@ src/app/components/common/
 └── Button.test.tsx        # Buttonのレンダリング・クリックテスト
 ```
 
-### 3.2 E2E Tests (`tests/`)
+### 3.2 E2E Tests (`e2e/`)
 
-システム全体を通したシナリオテストは、トップレベルの `tests/`
+システム全体を通したシナリオテストは、トップレベルの `e2e/`
 ディレクトリに配置します。
 
 - **ツール**: **Astral** (Deno Headless Browser)
@@ -101,7 +101,7 @@ src/app/components/common/
 - **実行**: `deno task test:e2e` (予定)
 
 ```
-tests/
+e2e/
 ├── setup.ts               # Astral インスタンス起動・終了処理
 ├── auth_flow.test.ts      # ログインからリソースアクセスまで
 ├── editor_flow.test.ts    # 記事作成・保存・PR確認フロー

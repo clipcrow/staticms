@@ -66,7 +66,7 @@ APIと連携する主要機能を一気に実装しました。これにより�
 
 **趣旨**: 機能実装は完了したが、テスト自動化において課題がある。
 
-- **E2Eテストの不整合**: 現在の `tests/` は Mock API
+- **E2Eテストの不整合**: 現在の `e2e/` は Mock API
   を前提としたレガシーな状態。実 GitHub API を使う E2E
   テストは認証やレートリミットの観点から難易度が高い。
 - **TODO**: E2Eテスト戦略の再定義（MSW等での精密なMocking
@@ -104,17 +104,26 @@ Unlock）の実装を完了しました。
 
 **Workflow**:
 
-1. **Documentation Review**:
-   - まず `architecture/v2/` 配下のドキュメント（特に `USER_STORIES.md`,
-     `PROJECT_STRUCTURE.md`）を読み込み、現在の仕様とテスト方針を再確認してください。
+1. **Documentation Loading**:
+   - 以下のドキュメントを**全て**読み込み、最新の仕様とアーキテクチャを完全に把握してください。
+     - `architecture/v2/PROJECT.md`
+     - `architecture/v2/USER_STORIES.md`
+     - `architecture/v2/DATA_MODEL.md`
+     - `architecture/v2/COMPONENT_DESIGN.md`
+     - `architecture/v2/PROJECT_STRUCTURE.md`
+     - `architecture/v2/GITHUB_INTEGRATION.md`
+     - `architecture/v2/REALTIME_ARCHITECTURE.md`
+     - `architecture/v2/BUILD_STRATEGY.md`
+     - `architecture/v2/TEST_PLAN.md`
+     - `architecture/v2/UI_DESIGN.md`
 2. **E2E Test Restoration**:
-   - `tests/` 配下の古いテストを新しい実装に合わせて修正します。
+   - `e2e/` 配下の古いテストを新しい実装に合わせて修正します。
    - 実際のGitHub APIを叩くのではなく、`globalThis.fetch`
      を適切にMockしてシナリオを通す方針で進めてください。
 3. **UI Polish**:
    - ユーザー操作に対するフィードバック（保存成功時のToast通知、エラー表示）を強化してください。
 
 **Task**: まず `architecture/v2/USER_STORIES.md`
-を読み、現在の仕様を把握してから、`tests/repository_selection.test.ts`
+を読み、現在の仕様を把握してから、`e2e/repository_selection.test.ts`
 (または関連するテスト) の修正から着手してください。
 ```
