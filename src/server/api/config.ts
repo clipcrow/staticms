@@ -56,14 +56,17 @@ export const getRepoConfig = async (
 # Define your content collections here.
 
 collections:
-  # Example:
-  # - name: posts
-  #   label: Posts
-  #   folder: content/posts
-  #   create: true
-  #   fields:
-  #     - { label: "Title", name: "title", widget: "string" }
-  #     - { label: "Body", name: "body", widget: "markdown" }
+  - name: posts
+    label: Posts
+    folder: content/posts
+    create: true
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+      - label: "Body"
+        name: "body"
+        widget: "markdown"
 `;
   ctx.response.body = defaultConfig;
   ctx.response.type = "text/yaml";

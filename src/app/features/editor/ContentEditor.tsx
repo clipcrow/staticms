@@ -337,6 +337,15 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       </div>
 
       <div className={`ui form ${prInfo ? "disabled" : ""}`}>
+        {(!collection.fields || collection.fields.length === 0) && (
+          <div className="ui warning message">
+            <div className="header">No Fields Defined</div>
+            <p>
+              Please define 'fields' in your staticms.yml for collection '
+              {collection.name}'.
+            </p>
+          </div>
+        )}
         {collection.fields?.map((field: Field) => {
           const value = field.name === "body"
             ? draft.body

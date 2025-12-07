@@ -28,8 +28,17 @@ export function ContentConfigEditor({
     folder: "",
     fields: [],
   });
-  // We use a simple text area for YAML fields definition for MVP
-  const [fieldsYaml, setFieldsYaml] = useState("");
+  // Default boilerplate for fields to help user avoid empty fields
+  const [fieldsYaml, setFieldsYaml] = useState(
+    mode === "add"
+      ? `- label: "Title"
+  name: "title"
+  widget: "string"
+- label: "Body"
+  name: "body"
+  widget: "markdown"`
+      : "",
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
