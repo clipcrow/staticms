@@ -67,7 +67,8 @@ Collection）を選び、編集作業に進む **So that**
    - 画面遷移はせず、URLクエリパラメータ `?action=add`
      が付与され、設定追加画面が表示される（View切替）。
    - Type (Collection/Singleton), Name, Path, Fields などを入力し保存。
-   - 保存後、Deno KV に永続化され、ダッシュボードのリストに即座に反映される。
+   - 保存後、変更内容を含む **Pull Request** が作成される。
+   - （将来的に: マージされるとダッシュボードのリストに反映される）
 
 2. **Edit Content Definition**:
    - ダッシュボードで既存コンテンツの「Config」ボタン、または Article List
@@ -96,7 +97,17 @@ Collection）を選び、編集作業に進む **So that**
 2. **Image Handling in Draft**:
    - エディタに画像をドラック＆ドロップ（または選択）すると、画像データもドラフトの一部としてローカルに保存される。
    - マークダウンプレビューおよびエディタ内では、このローカル画像が即座に表示される。
-3. **Session Resumption**:
+3. **Remote Content Loading**:
+   - 既存記事を開いた際、ローカルにドラフトが存在しない場合は、GitHub API
+     を介して**最新のコンテンツを取得**し、エディタに表示する。
+   - Frontmatter (YAML) と本文 (Markdown)
+     は自動的にパースされ、編集可能な状態になる。
+
+4. **Reset to Remote (Discard Changes)**:
+   - 編集（ドラフト）中に「Reset」ボタンを押すと、ローカルの変更を**破棄**できる。
+   - 破棄後、再度 GitHub から最新のコンテンツを読み込み直し、初期状態に戻る。
+
+5. **Session Resumption**:
    - ブラウザを閉じたりリロードしたりしても、次回アクセス時にドラフトが復元され、続きから編集できる。
 
 ## US-06: Save as Pull Request (保存とPR作成)

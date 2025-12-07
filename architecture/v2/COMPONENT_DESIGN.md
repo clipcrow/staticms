@@ -169,7 +169,7 @@ export function ContentList({ items, loading, onSelect }: ContentListProps) {
 
 データ取得とイベントハンドリングを担当。
 
-```tsx
+````tsx
 // src/app/features/content-browser/ContentBrowser.tsx
 import { useRemoteContent } from "@/app/hooks/useRemoteContent";
 import { ContentList } from "./ContentList";
@@ -190,7 +190,35 @@ export function ContentBrowser() {
     />
   );
 }
-```
+### Container: `ContentConfigEditor.tsx`
+
+`ContentBrowser` から呼ばれる、設定編集用のコンテナ。YAMLのパースとバリデーション、APIへの保存を担当。
+
+```tsx
+// src/app/features/config/ContentConfigEditor.tsx
+export function ContentConfigEditor({
+  owner,
+  repo,
+  config, // Current Config
+  mode // "add" | "edit"
+}: ContentConfigEditorProps) {
+  // State: FormData (Name, Folder, Fields(YAML string))
+  
+  const handleSave = async () => {
+     // 1. Parse YAML fields
+     // 2. Construct new Config object
+     // 3. POST /api/repo/:owner/:repo/config
+  };
+
+  return (
+    <form>
+       {/* Type Select, Name Input, Path Input */}
+       {/* Fields YAML TextArea */}
+       {/* Save / Cancel Buttons */}
+    </form>
+  )
+}
+````
 
 ## 5. CSS Strategy
 
