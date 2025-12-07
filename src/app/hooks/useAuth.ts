@@ -1,84 +1,60 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-export interface User {
-  login: string;
-  avatar_url: string;
-  name?: string;
-}
+export const useAuth = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [username, setUsername] = useState<string | null>(null);
 
-interface AuthState {
-  user: User | null;
-  loading: boolean;
-  error: Error | null;
-}
-
-export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    loading: true,
-    error: null,
-  });
-
-  /* DEBUG LOG */
-  console.log("useAuth hook called");
-
-  useEffect(() => {
-    console.log("useAuth useEffect called");
-    let mounted = true;
-
-    async function checkAuth() {
-      try {
-        console.log("Fetching /api/user...");
-        const res = await fetch("/api/user");
-        if (res.status === 401) {
-          if (mounted) {
-            setAuthState({ user: null, loading: false, error: null });
-          }
-          return;
+  // Expose checkAuth for manual calls
+  const checkAuth = useCallback(async () => {
+    try {
+      const userRes = await fetch("/api/user");
+      if (userRes.ok) {
+        const data = await userRes.json();
+        setIsAuthenticated(true);
+        const login = data.login || data.username || "";
+        setUsername(login);
+        if (login) {
+          localStorage.setItem("staticms_user", login);
         }
-        if (!res.ok) {
-          throw new Error(`Auth check failed: ${res.statusText}`);
-        }
-        const user = await res.json();
-
-        // Persist user for draft keys (See US-05, DATA_MODEL.md)
-        if (user && user.login) {
-          localStorage.setItem("staticms_user", user.login);
-        }
-
-        if (mounted) {
-          setAuthState({ user, loading: false, error: null });
-        }
-      } catch (e) {
-        if (mounted) {
-          setAuthState({
-            user: null,
-            loading: false,
-            error: e instanceof Error ? e : new Error(String(e)),
-          });
+      } else {
+        console.warn(
+          "[useAuth] Auth check failed with status:",
+          userRes.status,
+        );
+        if (userRes.status === 401 || userRes.status === 403) {
+          localStorage.removeItem("staticms_user");
+          setIsAuthenticated(false);
         }
       }
+    } catch (e) {
+      console.error("[useAuth] Auth check error", e);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
     }
-
-    checkAuth();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
-  const login = () => {
-    globalThis.location.href = `/api/auth/login?returnTo=${
-      encodeURIComponent(
-        globalThis.location.pathname,
-      )
-    }`;
-  };
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
-  const logout = () => {
-    localStorage.removeItem("staticms_user");
-    globalThis.location.href = "/api/auth/logout";
-  };
+  const login = useCallback((returnTo?: string, forceLogin = false) => {
+    // Use a small timeout to allow UI to update before redirecting
+    setTimeout(() => {
+      const params = new URLSearchParams();
+      if (returnTo) params.set("returnTo", returnTo);
+      if (forceLogin) params.set("prompt", "login");
 
-  return { ...authState, login, logout };
-}
+      const url = `/api/auth/login?${params.toString()}`;
+      globalThis.location.href = url;
+    }, 10);
+  }, []);
+
+  return {
+    isAuthenticated,
+    loading,
+    login,
+    username,
+  };
+};

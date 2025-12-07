@@ -52,6 +52,7 @@ app.use(authRouter.routes());
 app.use(authRouter.allowedMethods());
 
 router.get("/api/repositories", listRepositories);
+router.get("/api/user/repos", listRepositories); // v1 compatibility
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);

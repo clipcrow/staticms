@@ -1,50 +1,12 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-
-interface Repository {
-  id: number;
-  name: string;
-  full_name: string;
-  description: string;
-}
+import { useNavigate } from "react-router-dom";
+import { RepositorySelector as V1RepositorySelector } from "@/app/components/repository/RepositorySelector.tsx";
 
 export function RepositorySelector() {
-  const [repos, setRepos] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch("/api/repositories")
-      .then((res) => res.json())
-      .then((data) => {
-        setRepos(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch repos", err);
-        setLoading(false);
-      });
-  }, []);
+  const handleSelect = (repoFullName: string) => {
+    navigate(`/${repoFullName}`);
+  };
 
-  if (loading) {
-    return <div className="ui active centered inline loader"></div>;
-  }
-
-  return (
-    <div className="ui container" style={{ marginTop: "2em" }}>
-      <h1 className="ui header">Select Repository</h1>
-      <div className="ui relaxed divided list repository-list">
-        {repos.map((repo) => (
-          <div className="item repo-item" key={repo.id} role="listitem">
-            <i className="large github middle aligned icon"></i>
-            <div className="content">
-              <Link className="header" to={`/${repo.full_name}`}>
-                {repo.full_name}
-              </Link>
-              <div className="description">{repo.description}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <V1RepositorySelector onSelect={handleSelect} />;
 }
