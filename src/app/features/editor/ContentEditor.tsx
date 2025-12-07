@@ -1,15 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import {
-  Collection,
-  Field,
-  useContentConfig,
-} from "@/app/hooks/useContentConfig.ts";
-import { Draft, FileItem, useDraft } from "@/app/hooks/useDraft.ts";
+import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
+import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
 import yaml from "js-yaml";
 
-// Simple Frontmatter Parser
+// V1 Components
+import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
+import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEditor.tsx";
+import {
+  Content as V1Content,
+  Field as V1Field,
+} from "@/app/components/editor/types.ts";
+
+// Simple Frontmatter Parser (Reuse existing)
 function parseFrontMatter(text: string) {
   const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (match) {
@@ -21,7 +25,6 @@ function parseFrontMatter(text: string) {
       console.warn("Failed to parse YAML frontmatter", e);
     }
   }
-  // Try to check if it starts with --- but maybe different newline handling
   if (text.startsWith("---")) {
     const parts = text.split("---");
     if (parts.length >= 3) {
@@ -35,7 +38,6 @@ function parseFrontMatter(text: string) {
       }
     }
   }
-
   return { data: {}, content: text };
 }
 
@@ -43,7 +45,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const { owner, repo, collectionName, articleName } = useParams();
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -51,9 +52,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     { prUrl: string; prNumber: number } | null
   >(null);
 
+  // SSE for PR updates (Keep existing logic)
   useEffect(() => {
     if (!prInfo) return;
-
     const eventSource = new EventSource("/api/events");
     eventSource.onmessage = (event) => {
       try {
@@ -82,7 +83,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
   const user = localStorage.getItem("staticms_user") || "anonymous";
   const effectiveArticleName = articleName || "__new__";
-
   const folder = collection?.folder ? collection.folder : null;
   const draftKey =
     `draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
@@ -96,7 +96,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     },
   );
 
-  // Fetch remote content if editing and no local draft
+  // Fetch remote content (Keep existing logic)
   useEffect(() => {
     if (
       mode === "new" ||
@@ -149,81 +149,11 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     repo,
     collection,
     articleName,
-    setDraft,
-    fetching,
     folder,
+    fetching,
+    setDraft,
     showToast,
   ]);
-
-  if (!loaded || !config) {
-    return <div className="ui active centered inline loader"></div>;
-  }
-  if (!collection) {
-    return <div className="ui error message">Collection not found</div>;
-  }
-
-  const insertTextAtCursor = (text: string, insertion: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return text + insertion;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    return text.slice(0, start) + insertion + text.slice(end);
-  };
-
-  const handleImageUpload = (files: FileList | null) => {
-    if (prInfo) return;
-    if (!files || files.length === 0) return;
-
-    const file = files[0];
-    if (!file.type.startsWith("image/")) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const newItem: FileItem = {
-        name: file.name,
-        type: "file",
-        content: content,
-        path: `images/${file.name}`,
-      };
-
-      setDraft((prev: Draft) => ({
-        ...prev,
-        pendingImages: [...(prev.pendingImages || []), newItem],
-        body: insertTextAtCursor(prev.body, `![${file.name}](${newItem.path})`),
-      }));
-      showToast("Image added to draft", "info");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const onPaste = (e: React.ClipboardEvent) => {
-    if (prInfo) return;
-    if (e.clipboardData.files.length > 0) {
-      e.preventDefault();
-      handleImageUpload(e.clipboardData.files);
-    }
-  };
-
-  const onDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (prInfo) return;
-    if (e.dataTransfer.files.length > 0) {
-      handleImageUpload(e.dataTransfer.files);
-    }
-  };
-
-  const handleChange = (fieldName: string, value: string) => {
-    if (fieldName === "body") {
-      setDraft((prev: Draft) => ({ ...prev, body: value }));
-    } else {
-      setDraft((prev: Draft) => ({
-        ...prev,
-        frontMatter: { ...prev.frontMatter, [fieldName]: value },
-      }));
-    }
-  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -231,7 +161,8 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       let savePath: string;
 
       if (mode === "new") {
-        const title = draft.frontMatter.title as string;
+        // deno-lint-ignore no-explicit-any
+        const title = (draft.frontMatter as any).title as string;
         let filename = `post-${Date.now()}.md`;
         if (title) {
           filename = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
@@ -239,8 +170,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
             "",
           ) + ".md";
         } else {
-          // For now continue using prompt for filename as it requires user input
-          // Or we can open a modal. Simplicity for now:
           const userInput = prompt(
             "Enter filename (e.g. my-post.md):",
             filename,
@@ -248,61 +177,105 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
           if (!userInput) throw new Error("Filename required");
           filename = userInput;
         }
+
         savePath = folder ? `${folder}/${filename}` : filename;
       } else {
-        savePath = folder ? `${folder}/${articleName}` : (articleName || "");
+        savePath = folder ? `${folder}/${articleName}` : articleName!;
       }
 
-      const res = await fetch(`/api/repo/${owner}/${repo}/pr`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          draft,
-          path: savePath,
-          collectionName,
-          baseBranch: "main",
-        }),
-      });
+      const frontMatterString = Object.keys(draft.frontMatter || {}).length > 0
+        ? yaml.dump(draft.frontMatter)
+        : "";
+      const fileContent = frontMatterString
+        ? `---\n${frontMatterString}---\n\n${draft.body}`
+        : draft.body;
+
+      // TODO: Handle Image Uploads First (similar to v1 logic, or reuse v1 hook logic later)
+      // For now, assume images are already uploaded or we just save text.
+
+      const res = await fetch(
+        `/api/repo/${owner}/${repo}/contents/${savePath}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `Update ${savePath}`,
+            content: btoa(unescape(encodeURIComponent(fileContent))), // UTF-8 safe base64
+            branch: "main", // TODO: Configurable branch
+            sha: undefined, // TODO: We need SHA if updating
+          }),
+        },
+      );
 
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Failed to create PR");
+        throw new Error(err.error || "Failed to save");
       }
+
       const data = await res.json();
-      setPrInfo({ prUrl: data.prUrl, prNumber: data.prNumber });
-      showToast("Pull Request created successfully!", "success");
+      if (data.pr) {
+        setPrInfo({ prUrl: data.pr.html_url, prNumber: data.pr.number });
+        showToast("Pull Request created/updated!", "success");
+      } else {
+        showToast("Saved successfully!", "success");
+        clearDraft();
+        if (mode === "new") {
+          // Redirect to edit mode? For now just stay or reload
+          // navigate...
+        }
+      }
     } catch (e) {
-      showToast("Error saving: " + (e as Error).message, "error");
+      console.error(e);
+      showToast((e as Error).message, "error");
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = () => {
-    if (confirm("Are you sure? This will discard local changes.")) {
+    if (confirm("Discard local changes?")) {
       clearDraft();
-      showToast("Draft discarded", "info");
+      // Trigger refetch?
+      globalThis.location.reload();
     }
   };
 
+  if (!collection || !config) {
+    return <div className="ui active centered inline loader"></div>;
+  }
+
+  // Adapter: Convert v2 collection/config to v1 Content interface
+  const v1Fields: V1Field[] = collection.fields?.map((f) => ({
+    name: f.name,
+    value: "",
+    defaultValue: "",
+  })) || [];
+
+  const currentContent: V1Content = {
+    owner: owner || "",
+    repo: repo || "",
+    filePath: folder
+      ? `${folder}/${effectiveArticleName}`
+      : effectiveArticleName,
+    fields: v1Fields,
+    name: effectiveArticleName,
+    type: "collection-files", // Simplified assumption
+  };
+
   return (
-    <div className="ui container content-editor" style={{ marginTop: "2em" }}>
-      <div
-        className="ui flex"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "1em",
-        }}
-      >
-        <h2 className="ui header" style={{ margin: 0 }}>
+    <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui segment basic">
+        <h2 className="ui header">
           {mode === "new" ? "New" : "Edit"} {collection.label}
           {fromStorage && mode === "edit" && (
             <div className="ui horizontal label orange">Draft Restored</div>
           )}
         </h2>
-        <div>
+
+        {/* Actions Toolbar */}
+        <div style={{ marginBottom: "1rem", textAlign: "right" }}>
           {prInfo && (
             <a
               href={prInfo.prUrl}
@@ -336,73 +309,44 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         </div>
       </div>
 
-      <div className={`ui form ${prInfo ? "disabled" : ""}`}>
-        {(!collection.fields || collection.fields.length === 0) && (
-          <div className="ui warning message">
-            <div className="header">No Fields Defined</div>
-            <p>
-              Please define 'fields' in your staticms.yml for collection '
-              {collection.name}'.
-            </p>
-          </div>
-        )}
-        {collection.fields?.map((field: Field) => {
-          const value = field.name === "body"
-            ? draft.body
-            : draft.frontMatter[field.name] || "";
-
-          return (
-            <div className="field" key={field.name}>
-              <label>{field.label}</label>
-              {field.widget === "markdown" || field.name === "body"
-                ? (
-                  <textarea
-                    ref={field.name === "body" || field.widget === "markdown"
-                      ? textareaRef
-                      : null}
-                    name={field.name}
-                    value={value as string}
-                    onChange={(e) => handleChange(field.name, e.target.value)}
-                    onPaste={field.name === "body" ||
-                        field.widget === "markdown"
-                      ? onPaste
-                      : undefined}
-                    onDrop={field.name === "body" || field.widget === "markdown"
-                      ? onDrop
-                      : undefined}
-                    disabled={!!prInfo}
-                  />
-                )
-                : (
-                  <input
-                    type="text"
-                    name={field.name}
-                    value={value as string}
-                    onChange={(e) => handleChange(field.name, e.target.value)}
-                    disabled={!!prInfo}
-                  />
-                )}
+      <div className="ui stackable grid">
+        <div className="twelve wide column">
+          {/* FrontMatter Editor */}
+          {(!collection.fields || collection.fields.length === 0) && (
+            <div className="ui warning message">
+              <div className="header">No Fields Defined</div>
+              <p>Please define 'fields' in your staticms.yml.</p>
             </div>
-          );
-        })}
-      </div>
+          )}
 
-      {draft.pendingImages && draft.pendingImages.length > 0 && (
-        <div className="ui segment">
-          <h4 className="ui header">Pending Images</h4>
-          <div className="ui small images">
-            {draft.pendingImages.map((img: FileItem, idx: number) => (
-              <img
-                key={idx}
-                src={img.content}
-                alt={img.name}
-                title={img.name}
-                className="ui image border"
-              />
-            ))}
+          <FrontMatterItemEditor
+            frontMatter={draft.frontMatter as Record<string, unknown>}
+            setFrontMatter={(fm) =>
+              setDraft((prev) => ({ ...prev, frontMatter: fm }))}
+            currentContent={currentContent}
+            isPrLocked={!!prInfo}
+          />
+
+          {/* Markdown Editor */}
+          <div className="ui segment">
+            <MarkdownEditor
+              body={draft.body}
+              setBody={(body) => setDraft((prev) => ({ ...prev, body }))}
+              isPrLocked={!!prInfo}
+              currentContent={currentContent}
+              height={600}
+              // onImageUpload={...} // TODO: Implement image upload hook logic
+            />
           </div>
         </div>
-      )}
+        <div className="four wide column">
+          {/* Future Sidebar (History, Images) */}
+          <div className="ui segment">
+            <h4 className="ui header">Sidebar</h4>
+            <p>Coming back soon...</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

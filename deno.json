@@ -57,6 +57,8 @@
     "@std/fmt": "jsr:@std/fmt@^0.225.0",
     "@std/encoding": "jsr:@std/encoding@^1.0.0",
     "esbuild": "npm:esbuild@0.20.2",
+    "react-md-editor": "npm:@uiw/react-md-editor@^4.0.0",
+    "rehype-highlight": "npm:rehype-highlight@^7.0.0",
     "deno_esbuild": "jsr:@luca/esbuild-deno-loader@^0.10.3"
   }
 }
