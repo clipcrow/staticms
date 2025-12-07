@@ -66,17 +66,18 @@ export function ContentConfigEditor({
       };
 
       // Merge into config
-      const newConfig = { ...config };
+      // Deep copy to avoid mutating prop/state directly
+      const newConfig = JSON.parse(JSON.stringify(config));
       if (!newConfig.collections) newConfig.collections = [];
 
       if (mode === "add") {
         newConfig.collections.push(newCollection);
       } else {
-        // Edit: find by name (assuming name is ID, which might change, but for MVP assumes name key)
-        // Ideally we should use original name to find index
-        const index = newConfig.collections.findIndex((c) =>
+        // Edit
+        const index = newConfig.collections.findIndex((c: any) =>
           c.name === initialData?.name
         );
+
         if (index >= 0) {
           newConfig.collections[index] = newCollection;
         } else {
@@ -85,11 +86,12 @@ export function ContentConfigEditor({
       }
 
       // Save to API
-      const configString = yaml.dump(newConfig);
       const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
-        headers: { "Content-Type": "text/yaml" }, // or text/plain
-        body: configString,
+        headers: {
+          "Content-Type": "text/plain",
+        },
+        body: yaml.dump(newConfig),
       });
 
       if (!res.ok) {

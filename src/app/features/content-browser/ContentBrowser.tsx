@@ -18,9 +18,8 @@ export function ContentBrowser() {
   };
 
   const handleSave = () => {
-    setSearchParams({});
-    // Reload to fetch the updated config from the server
-    globalThis.location.reload();
+    // Force a full page navigation/reload to ensure config is refetched
+    globalThis.location.href = `/${owner}/${repo}`;
   };
 
   const isEditing = action === "add" || (action === "edit" && target);

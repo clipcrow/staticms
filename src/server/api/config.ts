@@ -53,20 +53,29 @@ export const saveRepoConfig = async (
 ) => {
   const { repo } = ctx.params;
 
-  // We expect raw YAML body. Oak's request.body is a method in older/some versions but in standard Request it's a getter.
-  // Oak's ctx.request.body() returns a Body object.
-  // We want text.
-  const body = ctx.request.body;
-  if (body.type() !== "text") {
-    ctx.response.status = 400;
-    ctx.response.body = "Invalid body type";
-    return;
+  // We expect raw YAML body. Use 'any' cast to bypass strict typing issues with Oak
+  try {
+    const body = ctx.request.body;
+    // deno-lint-ignore no-explicit-any
+    const configYaml = await (body as any).text();
+    console.log(`[Config API] Received config update for ${repo}:`, configYaml);
+
+    // Simple validation (check if not empty)
+    if (!configYaml || !configYaml.trim()) {
+      throw new Error("Empty config body");
+    }
+
+    MOCK_CONFIGS[repo] = configYaml;
+    console.log(`[Config API] Saved config for ${repo}`);
+
+    ctx.response.status = 200;
+    ctx.response.body = { success: true };
+  } catch (e) {
+    console.error("[Config API] Error saving config:", e);
+    ctx.response.status = 500;
+    ctx.response.body = {
+      error: "Failed to save config: " +
+        (e instanceof Error ? e.message : String(e)),
+    };
   }
-  const configYaml = await body.text();
-
-  console.log(`[MockAPI] Saving config for ${repo}`);
-  MOCK_CONFIGS[repo] = configYaml;
-
-  ctx.response.status = 200;
-  ctx.response.body = { success: true };
 };

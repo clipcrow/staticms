@@ -89,47 +89,79 @@ Deno.test("US-04: Content Configuration Management", async () => {
       "- {label: 'Title', name: 'title', widget: 'string'}",
     );
 
-    // Submit
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: "load" }),
-      page.evaluate(() => {
-        const submitBtn = document.querySelector(
-          'button[type="submit"]',
-        ) as HTMLButtonElement;
-        submitBtn.click();
-      }),
-    ]);
+    // Verify value
+    const textareaVal = await page.evaluate(() =>
+      (document.querySelector("textarea") as HTMLTextAreaElement).value
+    );
+    console.log("Textarea value:", textareaVal);
+    assert(textareaVal.includes("Title"), "Textarea should be updated");
 
-    // Wait for reload (Dashboard should appear again)
-    // The reload happens, so we wait for content-browser-header and the NEW item
-    await page.waitForSelector(".content-browser-header");
+    // Submit
+    await page.evaluate(() => {
+      const submitBtn = document.querySelector(
+        'button[type="submit"]',
+      ) as HTMLButtonElement;
+      submitBtn.click();
+    });
+
+    // Wait for the URL to change back to NOT having ?action=add
+    // Explicit wait to allow reload to happen
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // Check for error message
+    const errorMsg = await page.evaluate(() => {
+      const el = document.querySelector(".ui.negative.message");
+      return el ? (el as HTMLElement).innerText : null;
+    });
+    if (errorMsg) {
+      console.error("Config Save Error:", errorMsg);
+      throw new Error(`Config Save Error: ${errorMsg}`);
+    }
+
+    const urlAfterAdd = await page.evaluate(() => location.href);
+    console.log("URL after add submit:", urlAfterAdd);
+    assert(
+      !urlAfterAdd.includes("action="),
+      `Action param should be cleared, got ${urlAfterAdd}`,
+    );
 
     // Check if "News" is in the list
     await page.waitForSelector(".collection-item");
-    const collections = await page.evaluate(() =>
+    const collectionHeaders = await page.evaluate(() =>
       Array.from(document.querySelectorAll(".collection-item .header")).map(
         (el) => el.textContent,
       )
     );
     assert(
-      collections.includes("News"),
+      collectionHeaders.includes("News"),
       "Should list 'News' collection after add",
     );
+
+    // Check duplication
+    const newsCount = collectionHeaders.filter((h) => h === "News").length;
+    assert(newsCount === 1, "Should have exactly one 'News' item");
 
     // 3. Edit Content
     // Find "Config" button for "News"
     await page.evaluate(() => {
+      // Find the item with header "News"
       const items = Array.from(document.querySelectorAll(".collection-item"));
-      const newsItem = items.find((el) => el.textContent?.includes("News"));
+      const newsItem = items.find((item) =>
+        item.querySelector(".header")?.textContent === "News"
+      );
       if (!newsItem) throw new Error("News item not found");
 
-      const configBtn = newsItem.querySelector("a.button.basic") as HTMLElement; // Config button
-      if (configBtn) configBtn.click();
-      else throw new Error("Config button not found");
+      // Find Config button
+      const configBtn = Array.from(newsItem.querySelectorAll("a.button")).find(
+        (a) => a.textContent?.trim() === "Config",
+      ) as HTMLElement;
+      if (!configBtn) throw new Error("Config button not found for News");
+
+      configBtn.click();
     });
 
-    // Verify URL
-    await page.waitForSelector("form"); // reusing wait for form
+    // Wait for editor
+    await page.waitForSelector("form");
     const urlEdit = await page.evaluate(() => location.href);
     assert(urlEdit.includes("action=edit"), "URL should contain action=edit");
     assert(urlEdit.includes("target=news"), "URL should contain target=news");
@@ -145,20 +177,13 @@ Deno.test("US-04: Content Configuration Management", async () => {
       submitBtn.click();
     });
 
-    try {
-      await page.waitForNavigation({ waitUntil: "load" });
-    } catch {
-      const errorMsg = await page.evaluate(() => {
-        const el = document.querySelector(".ui.negative.message");
-        return el ? el.textContent : null;
-      });
-      if (errorMsg) {
-        throw new Error(`Submit (Edit) failed with error: ${errorMsg}`);
-      }
-    }
+    // Wait for return to dashboard
+    await page.waitForFunction(() => !location.search.includes("action="));
 
-    // Wait for reload and verification
-    await page.waitForSelector(".content-browser-header");
+    // Wait for DOM stabilization
+    await new Promise((r) => setTimeout(r, 2000));
+
+    await page.waitForSelector(".collection-item", { timeout: 15000 }); // Ensure items are loaded
 
     const collectionsAfter = await page.evaluate(() =>
       Array.from(document.querySelectorAll(".collection-item .header")).map(
