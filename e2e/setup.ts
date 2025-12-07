@@ -21,8 +21,8 @@ export async function withPage(
 
     // Proxy browser console logs to Deno terminal
     // deno-lint-ignore no-explicit-any
-    (page as any).on("console", (msg: any) => {
-      console.log(`[Browser] ${msg.text}`);
+    page.addEventListener("console", (e: any) => {
+      console.log(`[Browser] ${e.detail.text}`);
     });
 
     await testFn(page);

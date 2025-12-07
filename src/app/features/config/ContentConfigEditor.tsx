@@ -67,14 +67,14 @@ export function ContentConfigEditor({
 
       // Merge into config
       // Deep copy to avoid mutating prop/state directly
-      const newConfig = JSON.parse(JSON.stringify(config));
+      const newConfig: Config = JSON.parse(JSON.stringify(config));
       if (!newConfig.collections) newConfig.collections = [];
 
       if (mode === "add") {
         newConfig.collections.push(newCollection);
       } else {
         // Edit
-        const index = newConfig.collections.findIndex((c: any) =>
+        const index = newConfig.collections.findIndex((c) =>
           c.name === initialData?.name
         );
 

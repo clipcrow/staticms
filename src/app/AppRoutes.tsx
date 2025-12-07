@@ -9,7 +9,7 @@ export interface AppRoutesProps {
   RepositorySelectorComponent?: React.ComponentType;
   ContentBrowserComponent?: React.ComponentType;
   ContentRouteComponent?: React.ComponentType;
-  ContentEditorComponent?: React.ComponentType<any>;
+  ContentEditorComponent?: React.ComponentType<{ mode?: "new" | "edit" }>;
 }
 
 export function AppRoutes({
