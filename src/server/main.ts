@@ -28,6 +28,22 @@ router.get("/api/health", (ctx) => {
   ctx.response.body = { status: "ok", version: "2.0.0" };
 });
 
+// Debug Shutdown (Protected by Token)
+router.post("/_debug/shutdown", (ctx) => {
+  const token = Deno.env.get("STATICMS_ADMIN_TOKEN");
+  const headerToken = ctx.request.headers.get("X-Admin-Token");
+
+  if (token && token === headerToken) {
+    console.log("Shutdown signal received via API. Exiting...");
+    ctx.response.body = { status: "shutdown" };
+    // Exit after response
+    setTimeout(() => Deno.exit(0), 100);
+  } else {
+    ctx.response.status = 403;
+    ctx.response.body = { error: "Forbidden" };
+  }
+});
+
 router.get("/api/repositories", listRepositories);
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);

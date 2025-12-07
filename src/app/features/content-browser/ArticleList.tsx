@@ -56,19 +56,19 @@ export function ArticleList() {
         <div className="content">
           {collectionDef.label}
           <div className="sub header">
-            {/* New Breadcrumb: [Root] (Icon) / :owner :repo / :collectionName */}
-            {
-              /* Note: Root is effectively handled by UI layout or simple links here for now.
-                 Design says: [GitHub Icon] / :owner :repo / :collectionName.
-                 Here we just put link to dashboard.
-             */
-            }
             <Link to={`/${owner}/${repo}`}>
               {owner} {repo}
             </Link>{" "}
             / {collectionName}
           </div>
         </div>
+        <Link
+          to={`/${owner}/${repo}/${collectionName}/new`}
+          className="ui right floated primary button"
+        >
+          <i className="plus icon"></i>
+          New
+        </Link>
       </h1>
 
       <div className="ui segment">
