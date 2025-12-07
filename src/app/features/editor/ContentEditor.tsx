@@ -12,6 +12,7 @@ import {
   Content as V1Content,
   Field as V1Field,
 } from "@/app/components/editor/types.ts";
+import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 
 // Simple Frontmatter Parser (Reuse existing)
 function parseFrontMatter(text: string) {
@@ -190,9 +191,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         ? `---\n${frontMatterString}---\n\n${draft.body}`
         : draft.body;
 
-      // TODO: Handle Image Uploads First (similar to v1 logic, or reuse v1 hook logic later)
-      // For now, assume images are already uploaded or we just save text.
-
       const res = await fetch(
         `/api/repo/${owner}/${repo}/contents/${savePath}`,
         {
@@ -222,8 +220,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         showToast("Saved successfully!", "success");
         clearDraft();
         if (mode === "new") {
-          // Redirect to edit mode? For now just stay or reload
-          // navigate...
+          // Redirect?
         }
       }
     } catch (e) {
@@ -237,7 +234,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const handleReset = () => {
     if (confirm("Discard local changes?")) {
       clearDraft();
-      // Trigger refetch?
       globalThis.location.reload();
     }
   };
@@ -264,50 +260,70 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     type: "collection-files", // Simplified assumption
   };
 
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      label: `${owner}/${repo}`,
+      to: `/${owner}/${repo}`,
+    },
+  ];
+
+  if (collection) {
+    breadcrumbs.push({
+      label: collection.label,
+      to: `/${owner}/${repo}/${collection.name}`,
+    });
+  }
+
+  breadcrumbs.push({
+    label: mode === "new" ? "New Content" : effectiveArticleName,
+  });
+
   return (
     <div className="ui container" style={{ marginTop: "2rem" }}>
-      <div className="ui segment basic">
-        <h2 className="ui header">
-          {mode === "new" ? "New" : "Edit"} {collection.label}
-          {fromStorage && mode === "edit" && (
-            <div className="ui horizontal label orange">Draft Restored</div>
-          )}
-        </h2>
-
-        {/* Actions Toolbar */}
-        <div style={{ marginBottom: "1rem", textAlign: "right" }}>
-          {prInfo && (
-            <a
-              href={prInfo.prUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{ marginRight: "1em" }}
-            >
-              PR #{prInfo.prNumber} Open{" "}
-              <i className="external alternate icon"></i>
-            </a>
-          )}
-          {fromStorage && !prInfo && (
+      <Header
+        breadcrumbs={breadcrumbs}
+        rightContent={
+          <div style={{ display: "flex", gap: "0.5em", alignItems: "center" }}>
+            {prInfo && (
+              <a
+                href={prInfo.prUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{ marginRight: "1em" }}
+              >
+                PR #{prInfo.prNumber} Open{" "}
+                <i className="external alternate icon"></i>
+              </a>
+            )}
+            {fromStorage && (mode === "edit") && (
+              <div
+                className="ui horizontal label orange"
+                style={{ marginRight: "1em" }}
+              >
+                Draft Restored
+              </div>
+            )}
+            {fromStorage && !prInfo && (
+              <button
+                type="button"
+                className="ui button negative basic"
+                onClick={handleReset}
+                disabled={saving}
+              >
+                Reset
+              </button>
+            )}
             <button
               type="button"
-              className="ui button negative basic"
-              onClick={handleReset}
-              style={{ marginRight: "0.5em" }}
-              disabled={saving}
+              className={`ui primary button ${saving ? "loading" : ""}`}
+              onClick={handleSave}
+              disabled={saving || !!prInfo}
             >
-              Reset
+              {prInfo ? "Locked (PR Created)" : "Save"}
             </button>
-          )}
-          <button
-            type="button"
-            className={`ui primary button ${saving ? "loading" : ""}`}
-            onClick={handleSave}
-            disabled={saving || !!prInfo}
-          >
-            {prInfo ? "Locked (PR Created)" : "Save"}
-          </button>
-        </div>
-      </div>
+          </div>
+        }
+      />
 
       <div className="ui stackable grid">
         <div className="twelve wide column">
@@ -335,7 +351,6 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
               isPrLocked={!!prInfo}
               currentContent={currentContent}
               height={600}
-              // onImageUpload={...} // TODO: Implement image upload hook logic
             />
           </div>
         </div>
