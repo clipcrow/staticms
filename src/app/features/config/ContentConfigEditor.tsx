@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import yaml from "js-yaml";
 import { Collection, Config } from "@/app/hooks/useContentConfig.ts";
+import { ContentSettings } from "@/app/components/common/ContentSettings.tsx";
+import { Content as V1Content } from "@/app/components/editor/types.ts";
 
 interface ContentConfigEditorProps {
   owner: string;
   repo: string;
-  config: Config; // Current full config
-  initialData?: Collection; // If editing
+  config: Config;
+  initialData?: Collection;
   mode: "add" | "edit";
   onCancel: () => void;
   onSave: () => void;
@@ -21,36 +23,78 @@ export function ContentConfigEditor({
   onCancel,
   onSave,
 }: ContentConfigEditorProps) {
-  const [formData, setFormData] = useState<Partial<Collection>>({
-    type: "collection",
-    name: "",
-    label: "",
-    folder: "",
-    fields: [],
-  });
-  // Default boilerplate for fields to help user avoid empty fields
-  const [fieldsYaml, setFieldsYaml] = useState(
-    mode === "add"
-      ? `- label: "Title"
-  name: "title"
-  widget: "string"
-- label: "Body"
-  name: "body"
-  widget: "markdown"`
-      : "",
-  );
+  // Adapter: toV1Content
+  const toV1Content = (col: Collection | undefined): V1Content => {
+    if (!col && mode === "add") {
+      return {
+        owner,
+        repo,
+        filePath: "",
+        fields: [],
+        type: "collection-files",
+        name: "",
+      };
+    }
+
+    const c = col!;
+    let type: V1Content["type"] = "collection-files";
+    if (c.type === "singleton") {
+      type = c.folder ? "singleton-dir" : "singleton-file";
+    } else {
+      type = "collection-files"; // defaulting to collection-files
+    }
+
+    return {
+      owner,
+      repo,
+      name: c.label,
+      filePath: c.folder || c.file || "",
+      fields: c.fields?.map((f) => ({
+        name: f.name,
+        value: "",
+        defaultValue: "",
+      })) || [],
+      type,
+    };
+  };
+
+  const [formData, setFormData] = useState<V1Content>(toV1Content(initialData));
   const [saving, setSaving] = useState(false);
+  // deno-lint-ignore no-unused-vars
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (mode === "edit" && initialData) {
-      setFormData(initialData);
-      // Convert fields object back to YAML string for editing
-      if (initialData.fields) {
-        setFieldsYaml(yaml.dump(initialData.fields));
-      }
+  // Adapter: fromV1Content
+  const fromV1Content = (content: V1Content): Collection => {
+    const isSingleton = content.type?.startsWith("singleton");
+
+    const label = content.name || "Untitled";
+    let name = initialData?.name;
+    if (!name || mode === "add") {
+      name = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
+        /(^-|-$)/g,
+        "",
+      );
     }
-  }, [mode, initialData]);
+
+    const col: Collection = {
+      name: name!,
+      label: label,
+      type: isSingleton ? "singleton" : "collection",
+      fields: content.fields.map((f) => ({
+        name: f.name,
+        label: f.name,
+        widget: "string",
+      })),
+    };
+
+    if (content.type === "singleton-file") {
+      col.file = content.filePath;
+    } else {
+      col.folder = content.filePath;
+    }
+
+    return col;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,35 +102,24 @@ export function ContentConfigEditor({
     setError(null);
 
     try {
-      // Parse fields YAML
-      let parsedFields = [];
-      try {
-        if (fieldsYaml.trim()) {
-          // deno-lint-ignore no-explicit-any
-          parsedFields = yaml.load(fieldsYaml) as any[];
-        }
-      } catch (e) {
-        throw new Error("Invalid Fields YAML: " + (e as Error).message);
-      }
+      const newCollection = fromV1Content(formData);
 
-      const newCollection: Collection = {
-        ...formData as Collection,
-        fields: parsedFields,
-      };
-
-      // Merge into config
-      // Deep copy to avoid mutating prop/state directly
+      // Deep copy config
       const newConfig: Config = JSON.parse(JSON.stringify(config));
       if (!newConfig.collections) newConfig.collections = [];
 
       if (mode === "add") {
+        if (!newCollection.fields || newCollection.fields.length === 0) {
+          newCollection.fields = [
+            { name: "title", label: "Title", widget: "string" },
+            { name: "body", label: "Body", widget: "markdown" },
+          ];
+        }
         newConfig.collections.push(newCollection);
       } else {
-        // Edit
         const index = newConfig.collections.findIndex((c) =>
           c.name === initialData?.name
         );
-
         if (index >= 0) {
           newConfig.collections[index] = newCollection;
         } else {
@@ -94,134 +127,72 @@ export function ContentConfigEditor({
         }
       }
 
-      // Save to API
       const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: {
-          "Content-Type": "text/plain",
+          "Content-Type": "application/json",
         },
-        body: yaml.dump(newConfig),
+        body: JSON.stringify({
+          message: `Update config for ${newCollection.label}`,
+          content: btoa(unescape(encodeURIComponent(yaml.dump(newConfig)))),
+          branch: "main",
+        }),
       });
 
       if (!res.ok) {
         throw new Error("Failed to save config");
       }
 
-      onSave(); // Should trigger reload in parent
-    } catch (err) {
-      setError((err as Error).message);
+      onSave();
+    } catch (e) {
+      console.error(e);
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (
+      !confirm("Are you sure you want to delete this content configuration?")
+    ) return;
+    setSaving(true);
+    try {
+      const newConfig: Config = JSON.parse(JSON.stringify(config));
+      newConfig.collections = newConfig.collections.filter((c) =>
+        c.name !== initialData?.name
+      );
+
+      const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: `Delete content config ${initialData?.label}`,
+          content: btoa(unescape(encodeURIComponent(yaml.dump(newConfig)))),
+          branch: "main",
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to delete");
+      onSave();
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting: " + (e as Error).message);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="ui segment">
-      <h2 className="ui header">
-        {mode === "add" ? "Add Content" : "Edit Content"}
-      </h2>
-
-      {error && <div className="ui negative message">{error}</div>}
-
-      <form className="ui form" onSubmit={handleSubmit}>
-        <div className="field">
-          <label>Type</label>
-          <select
-            value={formData.type || "collection"}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          >
-            <option value="collection">Collection (Folder based)</option>
-            <option value="singleton">Singleton (Single file)</option>
-          </select>
-        </div>
-
-        <div className="field">
-          <label>Name (ID)</label>
-          <input
-            type="text"
-            required
-            placeholder="posts"
-            value={formData.name || ""}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            // Disable name edit in edit mode for simplicity (as it is key)?
-            // For now allow it, but logic above relies on previous name finding.
-            // TODO: Handle rename correctly.
-          />
-        </div>
-
-        <div className="field">
-          <label>Label</label>
-          <input
-            type="text"
-            required
-            placeholder="Blog Posts"
-            value={formData.label || ""}
-            onChange={(e) =>
-              setFormData({ ...formData, label: e.target.value })}
-          />
-        </div>
-
-        {/* Conditional Path Input */}
-        <div className="field">
-          <label>
-            {formData.type === "singleton" ? "File Path" : "Folder Path"}
-          </label>
-          {formData.type === "singleton"
-            ? (
-              <input
-                type="text"
-                placeholder="data/settings.json"
-                value={formData.file || ""} // Accessing dynamic prop? Collection definition has folder/file
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    file: e.target.value,
-                    folder: undefined,
-                  })}
-              />
-            )
-            : (
-              <input
-                type="text"
-                placeholder="content/posts"
-                value={formData.folder || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    folder: e.target.value,
-                    file: undefined,
-                  })}
-              />
-            )}
-        </div>
-
-        <div className="field">
-          <label>Fields Definition (YAML)</label>
-          <textarea
-            rows={10}
-            placeholder="- {label: 'Title', name: 'title', widget: 'string'}"
-            value={fieldsYaml}
-            onChange={(e) => setFieldsYaml(e.target.value)}
-            style={{ fontFamily: "monospace" }}
-          >
-          </textarea>
-        </div>
-
-        <div className="ui buttons">
-          <button
-            type="button"
-            className="ui button"
-            onClick={onCancel}
-            disabled={saving}
-          >
-            Cancel
-          </button>
-          <div className="or"></div>
-          <button type="submit" className="ui primary button" disabled={saving}>
-            {saving ? "Saving..." : "Save Config"}
-          </button>
-        </div>
-      </form>
-    </div>
+    <ContentSettings
+      formData={formData}
+      setFormData={setFormData}
+      editingIndex={mode === "edit" ? 1 : null}
+      onSave={handleSubmit}
+      onCancel={onCancel}
+      onDelete={handleDelete}
+      repoInfo={{ owner, repo }}
+      loading={saving}
+    />
   );
 }
