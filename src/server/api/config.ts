@@ -1,6 +1,7 @@
 import { RouterContext } from "@oak/oak";
 import { getSessionToken } from "@/server/auth.ts";
 import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
+import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 
 // GET /api/repo/:owner/:repo/config
 export const getRepoConfig = async (
@@ -27,7 +28,11 @@ export const getRepoConfig = async (
       if (Array.isArray(data)) continue; // Should be a file
 
       // GitHub API returns base64 content
-      const content = atob(data.content.replace(/\n/g, ""));
+      // Use @std/encoding/base64 for robust decoding
+      const rawContent = data.content.replace(/\n/g, "");
+      const decodedBytes = decodeBase64(rawContent);
+      const content = new TextDecoder().decode(decodedBytes);
+
       ctx.response.body = content;
       ctx.response.type = "text/yaml";
       return;
@@ -46,11 +51,84 @@ export const getRepoConfig = async (
 };
 
 // POST /api/repo/:owner/:repo/config
-export const saveRepoConfig = (
+export const saveRepoConfig = async (
   ctx: RouterContext<"/api/repo/:owner/:repo/config">,
 ) => {
-  // TODO: Implement config saving via Pull Request or direct commit
-  // For now, return 501 Not Implemented
-  ctx.response.status = 501;
-  ctx.response.body = { error: "Saving config not yet implemented in v2" };
+  const { owner, repo } = ctx.params;
+  const token = await getSessionToken(ctx);
+
+  if (!token) {
+    ctx.response.status = 401;
+    ctx.response.body = { error: "Unauthorized" };
+    return;
+  }
+
+  if (!owner || !repo) {
+    ctx.response.status = 400;
+    return;
+  }
+
+  try {
+    const bodyText = await ctx.request.body.text();
+    if (!bodyText) {
+      ctx.throw(400, "Empty config body");
+    }
+
+    const client = new GitHubUserClient(token);
+
+    // 1. Determine path
+    let configPath = "staticms.config.yml";
+    const paths = ["staticms.config.yml", ".github/staticms.yml"];
+    for (const p of paths) {
+      try {
+        await client.getContent(owner, repo, p);
+        configPath = p; // Found existing
+        break;
+      } catch (_) {
+        // Ignore 404
+      }
+    }
+
+    // 2. Identify base branch (assume main for now, or fetch repo details)
+    const baseBranch = "main";
+    const baseRef = await client.getBranch(owner, repo, baseBranch);
+    const baseSha = baseRef.object.sha;
+
+    // 3. Create new branch
+    const newBranchName = `staticms-config-${
+      crypto.randomUUID().split("-")[0]
+    }`;
+    await client.createBranch(owner, repo, newBranchName, baseSha);
+
+    // 4. Upload file
+    const encodedContent = encodeBase64(new TextEncoder().encode(bodyText));
+    await client.uploadFile(
+      owner,
+      repo,
+      configPath,
+      encodedContent,
+      "Update Configuration via Staticms",
+      newBranchName,
+    );
+
+    // 5. Create PR
+    const pr = await client.createPullRequest(
+      owner,
+      repo,
+      "Update Configuration",
+      "Configuration updated via Staticms Config Editor",
+      newBranchName,
+      baseBranch,
+    );
+
+    ctx.response.body = {
+      message: "PR created",
+      prNumber: pr.number,
+      prUrl: pr.html_url,
+    };
+  } catch (e) {
+    console.error("Failed to save config:", e);
+    ctx.response.status = 500;
+    ctx.response.body = { error: (e as Error).message };
+  }
 };
