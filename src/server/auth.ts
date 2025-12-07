@@ -9,7 +9,7 @@ const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
 const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
 // Deno KV for session storage
-const kv = await Deno.openKv();
+export const kv = await Deno.openKv();
 
 export const authRouter = new Router();
 
@@ -29,6 +29,26 @@ export async function getSessionToken(ctx: Context): Promise<string | null> {
   const session = await kv.get(["sessions", sessionId]);
   return session.value as string | null;
 }
+
+// Test Login Endpoint (only for E2E)
+authRouter.get("/api/test/login", async (ctx) => {
+  const testSessionId = ctx.request.url.searchParams.get("id");
+  if (testSessionId) {
+    const session = await kv.get(["sessions", testSessionId]);
+    if (session.value) {
+      await ctx.cookies.set("session_id", testSessionId, {
+        httpOnly: false, // Let test read it if needed
+        secure: false,
+        path: "/",
+        maxAge: 60 * 60,
+      });
+      ctx.response.redirect("/");
+      return;
+    }
+  }
+  ctx.response.status = 401;
+  ctx.response.body = "Invalid Test Session";
+});
 
 // 1. Login Endpoint
 authRouter.get("/api/auth/login", async (ctx) => {

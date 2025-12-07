@@ -10,3 +10,39 @@ body {
     background-color: darken($primary-color, 10%);
   }
 }
+
+// Toast Styles
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.toast-message {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+
+  // Ensure message is visible on top
+  position: relative;
+
+  &.ui.message {
+    margin: 0; // Override semantic ui margin
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

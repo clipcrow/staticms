@@ -6,11 +6,13 @@ import {
   useContentConfig,
 } from "@/app/hooks/useContentConfig.ts";
 import { Draft, FileItem, useDraft } from "@/app/hooks/useDraft.ts";
+import { useToast } from "@/app/contexts/ToastContext.tsx";
 import matter from "gray-matter";
 
 export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const { owner, repo, collectionName, articleName } = useParams();
   const { config } = useContentConfig(owner, repo);
+  const { showToast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [saving, setSaving] = useState(false);
@@ -28,7 +30,10 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         const data = JSON.parse(event.data);
         if (data.type === "pr_update" && data.prNumber === prInfo.prNumber) {
           if (data.status === "merged" || data.status === "closed") {
-            alert(`PR #${data.prNumber} is ${data.status}. Unlocking editor.`);
+            showToast(
+              `PR #${data.prNumber} is ${data.status}. Unlocking editor.`,
+              "info",
+            );
             setPrInfo(null);
           }
         }
@@ -39,7 +44,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     return () => {
       eventSource.close();
     };
-  }, [prInfo]);
+  }, [prInfo, showToast]);
 
   const collection = config?.collections.find((c: Collection) =>
     c.name === collectionName
@@ -102,6 +107,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       })
       .catch((e) => {
         console.error(e);
+        showToast("Failed to load content", "error");
       })
       .finally(() => {
         setFetching(false);
@@ -117,6 +123,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     setDraft,
     fetching,
     folder,
+    showToast,
   ]);
 
   if (!loaded || !config) {
@@ -157,6 +164,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         pendingImages: [...(prev.pendingImages || []), newItem],
         body: insertTextAtCursor(prev.body, `![${file.name}](${newItem.path})`),
       }));
+      showToast("Image added to draft", "info");
     };
     reader.readAsDataURL(file);
   };
@@ -197,12 +205,13 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         const title = draft.frontMatter.title as string;
         let filename = `post-${Date.now()}.md`;
         if (title) {
-          filename =
-            title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
-              /(^-|-$)/g,
-              "",
-            ) + ".md";
+          filename = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
+            /(^-|-$)/g,
+            "",
+          ) + ".md";
         } else {
+          // For now continue using prompt for filename as it requires user input
+          // Or we can open a modal. Simplicity for now:
           const userInput = prompt(
             "Enter filename (e.g. my-post.md):",
             filename,
@@ -232,8 +241,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       }
       const data = await res.json();
       setPrInfo({ prUrl: data.prUrl, prNumber: data.prNumber });
+      showToast("Pull Request created successfully!", "success");
     } catch (e) {
-      alert("Error saving: " + (e as Error).message);
+      showToast("Error saving: " + (e as Error).message, "error");
     } finally {
       setSaving(false);
     }
@@ -242,6 +252,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const handleReset = () => {
     if (confirm("Are you sure? This will discard local changes.")) {
       clearDraft();
+      showToast("Draft discarded", "info");
     }
   };
 
