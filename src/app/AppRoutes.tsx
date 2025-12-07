@@ -4,6 +4,7 @@ import { ContentBrowser } from "@/app/features/content-browser/ContentBrowser.ts
 import { ContentRoute } from "@/app/features/content-browser/ContentRoute.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
 import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
+import { NotFound } from "@/app/components/common/NotFound.tsx";
 
 // Dependency Injection Interface
 export interface AppRoutesProps {
@@ -65,6 +66,9 @@ export function AppRoutes({
           </RequireAuth>
         }
       />
+
+      {/* Not Found */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

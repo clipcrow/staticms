@@ -1,129 +1,110 @@
-# Daily Standup - DAY 03
+# Daily Standup - DAY 03 (Revision)
 
-**日付**: 2025-12-07 **フェーズ**: Phase 2: Real Implementation & GitHub
-Integration
+**日付**: 2025-12-08 **フェーズ**: Phase 2.5: UI Re-implementation with v1
+Components
 
-## YESTERDAY
+## YESTERDAY (Actually TODAY)
 
-**趣旨**: Mock段階を脱し、実際のGitHub
-APIと連携する主要機能を一気に実装しました。これにより、アプリケーションのコアバリュー（GitHubへの読み書き、PRベースの編集フロー）が実環境で機能することが確認できました。
+**趣旨**: v2 のバックエンド・アーキテクチャ上で、v1 の成熟した UI/UX
+を再現するため、v1 のソースコード資産 (`LegacyRepositorySelector`,
+`ContentList`, `ContentEditor` 等) を移植し、Adapter
+パターンを用いて統合しました。 ユーザーの要望通り、機能よりも UI
+の移行を最優先し、全画面のルック＆フィールを v1 と同等に復元しました。
 
 **🌟 戦略的マイルストーン**:
 
-- **Real GitHub Backbone**: Mock データストアから、GitHub API (v3)
-  を使用したリアルデータ連携への完全移行達成。
-- **Configuration Management in Git**: 設定ファイル (`.github/staticms.yml`)
-  の編集・保存・PR作成までの一連のフローを確立。
-- **Realtime Feedback Loop**: Webhook と SSE を組み合わせ、GitHub
-  側でのマージ操作が即座にクライアント（エディタ）のロック解除に反映されるリアルタイム性を実現。
+- **v1 UI Restoration**: 以下の画面コンポーネントを v1
+  から移植し、動作させました。
+  - **Repository Selector**: リポジトリ一覧と追加。
+  - **Content Dashboard**: コンテンツ設定 (Collection/Singleton) の一覧。
+  - **Article List**: 記事一覧と検索・追加。
+  - **Content Editor**: FrontMatter と Markdown の編集、プレビュー、サイドバー。
+  - **Content Settings**: 設定編集画面のGUI。
+- **Spec Documentation**: 実装の元となった v1
+  の仕様を詳細に解析し、`architecture/v2/specs/` 配下にドキュメント化しました。
 
 **完了したタスク**:
 
-- **US-04 (Config Management)**:
-  - `.github/staticms.yml` の読み書きAPI (`getRepoConfig`, `saveRepoConfig`)
-    実装。
-  - 設定編集画面 (`ContentConfigEditor`) からのPR作成フロー実装。
-- **US-05 (Content Editing)**:
-  - 記事ロード時にローカルドラフトが無ければリモート (`fetch`)
-    から取得・Frontmatterパースするロジック実装。
-  - 「Reset」ボタンによるローカル変更破棄・リモート復元機能実装。
-- **US-06 (Save as PR)**:
-  - `createPrHandler` を実装し、Frontmatter/Body/Images
-    を含むコミットとPR作成を実現。
-- **US-07 (Unlock by Webhook)**:
-  - `webhookHandler` 実装。HMAC SHA-256 署名検証、`pull_request` イベント受信。
-  - Server-Sent Events (SSE) によるクライアントへの通知ブロードキャスト。
-- **Docs Update**:
-  - `DATA_MODEL.md` (Configパス変更), `USER_STORIES.md`, `COMPONENT_DESIGN.md`
-    の追従更新。
-
-**テスト状況**:
-
-- 手動検証により、OAuthログイン -> リポジトリ選択 -> 記事編集 -> 保存(PR作成) ->
-  Webhook通知 -> ロック解除 の全フロー動作確認済み。
-- E2EテストはMockベースの古いものが残っており、実API対応が必要。
+- **UI Components Porting**:
+  - `src/app/components/common/` に `Header`, `ContentList`, `ArticleList`,
+    `ContentSettings` を作成。
+  - `src/app/components/repository/` に `RepositorySelector` を作成。
+  - `src/app/components/editor/` に v1 関連ファイルを配置。
+- **Integration**:
+  - `src/app/features/` 配下のコンテナコンポーネント (`ContentBrowser`,
+    `ContentEditor` 等) を、移植した v1 コンポーネントのラッパーとして再実装。
+  - v1 -> v2, v2 -> v1 のデータ変換アダプターを実装。
+- **Fixes**:
+  - `RequireAuth` の無限リダイレクトループを修正 (v1 `useAuth` の IF
+    変更に対応)。
+  - 各画面でのヘッダー重複表示を解消。
+- **Documentation**:
+  - `architecture/v2/specs/EDITOR_SPEC.md`
+  - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
+  - `architecture/v2/specs/REPOSITORY_SPEC.md`
 
 ## 💡 気づきと改善点
 
 **技術的なハマりポイントと解決策**:
 
-- **Config Path**: 当初 `.staticms/config.yml`
-  を検討したが、リポジトリ汚染を最小限にするため `.github/staticms.yml`
-  に一本化した。
-- **Base64 Decoding**: `atob` では日本語などのマルチバイト文字が化けるため、Deno
-  標準の `@std/encoding/base64` と `TextDecoder` を使用して解決。
+- **Header Duplication**: v2 のルーター側 (`ContentBrowser`) と、移植した v1
+  コンポーネント (`ContentList` etc)
+  の両方がヘッダーを持っていたため、二重表示が発生。 -> v2
+  側のヘッダーを削除し、v1 コンポーネントに委譲することで解決。
+- **Auth Hook Mismatch**: v1 の `useAuth` は `user` オブジェクトを返さず
+  `isAuthenticated` フラグを返す仕様だったため、v2 の `RequireAuth` が誤作動。
+  -> `RequireAuth` を修正して解決。
 
-**アーキテクチャ上の発見**:
+## STOP ISSUE (今後の課題)
 
-- **Draft Logic**: `useDraft`
-  で「ローカル(Storage)」か「初期値(Init/Remote)」かを判別可能にしたことで、ユーザーへのフィードバック（"Draft
-  Restored"）やリセット制御が容易になった。
-- **GitHub as Source of Truth**: Config を KV ではなく GitHub
-  上のファイルとして扱うことで、GitOps 的な管理が可能になり、CMS
-  自体の設定変更もレビュー対象にできる強力な設計となった。
+**趣旨**: UI の見た目は整ったが、内部ロジックの一部やテストが追いついていない。
 
-## STOP ISSUE
+- **E2E テスト全滅**: DOM 構造が v1 ベースに刷新されたため、従来の v2 用 E2E
+  テストは Selector が一致せず全て失敗する状態。
+- **未実装機能**: UI 上のボタンはあるが機能しないものがある（特に `ArticleList`
+  の削除ボタン、`ContentEditor` の画像アップロードなど）。
 
-**趣旨**: 機能実装は完了したが、テスト自動化において課題がある。
+## TOMORROW (Next Actions)
 
-- **E2Eテストの不整合**: 現在の `e2e/` は Mock API
-  を前提としたレガシーな状態。実 GitHub API を使う E2E
-  テストは認証やレートリミットの観点から難易度が高い。
-- **TODO**: E2Eテスト戦略の再定義（MSW等での精密なMocking
-  か、テスト用リポジトリを用いた実戦テストか）。
-
-## TODAY (Next Actions)
-
-**趣旨**: コア機能の実装が完了したため、品質向上とテスト基盤の再構築、および Day
-01/02 で積み残した UI の洗練を行う。
+**趣旨**: 仕様書 (`specs/`) に基づき、未実装の機能を埋め、品質を高める。
 
 **目標**:
 
-1. **E2Eテストの修復・拡充**:
-   - `testing/mocks.ts`
-     等を活用し、ネットワーク層をモックした安定したE2Eテスト環境を構築する。
-   - 特に `auth_flow`, `editor_flow` を Green にする。
-2. **UI/UX Polish**:
-   - Semantic UI
-     の単純な適用から、ユーザーフレンドリーなインタラクション（Toast通知、Loading状態の明示）への改善。
-3. **最終確認とデプロイ準備**:
-   - Deno Deploy へのデプロイワークフロー確認。
+1. **仕様の完全実装**:
+   - `ContentImages` (サイドバー) の完全動作。
+   - `MarkdownEditor` への D&D 画像アップロード実装。
+   - `ArticleList` での削除機能実装。
+2. **E2E テストの修復**:
+   - Playwright (または現在のテストツール) のセレクターを v1 UI
+     に合わせて更新し、Green に戻す。
 
 ---
 
 ## 🤖 明日用のプロンプト
 
 ```markdown
-現在、Staticms v2 プロジェクトは **Phase 3: Validation & Polish**
-に入っています。 昨日は US-03, 04, 05, 06, 07 の実API連携機能（GitHub
-Integration, Config Management, Content Editing, PR Creation, Webhook
-Unlock）の実装を完了しました。
-コア機能は動作していますが、E2Eテストが古いMockベースのままであり、実情と乖離しています。
+現在、StaticMS v2 プロジェクトは **Phase 2.5: UI Polish & Feature Completion**
+の段階です。 主要な画面は v1 コンポーネントの移植により UI
+が刷新されましたが、いくつかの機能（画像アップロード、削除など）がまだ結合されておらず、E2Eテストも壊れている状態です。
 
-本日は **E2Eテストの再構築とUIのブラッシュアップ** に集中します。
+前回までに、v1 の仕様を `architecture/v2/specs/` 配下にドキュメント化しました。
+
+本日は **仕様書に基づいた機能の完全実装** を行います。
 
 **Workflow**:
 
-1. **Documentation Loading**:
-   - 以下のドキュメントを**全て**読み込み、最新の仕様とアーキテクチャを完全に把握してください。
-     - `architecture/v2/PROJECT.md`
-     - `architecture/v2/USER_STORIES.md`
-     - `architecture/v2/DATA_MODEL.md`
-     - `architecture/v2/COMPONENT_DESIGN.md`
-     - `architecture/v2/PROJECT_STRUCTURE.md`
-     - `architecture/v2/GITHUB_INTEGRATION.md`
-     - `architecture/v2/REALTIME_ARCHITECTURE.md`
-     - `architecture/v2/BUILD_STRATEGY.md`
-     - `architecture/v2/TEST_PLAN.md`
-     - `architecture/v2/UI_DESIGN.md`
-2. **E2E Test Restoration**:
-   - `e2e/` 配下の古いテストを新しい実装に合わせて修正します。
-   - 実際のGitHub APIを叩くのではなく、`globalThis.fetch`
-     を適切にMockしてシナリオを通す方針で進めてください。
-3. **UI Polish**:
-   - ユーザー操作に対するフィードバック（保存成功時のToast通知、エラー表示）を強化してください。
+1. **Review Specs**:
+   - `architecture/v2/specs/EDITOR_SPEC.md`, `CONTENT_LIST_SPEC.md`,
+     `REPOSITORY_SPEC.md` を読み込みます。
+2. **Implement Missing Features**:
+   - **画像アップロード**: `ContentImages` と `MarkdownEditor`
+     の実装を行い、実際に画像を GitHub (またはドラフト)
+     に保存できるようにします。
+   - **記事削除**: `ArticleList` のゴミ箱ボタンを実装します。
+   - **サイドバー**: `ContentEditor` のサイドバー情報を正しく表示させます。
+3. **Refactor & Test**:
+   - アダプターコードを整理し、E2Eテストを修復して通るようにします。
 
-**Task**: まず `architecture/v2/USER_STORIES.md`
-を読み、現在の仕様を把握してから、`e2e/repository_selection.test.ts`
-(または関連するテスト) の修正から着手してください。
+**Task**: まず `architecture/v2/specs/EDITOR_SPEC.md`
+を確認し、画像アップロード機能の実装から着手してください。
 ```
