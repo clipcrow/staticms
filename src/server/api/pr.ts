@@ -101,8 +101,10 @@ export const createPrHandler = async (ctx: RouterContext<string>) => {
     }
 
     // 6. Create PR
-    const prTitle = draft.prTitle || `Update ${filePath}`;
-    const prBody = draft.prBody || "Content update via Staticms";
+    const prTitle = draft.frontMatter?.title
+      ? `Update ${draft.frontMatter.title}`
+      : `Update ${filePath}`;
+    const prBody = "Content update via Staticms";
     const pr = await client.createPullRequest(
       owner,
       repo,

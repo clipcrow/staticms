@@ -31,6 +31,7 @@
     "@/": "./src/",
     "react": "npm:react@^19.0.0",
     "react-dom": "npm:react-dom@^19.0.0",
+    "gray-matter": "npm:gray-matter@^4.0.3",
     "react-router-dom": "npm:react-router-dom@^6.22.0",
     "react/jsx-runtime": "npm:react@^19.0.0/jsx-runtime",
     "@types/react": "npm:@types/react@^18.2.0",

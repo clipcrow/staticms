@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Field, useContentConfig } from "@/app/hooks/useContentConfig.ts";
-import { FileItem, useDraft } from "@/app/hooks/useDraft.ts";
+import {
+  Collection,
+  Field,
+  useContentConfig,
+} from "@/app/hooks/useContentConfig.ts";
+import { Draft, FileItem, useDraft } from "@/app/hooks/useDraft.ts";
+import matter from "gray-matter";
 
 export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const { owner, repo, collectionName, articleName } = useParams();
@@ -9,11 +14,10 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const [saving, setSaving] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const [prInfo, setPrInfo] = useState<
     { prUrl: string; prNumber: number } | null
-  >(
-    null,
-  );
+  >(null);
 
   useEffect(() => {
     if (!prInfo) return;
@@ -37,18 +41,83 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     };
   }, [prInfo]);
 
-  const collection = config?.collections.find((c) => c.name === collectionName);
+  const collection = config?.collections.find((c: Collection) =>
+    c.name === collectionName
+  );
 
   const user = localStorage.getItem("staticms_user") || "anonymous";
-  const filePath = mode === "new" ? "__new__" : articleName;
-  const draftKey =
-    `draft_${user}|${owner}|${repo}|main|${collectionName}/${filePath}`;
+  const effectiveArticleName = articleName || "__new__";
 
-  const { draft, setDraft, loaded } = useDraft(draftKey, {
-    frontMatter: {},
-    body: "",
-    pendingImages: [],
-  });
+  const folder = collection?.folder ? collection.folder : null;
+  const draftKey =
+    `draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
+
+  const { draft, setDraft, loaded, fromStorage, clearDraft } = useDraft(
+    draftKey,
+    {
+      frontMatter: {},
+      body: "",
+      pendingImages: [],
+    },
+  );
+
+  // Fetch remote content if editing and no local draft
+  useEffect(() => {
+    if (
+      mode === "new" ||
+      !loaded ||
+      fromStorage ||
+      !owner ||
+      !repo ||
+      !collection ||
+      !articleName ||
+      fetching
+    ) {
+      return;
+    }
+
+    const path = folder ? `${folder}/${articleName}` : articleName;
+
+    setFetching(true);
+    fetch(`/api/repo/${owner}/${repo}/contents/${path}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to fetch remote content");
+        return await res.text();
+      })
+      .then((text) => {
+        try {
+          // @ts-ignore: gray-matter types
+          const parsed = matter(text);
+          const { data, content } = parsed;
+          console.log("Loaded remote content:", data);
+          setDraft((prev: Draft) => ({
+            ...prev,
+            frontMatter: data,
+            body: content,
+          }));
+        } catch (e) {
+          console.error("Failed to parse frontmatter", e);
+          setDraft((prev: Draft) => ({ ...prev, body: text }));
+        }
+      })
+      .catch((e) => {
+        console.error(e);
+      })
+      .finally(() => {
+        setFetching(false);
+      });
+  }, [
+    mode,
+    loaded,
+    fromStorage,
+    owner,
+    repo,
+    collection,
+    articleName,
+    setDraft,
+    fetching,
+    folder,
+  ]);
 
   if (!loaded || !config) {
     return <div className="ui active centered inline loader"></div>;
@@ -63,12 +132,11 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-
     return text.slice(0, start) + insertion + text.slice(end);
   };
 
   const handleImageUpload = (files: FileList | null) => {
-    if (prInfo) return; // Locked
+    if (prInfo) return;
     if (!files || files.length === 0) return;
 
     const file = files[0];
@@ -84,7 +152,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         path: `images/${file.name}`,
       };
 
-      setDraft((prev) => ({
+      setDraft((prev: Draft) => ({
         ...prev,
         pendingImages: [...(prev.pendingImages || []), newItem],
         body: insertTextAtCursor(prev.body, `![${file.name}](${newItem.path})`),
@@ -94,7 +162,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   };
 
   const onPaste = (e: React.ClipboardEvent) => {
-    if (prInfo) return; // Locked
+    if (prInfo) return;
     if (e.clipboardData.files.length > 0) {
       e.preventDefault();
       handleImageUpload(e.clipboardData.files);
@@ -103,7 +171,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    if (prInfo) return; // Locked
+    if (prInfo) return;
     if (e.dataTransfer.files.length > 0) {
       handleImageUpload(e.dataTransfer.files);
     }
@@ -111,9 +179,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
   const handleChange = (fieldName: string, value: string) => {
     if (fieldName === "body") {
-      setDraft((prev) => ({ ...prev, body: value }));
+      setDraft((prev: Draft) => ({ ...prev, body: value }));
     } else {
-      setDraft((prev) => ({
+      setDraft((prev: Draft) => ({
         ...prev,
         frontMatter: { ...prev.frontMatter, [fieldName]: value },
       }));
@@ -123,12 +191,36 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const handleSave = async () => {
     setSaving(true);
     try {
+      let savePath: string;
+
+      if (mode === "new") {
+        const title = draft.frontMatter.title as string;
+        let filename = `post-${Date.now()}.md`;
+        if (title) {
+          filename =
+            title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
+              /(^-|-$)/g,
+              "",
+            ) + ".md";
+        } else {
+          const userInput = prompt(
+            "Enter filename (e.g. my-post.md):",
+            filename,
+          );
+          if (!userInput) throw new Error("Filename required");
+          filename = userInput;
+        }
+        savePath = folder ? `${folder}/${filename}` : filename;
+      } else {
+        savePath = folder ? `${folder}/${articleName}` : (articleName || "");
+      }
+
       const res = await fetch(`/api/repo/${owner}/${repo}/pr`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           draft,
-          filePath,
+          path: savePath,
           collectionName,
           baseBranch: "main",
         }),
@@ -140,11 +232,16 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       }
       const data = await res.json();
       setPrInfo({ prUrl: data.prUrl, prNumber: data.prNumber });
-      // Ideally show toast
     } catch (e) {
       alert("Error saving: " + (e as Error).message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    if (confirm("Are you sure? This will discard local changes.")) {
+      clearDraft();
     }
   };
 
@@ -161,6 +258,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       >
         <h2 className="ui header" style={{ margin: 0 }}>
           {mode === "new" ? "New" : "Edit"} {collection.label}
+          {fromStorage && mode === "edit" && (
+            <div className="ui horizontal label orange">Draft Restored</div>
+          )}
         </h2>
         <div>
           {prInfo && (
@@ -173,6 +273,17 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
               PR #{prInfo.prNumber} Open{" "}
               <i className="external alternate icon"></i>
             </a>
+          )}
+          {fromStorage && !prInfo && (
+            <button
+              type="button"
+              className="ui button negative basic"
+              onClick={handleReset}
+              style={{ marginRight: "0.5em" }}
+              disabled={saving}
+            >
+              Reset
+            </button>
           )}
           <button
             type="button"
@@ -231,7 +342,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         <div className="ui segment">
           <h4 className="ui header">Pending Images</h4>
           <div className="ui small images">
-            {draft.pendingImages.map((img, idx) => (
+            {draft.pendingImages.map((img: FileItem, idx: number) => (
               <img
                 key={idx}
                 src={img.content}

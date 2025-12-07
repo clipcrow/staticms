@@ -6,17 +6,20 @@ export type { Draft, FileItem };
 export function useDraft(key: string, initialData: Draft) {
   const [draft, setDraft] = useState<Draft>(initialData);
   const [loaded, setLoaded] = useState(false);
+  const [fromStorage, setFromStorage] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(key);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Merge with initialData structure in case of schema changes? For now, just load.
         setDraft(parsed);
+        setFromStorage(true);
       } catch (e) {
         console.error("Failed to parse draft", e);
       }
+    } else {
+      setFromStorage(false);
     }
     setLoaded(true);
   }, [key]);
@@ -27,5 +30,11 @@ export function useDraft(key: string, initialData: Draft) {
     }
   }, [key, draft, loaded]);
 
-  return { draft, setDraft, loaded };
+  const clearDraft = () => {
+    localStorage.removeItem(key);
+    setDraft(initialData); // Reset to initial empty/default
+    setFromStorage(false);
+  };
+
+  return { draft, setDraft, loaded, fromStorage, clearDraft };
 }
