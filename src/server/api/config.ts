@@ -18,8 +18,8 @@ export const getRepoConfig = async (
 
   const client = new GitHubUserClient(token);
 
-  // Try staticms.config.yml then .github/staticms.yml
-  const paths = ["staticms.config.yml", ".github/staticms.yml"];
+  // Try .staticms/config.yml then .github/staticms.yml
+  const paths = [".staticms/config.yml", ".github/staticms.yml"];
 
   for (const path of paths) {
     try {
@@ -77,8 +77,8 @@ export const saveRepoConfig = async (
     const client = new GitHubUserClient(token);
 
     // 1. Determine path
-    let configPath = "staticms.config.yml";
-    const paths = ["staticms.config.yml", ".github/staticms.yml"];
+    let configPath = ".staticms/config.yml";
+    const paths = [".staticms/config.yml", ".github/staticms.yml"];
     for (const p of paths) {
       try {
         await client.getContent(owner, repo, p);

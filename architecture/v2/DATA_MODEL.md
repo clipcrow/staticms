@@ -16,7 +16,7 @@ Deno KV はアプリケーション設定やセッションの永続化に使用
 
 各リポジトリにおけるコンテンツ定義（コレクション構造、フィールド定義など）は、**リポジトリ内のファイル**として保存されます。
 
-- **Path**: `staticms.config.yml` または `.github/staticms.yml`
+- **Path**: `.staticms/config.yml` または `.github/staticms.yml`
 - **Format**: YAML
 - **更新**: `/api/repo/:owner/:repo/config` への POST
   によって、**新しいブランチとPull Request**を作成して更新します。
