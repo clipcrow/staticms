@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $primary-color: #2185d0; // Semantic UI Blue
 
 body {
@@ -7,7 +9,7 @@ body {
 .custom-button {
   background-color: $primary-color;
   &:hover {
-    background-color: darken($primary-color, 10%);
+    background-color: color.adjust($primary-color, $lightness: -10%);
   }
 }
 
