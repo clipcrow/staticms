@@ -8,3 +8,4 @@ Thumbs.db
 # Build artifacts
 public/js/bundle.js
 public/styles/main.css
+test_debug.log

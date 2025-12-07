@@ -29,11 +29,11 @@ Deno.test("US-02: Content Navigation Flow", async () => {
     );
 
     assert(
-      url.includes("/repo/"),
-      `URL should contain /repo/, but got: ${url}`,
+      url.includes("/user/my-blog"),
+      `URL should contain /user/my-blog, but got: ${url}`,
     );
     assert(
-      headerText?.includes("user/my-blog"),
+      headerText?.includes("user my-blog"),
       `Header should display repository name, got: ${headerText}`,
     );
 

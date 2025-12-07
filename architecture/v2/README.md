@@ -3,11 +3,25 @@
 Staticms V2
 のアーキテクチャ、設計指針、および運用ルールに関するドキュメントインデックスです。
 
+## プロジェクト定義 (Product Definition)
+
+- [**PROJECT.md**](./PROJECT.md)
+  - Staticms V2 の企画書。
+  - 製品ビジョン、コアコンセプト（GitHub App + Headless CMS）、主要機能の概要。
+
+- [**USER_STORIES.md**](./USER_STORIES.md)
+  - ユーザー要件定義書。
+  - 開発のベースとなるユーザーストーリー（US）とシナリオ。E2Eテストの仕様はこのドキュメントに準拠します。
+
 ## 設計と実装 (Design & Implementation)
 
 - [**PROJECT_STRUCTURE.md**](./PROJECT_STRUCTURE.md)
   - ディレクトリ構造、モジュール境界、Clean Architecture 設計。
   - `src/` 内部インポートにおける Path Alias (`@/`) の強制について。
+
+- [**UI_DESIGN.md**](./UI_DESIGN.md)
+  - 画面遷移図 (Sitemap) と各画面の詳細定義。
+  - Semantic UI をベースとしたレイアウト戦略。
 
 - [**BUILD_STRATEGY.md**](./BUILD_STRATEGY.md)
   - `esbuild` を中心としたビルドパイプラインと開発環境。

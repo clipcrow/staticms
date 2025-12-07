@@ -1,5 +1,6 @@
 import "@/testing/setup_dom.ts";
 import { render } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { assertEquals } from "@std/assert";
 import { stub } from "@std/testing/mock";
 import { RepositorySelector } from "./RepositorySelector.tsx";
@@ -34,7 +35,11 @@ Deno.test({
     );
 
     try {
-      const { findByText, getAllByRole } = render(<RepositorySelector />);
+      const { findByText, getAllByRole } = render(
+        <MemoryRouter>
+          <RepositorySelector />
+        </MemoryRouter>,
+      );
 
       // Wait for items to appear (this implicitly waits for loading to disappear)
       const firstItem = await findByText("user/my-repo");

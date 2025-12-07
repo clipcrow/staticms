@@ -37,7 +37,7 @@ export function RepositorySelector() {
           <div className="item repo-item" key={repo.id} role="listitem">
             <i className="large github middle aligned icon"></i>
             <div className="content">
-              <Link className="header" to={`/repo/${repo.full_name}`}>
+              <Link className="header" to={`/${repo.full_name}`}>
                 {repo.full_name}
               </Link>
               <div className="description">{repo.description}</div>

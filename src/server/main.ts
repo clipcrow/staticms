@@ -2,6 +2,8 @@ import { Application, Router } from "@oak/oak";
 import { green, yellow } from "@std/fmt/colors";
 
 import { listRepositories } from "@/server/api/repositories.ts";
+import { getContent } from "@/server/api/content.ts";
+import { getRepoConfig } from "@/server/api/config.ts";
 
 const app = new Application();
 const router = new Router();
@@ -22,13 +24,13 @@ app.use(async (ctx, next) => {
   const ms = Date.now() - start;
   ctx.response.headers.set("X-Response-Time", `${ms}ms`);
 });
-
-// API Routes
 router.get("/api/health", (ctx) => {
   ctx.response.body = { status: "ok", version: "2.0.0" };
 });
 
 router.get("/api/repositories", listRepositories);
+router.get("/api/repo/:owner/:repo/config", getRepoConfig);
+router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 
 app.use(router.routes());
 app.use(router.allowedMethods());
