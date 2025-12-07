@@ -9,6 +9,7 @@ import {
   debugUpdatePrStatusHandler,
   getPrStatusHandler,
 } from "@/server/api/pr.ts";
+import { webhookHandler } from "@/server/api/webhooks.ts";
 import { addClient } from "@/server/sse.ts";
 import { authRouter } from "@/server/auth.ts";
 
@@ -62,6 +63,7 @@ router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 router.post("/api/repo/:owner/:repo/pr", createPrHandler);
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
+router.post("/api/webhook", webhookHandler);
 
 // SSE
 router.get("/api/events", async (ctx) => {
