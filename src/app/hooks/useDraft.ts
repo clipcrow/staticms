@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
+import type { Draft, FileItem } from "@/shared/types.ts";
 
-export interface FileItem {
-  name: string;
-  type: "file" | "dir";
-  content?: string; // Base64
-  sha?: string;
-  path?: string;
-}
-
-export interface Draft {
-  frontMatter: Record<string, unknown>;
-  body: string;
-  pendingImages?: FileItem[];
-}
+export type { Draft, FileItem };
 
 export function useDraft(key: string, initialData: Draft) {
   const [draft, setDraft] = useState<Draft>(initialData);

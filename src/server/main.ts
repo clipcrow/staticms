@@ -4,7 +4,12 @@ import { green, yellow } from "@std/fmt/colors";
 import { listRepositories } from "@/server/api/repositories.ts";
 import { getContent } from "@/server/api/content.ts";
 import { getRepoConfig, saveRepoConfig } from "@/server/api/config.ts";
-import { createPrHandler } from "@/server/api/pr.ts";
+import {
+  createPrHandler,
+  debugUpdatePrStatusHandler,
+  getPrStatusHandler,
+} from "@/server/api/pr.ts";
+import { addClient } from "@/server/sse.ts";
 
 const app = new Application();
 const router = new Router();
@@ -50,6 +55,14 @@ router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 router.post("/api/repo/:owner/:repo/pr", createPrHandler);
+router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
+router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
+
+// SSE
+router.get("/api/events", async (ctx) => {
+  const target = await ctx.sendEvents();
+  addClient(target);
+});
 
 app.use(router.routes());
 app.use(router.allowedMethods());

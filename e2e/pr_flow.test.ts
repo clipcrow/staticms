@@ -29,10 +29,10 @@ Deno.test("US-06: Save as Pull Request", async (t) => {
       };
 
       // Inject Config
-      await fetch("http://localhost:8000/api/repo/user/my-blog/config", {
+      await (await fetch("http://localhost:8000/api/repo/user/my-blog/config", {
         method: "POST",
         body: JSON.stringify(configData),
-      });
+      })).text();
 
       // 2. Go to New Post Page
       await page.goto("http://localhost:8000/user/my-blog/posts/new");
@@ -105,6 +105,39 @@ Deno.test("US-06: Save as Pull Request", async (t) => {
 
       // Mock returns prNumber 13
       assert(prLink?.includes("/pull/13"), "PR Link should point to PR #13");
+
+      // 8. Test Unlock via Webhook (SSE)
+
+      // Handle alert dialog automatically
+      // deno-lint-ignore no-explicit-any
+      page.addEventListener("dialog", (e: any) => {
+        // e.detail is the Dialog object
+        e.detail.accept();
+      });
+
+      // Simulate Webhook (Debug API)
+      await (await fetch("http://localhost:8000/_debug/pr/13/status", {
+        method: "POST",
+        body: JSON.stringify({ status: "merged" }),
+      })).text();
+
+      // Wait for SSE update and Alert (Button should become enabled)
+      // Note: The button text changes back to "Save" when prInfo becomes null.
+      await page.waitForFunction(() => {
+        const btn = document.querySelector("button.primary") as
+          | HTMLButtonElement
+          | null;
+        return btn && !btn.disabled && btn.textContent === "Save";
+      });
+
+      // Verify Unlocked
+      const inputsEnabled = await page.evaluate(() => {
+        const input = document.querySelector(
+          'input[name="title"]',
+        ) as HTMLInputElement;
+        return !input.disabled;
+      });
+      assert(inputsEnabled, "Inputs should be enabled after merge");
     });
   });
 });

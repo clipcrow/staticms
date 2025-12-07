@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { FileItem, useDraft } from "@/app/hooks/useDraft.ts";
@@ -14,6 +14,28 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   >(
     null,
   );
+
+  useEffect(() => {
+    if (!prInfo) return;
+
+    const eventSource = new EventSource("/api/events");
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "pr_update" && data.prNumber === prInfo.prNumber) {
+          if (data.status === "merged" || data.status === "closed") {
+            alert(`PR #${data.prNumber} is ${data.status}. Unlocking editor.`);
+            setPrInfo(null);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse SSE message", e);
+      }
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [prInfo]);
 
   const collection = config?.collections.find((c) => c.name === collectionName);
 
