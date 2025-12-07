@@ -34,11 +34,11 @@ src/app/
 │   ├── editor-ui/         # エディタ画面固有のUIパーツ (Toolbar, PreviewArea...)
 │   └── layout/            # レイアウト (Header, Sidebar, PageContainer...)
 ├── features/              # 機能ごとのコンテナ (Containers / Business Logic)
-│   ├── auth/              # 認証フロー制御
+│   ├── auth/              # 認証フロー制御 (RequireAuth.tsx)
 │   ├── content-browser/   # リポジトリ・ファイル選択機能
 │   └── content-editor/    # 記事編集・ドラフト管理・保存フロー
-├── hooks/                 # 汎用カスタムフック (useLocalStorage, useTheme...)
-├── contexts/              # React Context (AuthContext, ToastContext...)
+├── hooks/                 # 汎用カスタムフック (useLocalStorage, useAuth...)
+├── contexts/              # React Context (AuthContext...)
 ├── routes/                # ルーティング定義 (AppRoutes.tsx)
 ├── styles/                # グローバルスタイル・テーマ設定
 ├── main.tsx               # エントリーポイント (DOM マウント)
@@ -60,11 +60,13 @@ src/app/
 ```
 src/server/
 ├── api/                   # API ハンドラ (Oak Routes)
-│   ├── auth.ts
-│   ├── content.ts
-│   └── webhooks.ts
+│   ├── auth.ts            # GitHub OAuth 認証
+│   ├── content.ts         # コンテンツ操作
+│   ├── repositories.ts    # リポジトリ一覧
+│   ├── pr.ts              # PR作成・状態確認
+│   └── webhooks.ts        # Webhook 受信
 ├── services/              # ビジネスロジック (APIハンドラから分離)
-│   ├── github.ts          # GitHub API 連携詳細
+│   ├── github.ts          # GitHub API Client (User/App)
 │   └── kv.ts              # Deno KV 操作
 ├── middleware/            # Oak Middleware (Auth guards, Error handling)
 └── main.ts                # サーバーエントリーポイント
@@ -113,7 +115,7 @@ tests/
 
 - `setup_dom.ts`: HappyDOM 初期化 (import side-effect)
 - `mock_local_storage.ts`: LocalStorage モック
-- `render_utils.tsx`: `render` ラッパー (必要に応じて Context Provider でラップ)
+- `mocks.ts`: fetch モック等の共通ヘルパー
 
 ## 4. Build & Bundle Strategy
 

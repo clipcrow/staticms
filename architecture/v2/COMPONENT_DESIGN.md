@@ -41,7 +41,7 @@ src/app/
 │       ├── FrontMatterPanel.tsx
 │       └── ImageGallery.tsx
 └── features/             # Business Logic Containers (Pages)
-    ├── auth/
+    ├── auth/             # RequireAuth.tsx 等 (Container)
     ├── content-browser/  # "ContentListWrapper" 等のロジック
     └── content-editor/   # "ContentEditorWrapper" 等のロジック
 ```
@@ -112,6 +112,20 @@ interface ModalProps {
   size?: "mini" | "small" | "large";
 }
 ```
+
+````
+### 3.5 Auth Guard (RequireAuth)
+
+認証状態を監視し、未認証ユーザーをリダイレクトするラッパーコンポーネント。
+
+```tsx
+// src/app/features/auth/RequireAuth.tsx
+export function RequireAuth({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  // ... redirect logic
+  return <>{children}</>;
+}
+````
 
 ## 4. Container / Presenter 実装例
 
