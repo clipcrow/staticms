@@ -1,9 +1,8 @@
 import { RouterContext } from "@oak/oak";
-import { getSessionToken } from "@/server/auth.ts";
+import { getSessionToken, kv } from "@/server/auth.ts";
 import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
-import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
+import { decodeBase64 } from "@std/encoding/base64";
 
-// GET /api/repo/:owner/:repo/config
 // GET /api/repo/:owner/:repo/config
 export const getRepoConfig = async (
   ctx: RouterContext<"/api/repo/:owner/:repo/config">,
@@ -16,17 +15,23 @@ export const getRepoConfig = async (
     ctx.response.body = { error: "Unauthorized" };
     return;
   }
-  const client = new GitHubUserClient(token);
 
-  // Use .github/staticms.yml only
+  // 1. Check Deno KV first
+  const kvResult = await kv.get(["config", owner, repo]);
+  if (kvResult.value) {
+    ctx.response.body = kvResult.value;
+    ctx.response.type = "text/yaml";
+    return;
+  }
+
+  // 2. Fallback: Try to fetch from GitHub (.github/staticms.yml)
+  const client = new GitHubUserClient(token);
   const configPath = ".github/staticms.yml";
 
   try {
     // deno-lint-ignore no-explicit-any
     const data: any = await client.getContent(owner, repo, configPath);
     if (!Array.isArray(data)) {
-      // GitHub API returns base64 content
-      // Use @std/encoding/base64 for robust decoding
       const rawContent = data.content.replace(/\n/g, "");
       const decodedBytes = decodeBase64(rawContent);
       const content = new TextDecoder().decode(decodedBytes);
@@ -36,9 +41,17 @@ export const getRepoConfig = async (
       return;
     }
   } catch (e) {
-    if (e instanceof GitHubAPIError && e.status === 404) {
-      // Config not found: Return default template
-      const defaultConfig = `# Staticms Configuration
+    // Ignore 404, throw others
+    if (!(e instanceof GitHubAPIError && e.status === 404)) {
+      console.error(`Failed to fetch config at ${configPath}:`, e);
+      ctx.response.status = 500;
+      ctx.response.body = { error: "Failed to fetch config from GitHub" };
+      return;
+    }
+  }
+
+  // 3. Last resort: Return default template
+  const defaultConfig = `# Staticms Configuration
 # This file was automatically generated/suggested by Staticms.
 # Define your content collections here.
 
@@ -52,15 +65,8 @@ collections:
   #     - { label: "Title", name: "title", widget: "string" }
   #     - { label: "Body", name: "body", widget: "markdown" }
 `;
-      ctx.response.body = defaultConfig;
-      ctx.response.type = "text/yaml";
-      return;
-    }
-
-    console.error(`Failed to fetch config at ${configPath}:`, e);
-    ctx.response.status = 500;
-    ctx.response.body = { error: "Failed to fetch config" };
-  }
+  ctx.response.body = defaultConfig;
+  ctx.response.type = "text/yaml";
 };
 
 // POST /api/repo/:owner/:repo/config
@@ -87,47 +93,11 @@ export const saveRepoConfig = async (
       ctx.throw(400, "Empty config body");
     }
 
-    const client = new GitHubUserClient(token);
-
-    // 1. Path is fixed
-    const configPath = ".github/staticms.yml";
-
-    // 2. Identify base branch (assume main for now, or fetch repo details)
-    const baseBranch = "main";
-    const baseRef = await client.getBranch(owner, repo, baseBranch);
-    const baseSha = baseRef.object.sha;
-
-    // 3. Create new branch
-    const newBranchName = `staticms-config-${
-      crypto.randomUUID().split("-")[0]
-    }`;
-    await client.createBranch(owner, repo, newBranchName, baseSha);
-
-    // 4. Upload file
-    const encodedContent = encodeBase64(new TextEncoder().encode(bodyText));
-    await client.uploadFile(
-      owner,
-      repo,
-      configPath,
-      encodedContent,
-      "Update Configuration via Staticms",
-      newBranchName,
-    );
-
-    // 5. Create PR
-    const pr = await client.createPullRequest(
-      owner,
-      repo,
-      "Update Configuration",
-      "Configuration updated via Staticms Config Editor",
-      newBranchName,
-      baseBranch,
-    );
+    // Save to Deno KV
+    await kv.set(["config", owner, repo], bodyText);
 
     ctx.response.body = {
-      message: "PR created",
-      prNumber: pr.number,
-      prUrl: pr.html_url,
+      message: "Configuration saved successfully (KV)",
     };
   } catch (e) {
     console.error("Failed to save config:", e);
