@@ -1,4 +1,4 @@
-# Daily Standup - DAY 03 (Revision)
+# Daily Standup - DAY 03 (Revision 2)
 
 **日付**: 2025-12-08 **フェーズ**: Phase 2.5: UI Re-implementation with v1
 Components
@@ -27,7 +27,7 @@ Components
 
 - **UI Components Porting**:
   - `src/app/components/common/` に `Header`, `ContentList`, `ArticleList`,
-    `ContentSettings` を作成。
+    `ContentSettings`, `NotFound` を作成。
   - `src/app/components/repository/` に `RepositorySelector` を作成。
   - `src/app/components/editor/` に v1 関連ファイルを配置。
 - **Integration**:
@@ -42,6 +42,8 @@ Components
   - `architecture/v2/specs/EDITOR_SPEC.md`
   - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
   - `architecture/v2/specs/REPOSITORY_SPEC.md`
+  - `architecture/v2/specs/CONFIG_SPEC.md`
+  - `architecture/v2/specs/NOT_FOUND_SPEC.md`
 
 ## 💡 気づきと改善点
 
@@ -64,7 +66,7 @@ Components
 - **未実装機能**: UI 上のボタンはあるが機能しないものがある（特に `ArticleList`
   の削除ボタン、`ContentEditor` の画像アップロードなど）。
 
-## TOMORROW (Next Actions)
+## TODAY (Next Actions)
 
 **趣旨**: 仕様書 (`specs/`) に基づき、未実装の機能を埋め、品質を高める。
 
@@ -86,25 +88,43 @@ Components
 現在、StaticMS v2 プロジェクトは **Phase 2.5: UI Polish & Feature Completion**
 の段階です。 主要な画面は v1 コンポーネントの移植により UI
 が刷新されましたが、いくつかの機能（画像アップロード、削除など）がまだ結合されておらず、E2Eテストも壊れている状態です。
-
 前回までに、v1 の仕様を `architecture/v2/specs/` 配下にドキュメント化しました。
 
-本日は **仕様書に基づいた機能の完全実装** を行います。
+本日は **仕様書に基づいた機能の完全実装、および結合** を行います。
 
 **Workflow**:
 
-1. **Review Specs**:
-   - `architecture/v2/specs/EDITOR_SPEC.md`, `CONTENT_LIST_SPEC.md`,
-     `REPOSITORY_SPEC.md` を読み込みます。
+1. **Documentation Loading**:
+   - 以下のドキュメントを**全て**読み込み、仕様と現状を完全に把握してください。
+     - `architecture/v2/PROJECT.md`
+     - `architecture/v2/USER_STORIES.md`
+     - `architecture/v2/DATA_MODEL.md`
+     - `architecture/v2/COMPONENT_DESIGN.md`
+     - `architecture/v2/PROJECT_STRUCTURE.md`
+     - `architecture/v2/specs/EDITOR_SPEC.md`
+     - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
+     - `architecture/v2/specs/REPOSITORY_SPEC.md`
+     - `architecture/v2/specs/CONFIG_SPEC.md`
+     - `architecture/v2/specs/NOT_FOUND_SPEC.md`
+     - `src/app/features/editor/ContentEditor.tsx` (現状の実装)
+     - `src/app/features/content-browser/ArticleList.tsx` (現状の実装)
+
 2. **Implement Missing Features**:
    - **画像アップロード**: `ContentImages` と `MarkdownEditor`
      の実装を行い、実際に画像を GitHub (またはドラフト)
      に保存できるようにします。
    - **記事削除**: `ArticleList` のゴミ箱ボタンを実装します。
    - **サイドバー**: `ContentEditor` のサイドバー情報を正しく表示させます。
+
 3. **Refactor & Test**:
    - アダプターコードを整理し、E2Eテストを修復して通るようにします。
 
-**Task**: まず `architecture/v2/specs/EDITOR_SPEC.md`
-を確認し、画像アップロード機能の実装から着手してください。
+**Work Context**:
+
+- 特に重要なドキュメント: `architecture/v2/specs/EDITOR_SPEC.md`
+- 最初に修正するファイル: `src/app/features/editor/ContentEditor.tsx`
+
+**Task**: `architecture/v2/specs/EDITOR_SPEC.md` の「画像処理 (Image
+Handling)」セクションに基づき、`ContentEditor.tsx`
+に画像アップロード機能とサイドバープレビュー機能を実装してください。
 ```
