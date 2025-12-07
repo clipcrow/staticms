@@ -26,28 +26,19 @@ export function ContentBrowser() {
 
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
-      <h1 className="ui header content-browser-header">
-        <div className="content">
-          <Link to="/">
-            <i className="github icon"></i>
-          </Link>{" "}
-          / {owner} {repo}
-          <div className="sub header">
-            {isEditing
-              ? (action === "add" ? "Add Content" : "Edit Configuration")
-              : "Content Dashboard"}
+      {isEditing && (
+        <h1 className="ui header content-browser-header">
+          <div className="content">
+            <Link to="/">
+              <i className="github icon"></i>
+            </Link>{" "}
+            / {owner} {repo}
+            <div className="sub header">
+              {action === "add" ? "Add Content" : "Edit Configuration"}
+            </div>
           </div>
-        </div>
-        {!isEditing && (
-          <button
-            type="button"
-            className="ui right floated primary button"
-            onClick={() => setSearchParams({ action: "add" })}
-          >
-            Add New Content
-          </button>
-        )}
-      </h1>
+        </h1>
+      )}
 
       <div className="ui segment basic">
         {loading && <div className="ui active centered inline loader"></div>}
