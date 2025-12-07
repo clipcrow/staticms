@@ -1,4 +1,4 @@
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentList } from "./ContentList.tsx";
 import { ContentConfigEditor } from "@/app/features/config/ContentConfigEditor.tsx";
@@ -26,20 +26,6 @@ export function ContentBrowser() {
 
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
-      {isEditing && (
-        <h1 className="ui header content-browser-header">
-          <div className="content">
-            <Link to="/">
-              <i className="github icon"></i>
-            </Link>{" "}
-            / {owner} {repo}
-            <div className="sub header">
-              {action === "add" ? "Add Content" : "Edit Configuration"}
-            </div>
-          </div>
-        </h1>
-      )}
-
       <div className="ui segment basic">
         {loading && <div className="ui active centered inline loader"></div>}
         {error && (
