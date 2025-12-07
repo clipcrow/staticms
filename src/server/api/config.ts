@@ -4,6 +4,7 @@ import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
 import { decodeBase64, encodeBase64 } from "@std/encoding/base64";
 
 // GET /api/repo/:owner/:repo/config
+// GET /api/repo/:owner/:repo/config
 export const getRepoConfig = async (
   ctx: RouterContext<"/api/repo/:owner/:repo/config">,
 ) => {
@@ -15,7 +16,6 @@ export const getRepoConfig = async (
     ctx.response.body = { error: "Unauthorized" };
     return;
   }
-
   const client = new GitHubUserClient(token);
 
   // Use .github/staticms.yml only
@@ -36,14 +36,31 @@ export const getRepoConfig = async (
       return;
     }
   } catch (e) {
-    if (!(e instanceof GitHubAPIError && e.status === 404)) {
-      console.error(`Failed to fetch config at ${configPath}:`, e);
-    }
-  }
+    if (e instanceof GitHubAPIError && e.status === 404) {
+      // Config not found: Return default template
+      const defaultConfig = `# Staticms Configuration
+# This file was automatically generated/suggested by Staticms.
+# Define your content collections here.
 
-  // If we get here, no config found
-  ctx.response.status = 404;
-  ctx.response.body = { error: "Config not found" };
+collections:
+  # Example:
+  # - name: posts
+  #   label: Posts
+  #   folder: content/posts
+  #   create: true
+  #   fields:
+  #     - { label: "Title", name: "title", widget: "string" }
+  #     - { label: "Body", name: "body", widget: "markdown" }
+`;
+      ctx.response.body = defaultConfig;
+      ctx.response.type = "text/yaml";
+      return;
+    }
+
+    console.error(`Failed to fetch config at ${configPath}:`, e);
+    ctx.response.status = 500;
+    ctx.response.body = { error: "Failed to fetch config" };
+  }
 };
 
 // POST /api/repo/:owner/:repo/config
