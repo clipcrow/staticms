@@ -1,12 +1,29 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentList } from "./ContentList.tsx";
+import { ContentConfigEditor } from "@/app/features/config/ContentConfigEditor.tsx";
 
 export function ContentBrowser() {
   const { owner, repo } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { config, loading, error } = useContentConfig(owner, repo);
 
   if (!owner || !repo) return null;
+
+  const action = searchParams.get("action");
+  const target = searchParams.get("target");
+
+  const handleCancel = () => {
+    setSearchParams({}); // Clear params to show dashboard
+  };
+
+  const handleSave = () => {
+    setSearchParams({});
+    // Reload to fetch the updated config from the server
+    globalThis.location.reload();
+  };
+
+  const isEditing = action === "add" || (action === "edit" && target);
 
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
@@ -16,8 +33,21 @@ export function ContentBrowser() {
             <i className="github icon"></i>
           </Link>{" "}
           / {owner} {repo}
-          <div className="sub header">Content Dashboard</div>
+          <div className="sub header">
+            {isEditing
+              ? (action === "add" ? "Add Content" : "Edit Configuration")
+              : "Content Dashboard"}
+          </div>
         </div>
+        {!isEditing && (
+          <button
+            type="button"
+            className="ui right floated primary button"
+            onClick={() => setSearchParams({ action: "add" })}
+          >
+            Add New Content
+          </button>
+        )}
       </h1>
 
       <div className="ui segment basic">
@@ -29,12 +59,30 @@ export function ContentBrowser() {
           </div>
         )}
 
-        {config && (
-          <ContentList
-            collections={config.collections}
-            owner={owner}
-            repo={repo}
-          />
+        {config && !loading && (
+          <>
+            {isEditing
+              ? (
+                <ContentConfigEditor
+                  owner={owner}
+                  repo={repo}
+                  config={config}
+                  mode={action as "add" | "edit"}
+                  initialData={action === "edit"
+                    ? config.collections.find((c) => c.name === target)
+                    : undefined}
+                  onCancel={handleCancel}
+                  onSave={handleSave}
+                />
+              )
+              : (
+                <ContentList
+                  collections={config.collections}
+                  owner={owner}
+                  repo={repo}
+                />
+              )}
+          </>
         )}
       </div>
     </div>
