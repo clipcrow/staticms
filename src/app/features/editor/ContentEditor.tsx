@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
+import { Field, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { FileItem, useDraft } from "@/app/hooks/useDraft.ts";
 
 export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
@@ -186,7 +186,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       </div>
 
       <div className={`ui form ${prInfo ? "disabled" : ""}`}>
-        {collection.fields.map((field: any) => {
+        {collection.fields?.map((field: Field) => {
           const value = field.name === "body"
             ? draft.body
             : draft.frontMatter[field.name] || "";

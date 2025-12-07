@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
 import yaml from "js-yaml";
 
+export interface Field {
+  name: string;
+  label: string;
+  widget: string;
+  // deno-lint-ignore no-explicit-any
+  [key: string]: any;
+}
+
 export interface Collection {
   name: string;
   label: string;
   folder?: string;
   files?: Array<{ file: string; label: string }>;
+  fields?: Field[];
+  type?: "collection" | "singleton";
   // deno-lint-ignore no-explicit-any
   [key: string]: any;
 }

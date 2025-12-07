@@ -1,6 +1,7 @@
 import { RouterContext } from "@oak/oak";
 import { getSessionToken } from "@/server/auth.ts";
 import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
+import { decodeBase64 } from "@std/encoding/base64";
 
 export const getContent = async (
   ctx: RouterContext<string>,
@@ -34,15 +35,15 @@ export const getContent = async (
         // Config file should be a file
         if (Array.isArray(data)) throw new Error("Config path is a directory");
 
-        const rawContent = atob(data.content.replace(/\n/g, ""));
-        ctx.response.body = rawContent;
+        const binary = decodeBase64(data.content.replace(/\n/g, ""));
+        const text = new TextDecoder().decode(binary);
+
+        ctx.response.body = text;
         ctx.response.type = "text/yaml";
         return;
       } catch (e) {
         if (e instanceof GitHubAPIError && e.status === 404) {
-          // Config not found, return default empty config or 404
-          // Returning empty config allows UI to show "No config" state or similar.
-          // For now, let's throw 404 so UI knows it doesn't exist.
+          // Config not found
           ctx.response.status = 404;
           ctx.response.body = "Config not found";
           return;
@@ -67,7 +68,7 @@ export const getContent = async (
       ctx.response.type = "application/json";
     } else {
       // File
-      const rawContent = atob(data.content.replace(/\n/g, ""));
+      const binary = decodeBase64(data.content.replace(/\n/g, ""));
 
       // Simple MIME type detection
       const ext = data.name.split(".").pop()?.toLowerCase();
@@ -84,8 +85,29 @@ export const getContent = async (
         "yaml": "text/yaml",
       };
 
-      ctx.response.type = mimeTypes[ext] || "text/plain";
-      ctx.response.body = rawContent;
+      const contentType = mimeTypes[ext] || "text/plain";
+      ctx.response.type = contentType;
+
+      // Return text for text-based formats to ensure proper encoding handling in client if needed,
+      // though fetching binary blob is also fine. But client usually expects text for Markdown.
+      const isText = [
+        "json",
+        "md",
+        "yml",
+        "yaml",
+        "xml",
+        "html",
+        "css",
+        "js",
+        "txt",
+        "svg",
+      ].includes(ext);
+
+      if (isText) {
+        ctx.response.body = new TextDecoder().decode(binary);
+      } else {
+        ctx.response.body = binary;
+      }
     }
   } catch (e) {
     if (e instanceof GitHubAPIError && e.status === 404) {
