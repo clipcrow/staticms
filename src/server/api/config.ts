@@ -18,15 +18,13 @@ export const getRepoConfig = async (
 
   const client = new GitHubUserClient(token);
 
-  // Try .staticms/config.yml then .github/staticms.yml
-  const paths = [".staticms/config.yml", ".github/staticms.yml"];
+  // Use .github/staticms.yml only
+  const configPath = ".github/staticms.yml";
 
-  for (const path of paths) {
-    try {
-      // deno-lint-ignore no-explicit-any
-      const data: any = await client.getContent(owner, repo, path);
-      if (Array.isArray(data)) continue; // Should be a file
-
+  try {
+    // deno-lint-ignore no-explicit-any
+    const data: any = await client.getContent(owner, repo, configPath);
+    if (!Array.isArray(data)) {
       // GitHub API returns base64 content
       // Use @std/encoding/base64 for robust decoding
       const rawContent = data.content.replace(/\n/g, "");
@@ -36,12 +34,10 @@ export const getRepoConfig = async (
       ctx.response.body = content;
       ctx.response.type = "text/yaml";
       return;
-    } catch (e) {
-      if (e instanceof GitHubAPIError && e.status === 404) {
-        continue;
-      }
-      console.error(`Failed to fetch config at ${path}:`, e);
-      // If critical error, throw or break
+    }
+  } catch (e) {
+    if (!(e instanceof GitHubAPIError && e.status === 404)) {
+      console.error(`Failed to fetch config at ${configPath}:`, e);
     }
   }
 
@@ -76,18 +72,8 @@ export const saveRepoConfig = async (
 
     const client = new GitHubUserClient(token);
 
-    // 1. Determine path
-    let configPath = ".staticms/config.yml";
-    const paths = [".staticms/config.yml", ".github/staticms.yml"];
-    for (const p of paths) {
-      try {
-        await client.getContent(owner, repo, p);
-        configPath = p; // Found existing
-        break;
-      } catch (_) {
-        // Ignore 404
-      }
-    }
+    // 1. Path is fixed
+    const configPath = ".github/staticms.yml";
 
     // 2. Identify base branch (assume main for now, or fetch repo details)
     const baseBranch = "main";
