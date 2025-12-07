@@ -15,8 +15,12 @@ export async function withBrowser(
   const serverPromise = app.listen({ port: TEST_PORT, signal });
   console.log(`Test server running on ${TEST_BASE_URL}`);
 
+  // Default to headless unless E2E_HEADLESS is set to "false"
+  // Or usage of E2E_DEMO env var to toggle modes
+  const headless = Deno.env.get("E2E_HEADLESS") !== "false";
+
   try {
-    const browser = await launch();
+    const browser = await launch({ headless });
     try {
       await testFn(browser);
     } finally {
@@ -82,4 +86,12 @@ export function mockGitHubApi(
   });
 
   return fetchStub;
+}
+
+// Helper for demo delays
+export async function demoDelay() {
+  const delay = parseInt(Deno.env.get("E2E_DELAY") || "0", 10);
+  if (delay > 0) {
+    await new Promise((r) => setTimeout(r, delay));
+  }
 }

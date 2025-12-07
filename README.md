@@ -43,8 +43,11 @@ deno task dev
 # ユニットテスト (src/ 以下のテストを実行)
 deno task test:unit
 
-# E2Eテスト (tests/ 以下のブラウザ操作テストを実行)
+# E2Eテスト (e2e/ 以下のブラウザ操作テストを実行)
 deno task test:e2e
+
+# E2Eテスト (デモモード: ブラウザ表示あり、スローモーション実行)
+deno task test:e2e:demo
 
 # 全テスト実行
 deno task test

@@ -13,7 +13,7 @@ export interface Collection {
   name: string;
   label: string;
   folder?: string;
-  files?: Array<{ file: string; label: string }>;
+  files?: Array<{ name: string; file: string; label: string }>;
   fields?: Field[];
   type?: "collection" | "singleton";
   // deno-lint-ignore no-explicit-any
