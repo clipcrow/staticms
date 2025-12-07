@@ -1,128 +1,191 @@
-import { withBrowser } from "./setup.ts";
+import { mockGitHubApi, TEST_BASE_URL, withPage } from "./setup.ts";
 import { assert } from "@std/assert";
+import { kv } from "@/server/auth.ts";
+import { encodeBase64 } from "@std/encoding/base64";
 
 Deno.test("US-03: Content Browsing", async () => {
-  await withBrowser(async (browser) => {
-    const page = await browser.newPage("http://localhost:8000");
-    await page.waitForSelector("body");
+  const sessionId = crypto.randomUUID();
+  const fakeToken = "gho_fake_token";
 
-    // 1. Repository Selection Page
-    // Click on the first repository "user/my-blog"
-    const repoLinkSelector = ".repo-item"; // Assuming this class exists from US-02
-    await page.waitForSelector(repoLinkSelector);
+  // 1. Setup Session
+  await kv.set(["sessions", sessionId], fakeToken, {
+    expireIn: 1000 * 60 * 60,
+  });
 
-    // Get the first repo text to verify later
-    const _repoName = await page.evaluate(() => {
-      const el = document.querySelector(".repo-item");
-      return el?.querySelector(".header")?.textContent?.trim();
-    });
+  // 2. Mock Data
+  const configContent = `
+collections:
+  - name: posts
+    label: Posts
+    folder: content/posts
+    create: true
+    type: collection
+    fields:
+      - { name: title, label: Title, widget: string }
+  - name: site_settings
+    label: Site Settings
+    type: singleton
+    files:
+      - name: general
+        label: General Settings
+        file: content/settings/general.json
+        fields:
+            - { name: title, label: Site Title, widget: string }
+`;
+  const configBase64 = encodeBase64(configContent);
 
-    // Click it
-    await page.evaluate(() => {
-      const el = document.querySelector(".repo-item .header") as HTMLElement;
-      if (el) el.click();
-      else throw new Error("Repo item link not found");
-    });
+  const postsDir = [
+    {
+      name: "hello.md",
+      path: "content/posts/hello.md",
+      sha: "sha1",
+      size: 123,
+      url: "...",
+      html_url: "...",
+      git_url: "...",
+      download_url: "...",
+      type: "file",
+    },
+  ];
 
-    // 2. Wait for navigation to /user/my-blog
-    // Since this is SPA, we wait for the target page selector instead of waitForNavigation
-    await page.waitForSelector(".content-browser-header");
-
-    const url = await page.evaluate(() => location.href);
-    assert(
-      url.includes("/user/my-blog"),
-      `URL should contain /user/my-blog, got ${url}`,
-    );
-
-    // 3. Verify Content Browser Header
-    // The previous placeholder implementation has "owner/repo" in the header.
-    // The new implementation should display "Collections" eventually.
-    // US-03 Goal: "configで定義されたコレクションが表示されることを検証"
-
-    // Verify that we are on the Content Browser page
-    const header = await page.evaluate(() =>
-      document.querySelector(".content-browser-header")?.textContent
-    );
-    assert(header?.includes("user my-blog"), "Header should show repo name");
-
-    // 4. Verify Collections List
-    // We expect the list of collections to NOT be empty.
-
-    await page.waitForSelector(".collection-item", { timeout: 5000 });
-    const collections = await page.evaluate(() =>
-      Array.from(document.querySelectorAll(".collection-item")).map((el) =>
-        el.textContent
-      )
-    );
-    assert(
-      collections.some((c) => c?.includes("Posts")),
-      "Should list 'Posts' collection",
-    );
-
-    // 5. Navigate to Article List
-    // Click "Browse" on the "Posts" collection
-    await page.evaluate(() => {
-      // Find the collection item for "Posts"
-      const items = Array.from(document.querySelectorAll(".collection-item"));
-      const postItem = items.find((el) => el.textContent?.includes("Posts"));
-      if (!postItem) throw new Error("Posts collection not found");
-
-      // Find the button inside it
-      const link = postItem.querySelector("a.button") as HTMLElement;
-      if (link) link.click();
-      else throw new Error("Browse button not found for Posts");
-    });
-
-    // Wait for Article List Header
-    // We expect the URL to change and a list of entries to appear
-    await page.waitForSelector(".article-list-header", { timeout: 5000 });
-
-    const entryUrl = await page.evaluate(() => location.href);
-    assert(
-      entryUrl.includes("/user/my-blog/posts"),
-      "URL should be /user/my-blog/posts",
-    );
-
-    // Check for some mock content (RED state: backend not implementing file list yet)
-    await page.waitForSelector(".article-item", { timeout: 2000 });
-    const entries = await page.evaluate(() =>
-      document.querySelectorAll(".article-item").length
-    );
-    assert(entries > 0, "Should display at least one entry");
-
-    // 6. Navigate back and check Singleton
-    // Click breadcrumb to go back
-    await page.evaluate(() => {
-      const breadcrumb = document.querySelector(
-        ".article-list-header .sub.header a",
-      ) as HTMLElement;
-      if (breadcrumb) breadcrumb.click();
-      else throw new Error("Breadcrumb link not found");
-    });
-
-    await page.waitForSelector(".collection-item", { timeout: 2000 });
-
-    // Click "Edit" on "Site Settings" singleton
-    await page.evaluate(() => {
-      const items = Array.from(document.querySelectorAll(".collection-item"));
-      const singletonItem = items.find((el) =>
-        el.textContent?.includes("Site Settings")
+  // 3. Setup Mock API
+  const apiMock = mockGitHubApi({
+    "/user": () =>
+      new Response(
+        JSON.stringify({
+          login: "test-user",
+          avatar_url: "https://example.com/avatar.png",
+        }),
+      ),
+    "/user/installations": () =>
+      new Response(
+        JSON.stringify({
+          installations: [{ id: 12345, account: { login: "test-org" } }],
+        }),
+      ),
+    "/user/installations/12345/repositories": () =>
+      new Response(
+        JSON.stringify({
+          repositories: [
+            {
+              id: 101,
+              name: "my-blog",
+              full_name: "test-org/my-blog",
+              private: false,
+              default_branch: "main",
+            },
+          ],
+        }),
+      ),
+    // Config File Mock
+    "/repos/test-org/my-blog/contents/.github/staticms.yml": () => {
+      console.log("[Mock] Fetching config.yml");
+      return new Response(
+        JSON.stringify({
+          type: "file",
+          encoding: "base64",
+          size: configBase64.length,
+          name: "staticms.yml",
+          path: ".github/staticms.yml",
+          content: configBase64,
+          sha: "config_sha",
+        }),
       );
-      if (!singletonItem) throw new Error("Site Settings singleton not found");
+    },
+    // Posts Directory Mock
+    "/repos/test-org/my-blog/contents/content/posts": () => {
+      console.log("[Mock] Fetching posts directory");
+      return new Response(JSON.stringify(postsDir));
+    },
+  });
 
-      const link = singletonItem.querySelector("a.button") as HTMLElement;
-      if (link) link.click();
-      else throw new Error("Edit button not found for Site Settings");
-    });
+  // 4. Run Test
+  await withPage(async (page) => {
+    try {
+      // 4. Login & Visit
+      await page.goto(`${TEST_BASE_URL}/api/test/login?id=${sessionId}`, {
+        waitUntil: "load",
+      });
 
-    // Wait for Singleton Editor
-    await page.waitForSelector(".singleton-editor-header", { timeout: 2000 });
-    const singletonUrl = await page.evaluate(() => location.href);
-    assert(
-      singletonUrl.includes("/user/my-blog/site_settings"),
-      "URL should be /user/my-blog/site_settings",
-    );
+      // Select Repository
+      await page.waitForSelector(".repo-item", { timeout: 2000 });
 
-    await page.close();
+      // Click on test-org/my-blog
+      await page.evaluate(() => {
+        const links = Array.from(
+          document.querySelectorAll(".repo-item .header"),
+        );
+        const target = links.find((l) =>
+          l.textContent?.includes("my-blog")
+        ) as HTMLElement;
+        if (target) target.click();
+        else throw new Error("Repo link not found");
+      });
+
+      // Verify Content Browser (Collections List)
+      await page.waitForSelector(".collection-item", { timeout: 5000 });
+
+      const content = await page.content();
+      assert(content.includes("Posts"), "Should display Posts collection");
+      assert(
+        content.includes("Site Settings"),
+        "Should display Site Settings collection",
+      );
+
+      // Navigate to Collection (Posts)
+      await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll(".collection-item"));
+        const postsItem = items.find((i) => i.textContent?.includes("Posts"));
+        const btn = postsItem?.querySelector("a.button") as HTMLElement;
+        if (btn) btn.click();
+        else throw new Error("Posts browse button not found");
+      });
+
+      // Verify Article List
+      await page.waitForSelector(".article-item", { timeout: 5000 });
+      const articleContent = await page.content();
+      assert(articleContent.includes("hello.md"), "Should list hello.md");
+
+      // Go Back
+      // await page.goBack();
+      await page.evaluate(() => {
+        const breadcrumb = document.querySelector(
+          ".article-list-header .sub.header a",
+        ) as HTMLElement;
+        if (breadcrumb) breadcrumb.click();
+        else throw new Error("Breadcrumb not found");
+      });
+      await page.waitForSelector(".collection-item");
+
+      // Navigate to Singleton (Site Settings -> General)
+      await page.evaluate(() => {
+        const items = Array.from(document.querySelectorAll(".collection-item"));
+        const settingsItem = items.find((i) =>
+          i.textContent?.includes("Site Settings")
+        );
+        const btn = settingsItem?.querySelector("a.button") as HTMLElement;
+        if (btn) btn.click();
+        else throw new Error("Site Settings button not found");
+      });
+
+      // Verify Singleton Editor
+      await page.waitForSelector(".singleton-editor-header");
+      const settingsContent = await page.content();
+      assert(
+        settingsContent.includes("Editing: site_settings"),
+        "Should show singleton editor header",
+      );
+    } catch (e) {
+      console.error("Test failed:", e);
+      // Log page content for debugging
+      try {
+        const content = await page.content();
+        console.log("Page Content at Failure:", content);
+      } catch (_) { /* ignore */ }
+      throw e;
+    } finally {
+      apiMock.restore();
+      await kv.delete(["sessions", sessionId]);
+    }
   });
 });

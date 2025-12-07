@@ -3,31 +3,29 @@ import { withPage } from "./setup.ts";
 
 Deno.test("US-01: Authentication Redirection", async () => {
   await withPage(async (page) => {
-    // 1. Visit Root
-    await page.goto("http://localhost:8000/", { waitUntil: "networkidle2" });
+    // page.url is already TEST_BASE_URL/ from setup.ts opening it.
+    // However, RequireAuth will trigger redirection.
 
-    // Should initially render or redirect.
-    // Our RequireAuth redirects to /api/auth/login, which redirects to https://github.com/login/oauth/...
+    // 1. Wait for redirection
+    // Since we are not mocked, and RequireAuth redirects to /api/auth/login, then to GitHub.
+    // We expect the URL to change.
 
-    // We wait for navigation.
+    // We might need to wait for network idle to ensure redirect happened
+    try {
+      await page.waitForNavigation({
+        waitUntil: "networkidle2",
+      });
+    } catch {
+      // Timeout means redirection might have finished quickly or stuck
+    }
+
     const url = page.url;
     console.log("Current URL:", url);
 
-    if (url.includes("github.com")) {
-      console.log("Verified redirection to GitHub");
-      assert(true);
-    } else if (url.includes("/api/auth/login")) {
-      console.log("Redirected to auth endpoint");
-      assert(true);
-    } else {
-      // Wait a bit
-      await new Promise((r) => setTimeout(r, 2000));
-      const newUrl = page.url;
-      console.log("URL after wait:", newUrl);
-      assert(
-        newUrl.includes("github.com") || newUrl.includes("login"),
-        "Should have redirected to GitHub",
-      );
-    }
+    assert(
+      url.includes("github.com") || url.includes("/api/auth/login") ||
+        url.includes("returnTo"),
+      `Should have redirected to GitHub or login endpoint, got ${url}`,
+    );
   });
 });

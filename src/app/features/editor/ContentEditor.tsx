@@ -7,7 +7,37 @@ import {
 } from "@/app/hooks/useContentConfig.ts";
 import { Draft, FileItem, useDraft } from "@/app/hooks/useDraft.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
-import matter from "gray-matter";
+import yaml from "js-yaml";
+
+// Simple Frontmatter Parser
+function parseFrontMatter(text: string) {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (match) {
+    try {
+      // deno-lint-ignore no-explicit-any
+      const data = yaml.load(match[1]) as any;
+      return { data, content: match[2] };
+    } catch (e) {
+      console.warn("Failed to parse YAML frontmatter", e);
+    }
+  }
+  // Try to check if it starts with --- but maybe different newline handling
+  if (text.startsWith("---")) {
+    const parts = text.split("---");
+    if (parts.length >= 3) {
+      try {
+        // deno-lint-ignore no-explicit-any
+        const data = yaml.load(parts[1]) as any;
+        const content = parts.slice(2).join("---").replace(/^\n/, "");
+        return { data, content };
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+
+  return { data: {}, content: text };
+}
 
 export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const { owner, repo, collectionName, articleName } = useParams();
@@ -91,8 +121,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       })
       .then((text) => {
         try {
-          // @ts-ignore: gray-matter types
-          const parsed = matter(text);
+          const parsed = parseFrontMatter(text);
           const { data, content } = parsed;
           console.log("Loaded remote content:", data);
           setDraft((prev: Draft) => ({
@@ -101,7 +130,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
             body: content,
           }));
         } catch (e) {
-          console.error("Failed to parse frontmatter", e);
+          console.error("Failed to parse content", e);
           setDraft((prev: Draft) => ({ ...prev, body: text }));
         }
       })

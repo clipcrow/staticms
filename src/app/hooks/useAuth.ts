@@ -19,11 +19,16 @@ export function useAuth() {
     error: null,
   });
 
+  /* DEBUG LOG */
+  console.log("useAuth hook called");
+
   useEffect(() => {
+    console.log("useAuth useEffect called");
     let mounted = true;
 
     async function checkAuth() {
       try {
+        console.log("Fetching /api/user...");
         const res = await fetch("/api/user");
         if (res.status === 401) {
           if (mounted) {

@@ -41,6 +41,10 @@ export async function withPage(
     page.addEventListener("console", (e: any) => {
       console.log(`[Browser] ${e.detail.text}`);
     });
+    // deno-lint-ignore no-explicit-any
+    page.addEventListener("pageerror", (e: any) => {
+      console.error(`[Browser Error] ${e.detail}`);
+    });
 
     await testFn(page);
   });
