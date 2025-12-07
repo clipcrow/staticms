@@ -2,13 +2,13 @@ import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/app/hooks/useAuth.ts";
 
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { user, loading, login } = useAuth();
+  const { isAuthenticated, loading, login } = useAuth();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !isAuthenticated) {
       login();
     }
-  }, [loading, user]); // Removed `login` from deps as it's stable
+  }, [loading, isAuthenticated, login]);
 
   if (loading) {
     // Show a loading spinner or skeleton while checking auth
@@ -19,7 +19,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return null; // Will redirect via useEffect
   }
 
