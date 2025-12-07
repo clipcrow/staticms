@@ -1,6 +1,50 @@
 import { assert, assertEquals } from "@std/assert";
 import { withPage } from "./setup.ts";
 
+Deno.test("US-01: Authentication Redirection", async () => {
+  await withPage(async (page) => {
+    // 1. Visit Root
+    await page.goto("http://localhost:8000/", { waitUntil: "networkidle2" });
+
+    // Should initially render or redirect.
+    // Our RequireAuth redirects to /api/auth/login, which redirects to https://github.com/login/oauth/...
+
+    // We wait for navigation.
+    // Note: Puppeteer/Deno browser might not follow external redirects automatically if it's strictly a page load unless we wait.
+
+    const url = page.url;
+    console.log("Current URL:", url);
+
+    // If environment variables are set correctly, it goes to github.com
+    // If not, it might stay or error.
+
+    // Assertion: URL should assume we are redirected to GitHub or at least /api/auth/login initiated.
+    // Since we are running in a CI/Test env without user interaction, we can't login.
+    // But we can verify the redirection logic initiated by RequireAuth.
+
+    if (url.includes("github.com")) {
+      console.log("Verified redirection to GitHub");
+      assert(true);
+    } else if (url.includes("/api/auth/login")) {
+      console.log("Redirected to auth endpoint");
+      assert(true);
+    } else {
+      // If we are still at localhost, maybe it's loading or failed.
+      // Check if "Loading..." is visible if broken?
+      // Or maybe locally it's fast.
+
+      // Wait a bit
+      await new Promise((r) => setTimeout(r, 2000));
+      const newUrl = page.url;
+      console.log("URL after wait:", newUrl);
+      assert(
+        newUrl.includes("github.com") || newUrl.includes("login"),
+        "Should have redirected to GitHub",
+      );
+    }
+  });
+});
+
 Deno.test("US-06: Save as Pull Request", async (t) => {
   await t.step("Create PR from Draft", async () => {
     await withPage(async (page) => {

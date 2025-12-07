@@ -3,6 +3,7 @@ import { RepositorySelector } from "@/app/features/content-browser/RepositorySel
 import { ContentBrowser } from "@/app/features/content-browser/ContentBrowser.tsx";
 import { ContentRoute } from "@/app/features/content-browser/ContentRoute.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
+import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
 
 // Dependency Injection Interface
 export interface AppRoutesProps {
@@ -20,26 +21,49 @@ export function AppRoutes({
 }: AppRoutesProps) {
   return (
     <Routes>
-      <Route path="/" element={<RepositorySelectorComponent />} />
+      <Route
+        path="/"
+        element={
+          <RequireAuth>
+            <RepositorySelectorComponent />
+          </RequireAuth>
+        }
+      />
       <Route
         path="/:owner/:repo"
-        element={<ContentBrowserComponent />}
+        element={
+          <RequireAuth>
+            <ContentBrowserComponent />
+          </RequireAuth>
+        }
       />
 
       {/* Content Editor Routes */}
       <Route
         path="/:owner/:repo/:collectionName/new"
-        element={<ContentEditorComponent mode="new" />}
+        element={
+          <RequireAuth>
+            <ContentEditorComponent mode="new" />
+          </RequireAuth>
+        }
       />
       <Route
         path="/:owner/:repo/:collectionName/:articleName"
-        element={<ContentEditorComponent mode="edit" />}
+        element={
+          <RequireAuth>
+            <ContentEditorComponent mode="edit" />
+          </RequireAuth>
+        }
       />
 
       {/* Article List / Singleton Handling */}
       <Route
         path="/:owner/:repo/:collectionName"
-        element={<ContentRouteComponent />}
+        element={
+          <RequireAuth>
+            <ContentRouteComponent />
+          </RequireAuth>
+        }
       />
     </Routes>
   );

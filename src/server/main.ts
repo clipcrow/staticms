@@ -10,6 +10,7 @@ import {
   getPrStatusHandler,
 } from "@/server/api/pr.ts";
 import { addClient } from "@/server/sse.ts";
+import { authRouter } from "@/server/auth.ts";
 
 const app = new Application();
 const router = new Router();
@@ -49,6 +50,10 @@ router.post("/_debug/shutdown", (ctx) => {
     ctx.response.body = { error: "Forbidden" };
   }
 });
+
+// Mount Auth
+app.use(authRouter.routes());
+app.use(authRouter.allowedMethods());
 
 router.get("/api/repositories", listRepositories);
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);

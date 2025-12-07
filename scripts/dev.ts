@@ -74,7 +74,15 @@ async function watchFrontend() {
 // 3. Server (Deno Run with internal watch)
 async function runServer() {
   console.log("Starting Server...");
-  const p = spawn([Deno.execPath(), "run", "-A", "--watch", SERVER_ENTRY]);
+  // Add --unstable-kv here
+  const p = spawn([
+    Deno.execPath(),
+    "run",
+    "-A",
+    "--unstable-kv",
+    "--watch=src/server/",
+    SERVER_ENTRY,
+  ]);
   await p.status;
 }
 
