@@ -43,8 +43,11 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
   - `boolean`: トグルスイッチ
   - `image`: 画像選択（モーダル連携）
 
-#### Markdown エディタ (MarkdownEditor)
+#### Body Editor (Markdown Only)
 
+- ファイル拡張子が `.md` (Markdown) の場合のみ表示されます。
+- FrontMatter とは独立した「本文」として扱われます。`config` の `fields` 定義に
+  `body` を含める必要はありません。
 - `react-md-editor` をベースとしたリッチな執筆エリア。
 - **Tabs**: `Write` / `Preview` 切り替え。
 - **Drag & Drop**:

@@ -61,12 +61,8 @@ collections:
     folder: content/posts
     create: true
     fields:
-      - label: "Title"
-        name: "title"
+      - name: "title"
         widget: "string"
-      - label: "Body"
-        name: "body"
-        widget: "markdown"
 `;
   ctx.response.body = defaultConfig;
   ctx.response.type = "text/yaml";

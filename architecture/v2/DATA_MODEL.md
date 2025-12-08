@@ -70,16 +70,23 @@ interface Config {
 
 export interface Collection {
   type: "collection" | "singleton"; // Default: collection
-  name: string; // ID (URL slug)
-  label: string; // Display Name
-  folder?: string; // For collections
-  file?: string; // For singletons
+  name: string; // ID (URL slug), trimmed
+  label?: string; // Display Name (Optional), trimmed
+
+  // Content Location & Binding
+  path: string; // File path or Folder path, trimmed
+  binding?: "file" | "directory";
+  // Combinations:
+  // 1. Collection + File (default): 'path' is folder, manages multiple files inside.
+  // 2. Collection + Directory: 'path' is folder, manages subfolders' index.md.
+  // 3. Singleton + File: 'path' is file, manages that specific file.
+  // 4. Singleton + Directory: 'path' is folder, manages 'path/index.md'.
+
   fields: Field[];
 }
 
 export interface Field {
-  label: string;
-  name: string;
+  name: string; // FrontMatter key, trimmed
   widget:
     | "string"
     | "text"
@@ -88,6 +95,8 @@ export interface Field {
     | "boolean"
     | "list"
     | "object";
+  default?: unknown; // Optional default value (Collection only)
+  required?: boolean; // Default: true
   // ... other widget specific props
 }
 ```
