@@ -1,5 +1,6 @@
 import React from "react";
 import { ContentStatus } from "../editor/utils.ts";
+import { StatusBadge } from "./StatusBadge.tsx";
 
 interface ContentListItemProps {
   icon?: React.ReactNode;
@@ -90,25 +91,18 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
           )}
         </div>
         <div className="staticms-content-list-labels">
-          {status?.hasPr && (
-            <span
-              className="ui label orange mini basic"
-              style={{ marginLeft: "0.5em" }}
-            >
-              <i className="lock icon"></i>
-              Local changes locked{status.prCount > 1
-                ? `: ${status.prCount}`
-                : ""}
-            </span>
-          )}
-          {status?.hasDraft && (
-            <span
-              className="ui label gray mini basic"
-              style={{ marginLeft: "0.5em" }}
-            >
-              <i className="edit icon"></i>
-              Draft / PR{status.draftCount > 1 ? `: ${status.draftCount}` : ""}
-            </span>
+          {status && (
+            status.hasDraft
+              ? <StatusBadge status="draft" style={{ marginLeft: "0.5em" }} />
+              : status.hasPr
+              ? (
+                <StatusBadge
+                  status="pr_open"
+                  prNumber={status.prNumber}
+                  style={{ marginLeft: "0.5em" }}
+                />
+              )
+              : null
           )}
           {labels}
         </div>

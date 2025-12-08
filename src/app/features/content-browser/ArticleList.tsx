@@ -6,6 +6,7 @@ import { FileItem } from "@/app/components/editor/types.ts";
 import { Header } from "@/app/components/common/Header.tsx";
 import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 
 export function ArticleList() {
   const { owner, repo, collectionName } = useParams();
@@ -267,16 +268,16 @@ export function ArticleList() {
                           </button>
                         </span>
                         <span>
-                          {status.hasDraft && (
-                            <div className="ui label orange mini basic">
-                              Draft
-                            </div>
-                          )}
-                          {status.hasPr && (
-                            <div className="ui label blue mini basic">
-                              PR Open
-                            </div>
-                          )}
+                          {status.hasDraft
+                            ? <StatusBadge status="draft" />
+                            : status.hasPr
+                            ? (
+                              <StatusBadge
+                                status="pr_open"
+                                prNumber={status.prNumber}
+                              />
+                            )
+                            : null}
                         </span>
                       </div>
                     </div>

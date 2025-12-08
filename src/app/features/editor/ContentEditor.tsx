@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
+import { savePrStatus } from "@/app/components/editor/utils.ts";
 import yaml from "js-yaml";
 
 // V1 Components
@@ -193,6 +194,27 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
   const handleSave = async () => {
     if (!handleValidation()) return;
     setSaving(true);
+
+    // Reconstruct currentContent for savePrStatus utility
+    // It matches the one in render but needs to be accessible here
+    const collectionDef = config?.collections.find((c) =>
+      c.name === collectionName
+    );
+    const folderPath = collectionDef?.folder ? collectionDef.folder : null;
+    const currentArticleName = articleName || "__new__";
+
+    // Slight duplication of currentContent construction logic, but safer than refactoring scope now
+    const currentContent: V1Content = {
+      owner: owner || "",
+      repo: repo || "",
+      filePath: folderPath
+        ? `${folderPath}/${currentArticleName}`
+        : currentArticleName,
+      fields: [], // Not needed for key generation
+      name: currentArticleName,
+      type: "collection-files",
+    };
+
     try {
       let savePath: string;
       let filename: string;
@@ -220,6 +242,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         if (!filename.endsWith(".md")) filename += ".md";
 
         savePath = folder ? `${folder}/${filename}` : filename;
+
+        // Update currentContent filePath for correct PR key generation if it was new
+        currentContent.filePath = savePath;
       } else {
         savePath = folder ? `${folder}/${articleName}` : articleName!;
       }
@@ -275,20 +300,19 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       }
 
       const data = await res.json();
-      // If backend returns PR info (not yet implemented in batch-commit but prepared for)
+      // If backend returns PR info
       if (data.pr) {
         setPrInfo({ prUrl: data.pr.html_url, prNumber: data.pr.number });
+
+        // Save PR status to localStorage for persistence across lists
+        savePrStatus(currentContent, data.pr.number, data.pr.html_url);
+
         showToast("Pull Request created/updated!", "success");
       } else {
         showToast("Saved successfully!", "success");
         clearDraft();
-        // If new, navigate to edit mode for the new file?
         if (mode === "new") {
-          // Need navigation
-          // window.location.href = ... or navigate()
-          // For now just reload
-          // globalThis.location.reload();
-          // Better: just clear draft. The URL still says 'new' which is awkward.
+          // Provide feedback or reload
         }
       }
     } catch (e) {
@@ -360,10 +384,10 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
                 href={prInfo.prUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="ui basic label"
+                className="ui green basic label"
                 title="View Pull Request on GitHub"
               >
-                <i className="github icon"></i>
+                <i className="code branch icon"></i>
                 PR #{prInfo.prNumber}
                 <div className="detail">Open</div>
               </a>
