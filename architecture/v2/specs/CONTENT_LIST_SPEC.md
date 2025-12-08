@@ -106,7 +106,11 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 ## UI Polish Guidelines
 
-- **Empty States**: 記事が0件の場合、「No articles found. Create
-  one!」といったフレンドリーなメッセージとCTAを表示する。
+- **Empty States**:
+  - **Content List**: 設定が0件の場合、「No content definitions
+    found.」等のメッセージと共に、**「Add New Content」ボタン** (CTA)
+    を表示する。
+  - **Article List**: 記事が0件の場合、「No articles found. Create
+    one!」といったフレンドリーなメッセージと CTA を表示する。
 - **Loading**: スケルトンローディング `Placeholder`
   を使用し、体感速度を向上させる。
