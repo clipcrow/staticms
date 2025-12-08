@@ -37,6 +37,38 @@ Deno.test("US-05: Content Editing & Draft", async (t) => {
             }),
           "/repos/user/my-blog/contents/content/posts": () =>
             new Response(JSON.stringify([]), { status: 200 }),
+          "/repos/user/my-blog/git/ref/heads/main": () =>
+            new Response(JSON.stringify({ object: { sha: "base-sha" } })),
+          "/repos/user/my-blog/git/refs": () =>
+            new Response(
+              JSON.stringify({
+                ref: "refs/heads/new-branch",
+                object: { sha: "base-sha" },
+              }),
+              { status: 201 },
+            ),
+          "/repos/user/my-blog/git/blobs": () =>
+            new Response(JSON.stringify({ sha: "blob-sha" }), { status: 201 }),
+          "/repos/user/my-blog/git/trees": () =>
+            new Response(JSON.stringify({ sha: "tree-sha" }), { status: 201 }),
+          "/repos/user/my-blog/git/commits": () =>
+            new Response(JSON.stringify({ sha: "commit-sha" }), {
+              status: 201,
+            }),
+          "regex:^/repos/user/my-blog/git/refs/heads/.+$": () =>
+            new Response(JSON.stringify({ object: { sha: "commit-sha" } }), {
+              status: 200,
+            }),
+          "/repos/user/my-blog/pulls": () =>
+            new Response(
+              JSON.stringify({
+                number: 1,
+                html_url: "http://github.com/user/my-blog/pull/1",
+                user: { login: "testuser" },
+                head: { ref: "staticms-draft-uuid" },
+              }),
+              { status: 201 },
+            ),
         });
 
         try {
@@ -178,6 +210,26 @@ Deno.test("US-05: Content Editing & Draft", async (t) => {
             bodyValue?.includes("![test.png](test.png)"),
             "Body should contain image link restored from draft",
           );
+
+          // 8. Create PR (Click Save)
+          await page.evaluate(() => {
+            const btn = document.querySelector('button[title="Create PR"]');
+            if (btn) (btn as HTMLElement).click();
+            else {
+              // Should find based on class if title varies or icon
+              const btns = Array.from(document.querySelectorAll("button"));
+              const createBtn = btns.find((b) =>
+                b.textContent?.includes("Create PR")
+              );
+              createBtn?.click();
+            }
+          });
+
+          // Wait for success and button update
+          await page.waitForFunction(() => {
+            const btn = document.querySelector("button.primary");
+            return btn && btn.textContent?.includes("Update PR");
+          });
         } finally {
           apiStub.restore();
         }

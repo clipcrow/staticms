@@ -4,7 +4,6 @@ import { listRepositories } from "@/server/api/repositories.ts";
 import { deleteContent, getContent } from "@/server/api/content.ts";
 import { getRepoConfig, saveRepoConfig } from "@/server/api/config.ts";
 import {
-  createPrHandler,
   debugUpdatePrStatusHandler,
   getPrStatusHandler,
 } from "@/server/api/pr.ts";
@@ -59,7 +58,7 @@ router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 router.delete("/api/repo/:owner/:repo/contents/(.*)", deleteContent);
 router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
-router.post("/api/repo/:owner/:repo/pr", createPrHandler);
+// router.post("/api/repo/:owner/:repo/pr", createPrHandler); // Deprecated
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
 router.post("/api/webhook", webhookHandler);

@@ -157,15 +157,6 @@ export function ContentEditor(
 
   // Fetch remote content (Keep existing logic)
   useEffect(() => {
-    console.log("[ContentEditor] Fetch Effect Check:", {
-      mode,
-      loaded,
-      fromStorage,
-      collectionName,
-      filePath,
-      fetching,
-      fetched: fetchedPathRef.current,
-    });
     if (
       mode === "new" ||
       !loaded ||
@@ -351,6 +342,7 @@ export function ContentEditor(
             message: `Update ${savePath}`,
             branch: "main", // TODO: Configurable
             updates,
+            createPr: true,
           }),
         },
       );

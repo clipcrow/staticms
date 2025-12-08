@@ -73,7 +73,15 @@ export function mockGitHubApi(
       );
 
       for (const path of sortedPaths) {
-        if (url.pathname === path) {
+        let isMatch = false;
+        if (path.startsWith("regex:")) {
+          const regex = new RegExp(path.substring(6));
+          isMatch = regex.test(url.pathname);
+        } else {
+          isMatch = url.pathname === path;
+        }
+
+        if (isMatch) {
           const handler = handlers[path];
           return Promise.resolve(handler(req));
         }
