@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
+import { useAuth } from "@/app/hooks/useAuth.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
 import { savePrStatus } from "@/app/components/editor/utils.ts";
 import yaml from "js-yaml";
@@ -63,12 +64,14 @@ export function ContentEditor(
   const articleName = propArtName || params.articleName;
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
+  const { username: currentUser } = useAuth();
 
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
   const fetchedPathRef = useRef<string | null>(null);
+  const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
   const [prInfo, setPrInfo] = useState<
-    { prUrl: string; prNumber: number } | null
+    { prUrl: string; prNumber: number; author?: string } | null
   >(null);
 
   // SSE for PR updates (Keep existing logic)
@@ -126,14 +129,15 @@ export function ContentEditor(
   const draftKey =
     `draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
 
-  const { draft, setDraft, loaded, fromStorage, clearDraft } = useDraft(
-    draftKey,
-    {
-      frontMatter: {},
-      body: "",
-      pendingImages: [],
-    },
-  );
+  const { draft, setDraft, loaded, fromStorage, clearDraft, isSynced } =
+    useDraft(
+      draftKey,
+      {
+        frontMatter: {},
+        body: "",
+        pendingImages: [],
+      },
+    );
 
   // Warn if singleton draft is empty (potential bug artifact)
   useEffect(() => {
@@ -187,12 +191,13 @@ export function ContentEditor(
         try {
           const parsed = parseFrontMatter(text);
           const { data, content } = parsed;
-          console.log("Loaded remote content:", data);
-          setDraft((prev: Draft) => ({
-            ...prev,
+          const newDraft = {
             frontMatter: data,
             body: content,
-          }));
+            pendingImages: [],
+          };
+          setOriginalDraft(newDraft);
+          setDraft(newDraft, true, true);
         } catch (e) {
           console.error("Failed to parse content", e);
           setDraft((prev: Draft) => ({ ...prev, body: text }));
@@ -358,7 +363,11 @@ export function ContentEditor(
       const data = await res.json();
       // If backend returns PR info
       if (data.pr) {
-        setPrInfo({ prUrl: data.pr.html_url, prNumber: data.pr.number });
+        setPrInfo({
+          prUrl: data.pr.html_url,
+          prNumber: data.pr.number,
+          author: data.pr.user?.login,
+        });
 
         // Save PR status to localStorage for persistence across lists
         savePrStatus(currentContent, data.pr.number, data.pr.html_url);
@@ -434,8 +443,9 @@ export function ContentEditor(
     });
   }
 
-  // Lock Logic: Locked if PR exists AND no local draft to override it.
-  const isLocked = !!prInfo && !fromStorage;
+  // Lock Logic: Locked if PR exists AND (no local draft OR not author).
+  // Current user must match PR author to unlock with draft.
+  const isLocked = !!prInfo && (!fromStorage || prInfo.author !== currentUser);
 
   return (
     <div className="ui container" style={{ marginTop: "2rem" }}>
@@ -468,7 +478,7 @@ export function ContentEditor(
             )}
 
             {/* Reset Button: Only show if we have local changes */}
-            {fromStorage && (
+            {!isSynced && (
               <button
                 type="button"
                 className="ui button negative basic compact"
@@ -484,9 +494,11 @@ export function ContentEditor(
               type="button"
               className={`ui primary button ${saving ? "loading" : ""}`}
               onClick={handleSave}
-              disabled={saving || isLocked}
+              disabled={saving || isLocked || isSynced}
               title={isLocked
                 ? "Editing is locked because a PR is open"
+                : isSynced
+                ? "No changes to save"
                 : "Save changes like a text editor"}
             >
               <i className={prInfo ? "sync icon" : "plus icon"}></i>
@@ -512,8 +524,19 @@ export function ContentEditor(
 
           <FrontMatterItemEditor
             frontMatter={draft.frontMatter as Record<string, unknown>}
-            setFrontMatter={(fm) =>
-              setDraft((prev) => ({ ...prev, frontMatter: fm }))}
+            setFrontMatter={(fm) => {
+              const prevBody = draft.body;
+              const isClean = originalDraft
+                ? (prevBody === originalDraft.body &&
+                  JSON.stringify(fm) ===
+                    JSON.stringify(originalDraft.frontMatter))
+                : false;
+              setDraft(
+                (prev) => ({ ...prev, frontMatter: fm }),
+                undefined,
+                isClean,
+              );
+            }}
             currentContent={currentContent}
             isPrLocked={isLocked}
           />
@@ -522,7 +545,23 @@ export function ContentEditor(
           <div className="ui segment">
             <MarkdownEditor
               body={draft.body}
-              setBody={(body) => setDraft((prev) => ({ ...prev, body }))}
+              setBody={(body) => {
+                const nextBody = body || "";
+                if (nextBody === draft.body) return;
+
+                const prevFM = draft.frontMatter;
+                const isClean = originalDraft
+                  ? (nextBody === originalDraft.body &&
+                    JSON.stringify(prevFM) ===
+                      JSON.stringify(originalDraft.frontMatter))
+                  : false;
+
+                setDraft(
+                  (prev) => ({ ...prev, body: nextBody }),
+                  undefined,
+                  isClean,
+                );
+              }}
               isPrLocked={isLocked}
               currentContent={currentContent}
               height={600}

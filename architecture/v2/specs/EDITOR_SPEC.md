@@ -98,11 +98,20 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
    - オープンな PR が存在する場合、原則として編集をロック（Read-Only）する。
    - **Locking Logic (Simple Lock)**:
      - 原則: **オープンな PR が存在する場合、編集不可（Read-Only）** とする。
-     - 例外: **ローカルドラフトが存在する場合**
-       は、ドラフトの内容を優先し、編集および PR
-       の更新を許可する（操作ユーザー自身が作成者の場合を想定）。
+     - 例外: **ローカルドラフトが存在し、かつ PR
+       作成者が操作ユーザーと一致する場合**
+       は、ドラフトの内容を優先し、編集および PR の更新を許可する。
 
-### 2. 保存プロセス (Save / Create PR)
+### 2. 編集プロセス (Editing)
+
+1. **Dirty Check**:
+   - 編集のたびに、ローカル内容（Draft）とリモート内容（Original）を比較する。
+   - **一致する場合 (Clean)**: `localStorage` からドラフトを削除し、Clean
+     状態へ戻す。
+   - **不一致の場合 (Dirty)**: `localStorage` にドラフトを保存し、Dirty
+     状態（未保存）とする。
+
+### 3. 保存プロセス (Save / Create PR)
 
 1. **Validation**: 必須 FrontMatter フィールドのチェック。
 2. **Image Processing**:
@@ -115,7 +124,7 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
    - 成功時、`localStorage` のドラフトを削除。
    - 作成された PR 情報を State に反映し、完了トーストを表示。
 
-### 3. 画像アップロード (Image Upload)
+### 4. 画像アップロード (Image Upload)
 
 - 画像は即座にサーバーに送るのではなく、一旦 `pendingImages` State と
   `localStorage` に保存します（ドラフトの一部）。
