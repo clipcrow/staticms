@@ -13,6 +13,7 @@ export interface ArticleListProps {
   error: string | null;
   createArticle: (name: string) => string | undefined;
   isCreating: boolean;
+  onDelete?: (file: FileItem) => Promise<void> | void;
 }
 
 export const ArticleList: React.FC<ArticleListProps> = ({
@@ -23,6 +24,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({
   error,
   createArticle,
   isCreating,
+  onDelete,
 }) => {
   const [newArticleName, setNewArticleName] = useState("");
   const [loadingPath, setLoadingPath] = useState<string | null>(null);
@@ -110,12 +112,12 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                   ? file.name.replace(/\.md$/, "")
                   : file.name}
                 status={(() => {
-                  let targetPath = file.path;
+                  let targetPath = file.path || "";
                   if (
                     contentConfig.type === "collection-dirs" &&
                     file.type === "dir"
                   ) {
-                    targetPath = `${file.path}/index.md`;
+                    targetPath = `${file.path || ""}/index.md`;
                   }
 
                   return getContentStatus(
@@ -134,8 +136,12 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                     className="ui icon button mini basic"
                     onClick={(e) => {
                       e.stopPropagation();
-                      // TODO: Implement delete functionality
-                      alert("Delete functionality not implemented yet");
+                      if (
+                        onDelete &&
+                        confirm(`Are you sure you want to delete ${file.name}?`)
+                      ) {
+                        onDelete(file);
+                      }
                     }}
                     title="Delete Article"
                   >
@@ -145,17 +151,19 @@ export const ArticleList: React.FC<ArticleListProps> = ({
                 loading={loadingPath === file.path}
                 style={{ cursor: "pointer", padding: "10px" }}
                 onClick={async () => {
-                  setLoadingPath(file.path);
+                  setLoadingPath(file.path || null);
                   try {
                     if (
                       contentConfig.type === "collection-dirs" &&
                       file.type === "dir"
                     ) {
                       await onSelectArticle(
-                        decodeURIComponent(`${file.path}/index.md`),
+                        decodeURIComponent(`${file.path || ""}/index.md`),
                       );
                     } else {
-                      await onSelectArticle(decodeURIComponent(file.path));
+                      await onSelectArticle(
+                        decodeURIComponent(file.path || ""),
+                      );
                     }
                   } finally {
                     setLoadingPath(null);

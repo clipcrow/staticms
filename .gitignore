@@ -7,5 +7,6 @@
 Thumbs.db
 # Build artifacts
 public/js/bundle.js
+public/js/bundle.css
 public/styles/main.css
 test_debug.log

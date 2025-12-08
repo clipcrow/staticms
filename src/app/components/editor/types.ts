@@ -52,9 +52,9 @@ export interface PrDetails {
 
 export interface FileItem {
   name: string;
-  path: string;
+  path?: string;
   type: "file" | "dir";
-  sha: string;
+  sha?: string;
   content?: string;
 }
 

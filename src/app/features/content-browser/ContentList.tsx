@@ -1,7 +1,8 @@
+import { useState } from "react";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
-import { Link, useNavigate } from "react-router-dom";
-import { ContentList as V1ContentList } from "@/app/components/common/ContentList.tsx";
-import { Content as V1Content } from "@/app/components/editor/types.ts";
+import { useNavigate } from "react-router-dom";
+import { Header } from "@/app/components/common/Header.tsx";
+import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
 
 interface ContentListProps {
   collections: Collection[];
@@ -11,51 +12,149 @@ interface ContentListProps {
 
 export function ContentList({ collections, owner, repo }: ContentListProps) {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [searchQuery, setSearchQuery] = useState("");
 
   if (!collections || collections.length === 0) {
     return (
-      <div className="ui message">
-        No content definitions found in configuration.
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <Header
+          breadcrumbs={[
+            { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+          ]}
+        />
+        <div className="ui placeholder segment">
+          <div className="ui icon header">
+            <i className="file alternate outline icon"></i>
+            No content definitions found.
+          </div>
+          <div className="inline">
+            Please add collections to your staticms.config.yml.
+          </div>
+        </div>
       </div>
     );
   }
 
-  // Adapter
-  const v1Contents: V1Content[] = collections.map((c) => ({
-    owner,
-    repo,
-    filePath: c.folder || c.file || "",
-    name: c.label,
-    type: c.type === "singleton" ? "singleton-file" : "collection-files", // approximation
-    fields: c.fields?.map((f) => ({ name: f.name, value: "" })) || [],
-    collectionName: c.name,
-    collectionPath: c.folder,
-    branch: "main",
-  }));
+  const filteredCollections = collections.filter((c) =>
+    c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const handleSelectContent = (content: V1Content, index: number) => {
-    // Navigate to /:owner/:repo/:collectionName
-    navigate(`/${owner}/${repo}/${content.collectionName}`);
-  };
-
-  const handleAddNewContentToRepo = () => {
-    // Navigate to Config editor to add new collection
-    navigate(`/${owner}/${repo}?action=add`);
-  };
-
-  const handleEditConfig = (index: number) => {
-    const col = collections[index];
-    navigate(`/${owner}/${repo}?action=edit&target=${col.name}`);
+  const handleSelectContent = (collectionName: string) => {
+    navigate(`/${owner}/${repo}/${collectionName}`);
   };
 
   return (
-    <V1ContentList
-      contents={v1Contents}
-      selectedRepo={`${owner}/${repo}`}
-      onEditContentConfig={handleEditConfig}
-      onSelectContent={handleSelectContent}
-      onAddNewContentToRepo={handleAddNewContentToRepo}
-      loadingItemIndex={null}
-    />
+    <div className="ui container" style={{ marginTop: "2rem" }}>
+      <Header
+        breadcrumbs={[
+          { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+        ]}
+        rightContent={
+          <div style={{ display: "flex", gap: "0.5em" }}>
+            <div className="ui icon buttons basic">
+              <button
+                type="button"
+                className={`ui button ${viewMode === "card" ? "active" : ""}`}
+                onClick={() => setViewMode("card")}
+                title="Card View"
+              >
+                <i className="th icon"></i>
+              </button>
+              <button
+                type="button"
+                className={`ui button ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+                title="List View"
+              >
+                <i className="list icon"></i>
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* Filter Bar */}
+      <div className="ui segment secondary form">
+        <div className="fields inline" style={{ margin: 0 }}>
+          <div className="sixteen wide field">
+            <div className="ui icon input fluid">
+              <input
+                type="text"
+                placeholder="Search collections..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <i className="search icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* List Content */}
+      {filteredCollections.length === 0
+        ? <div className="ui message">No collections match your search.</div>
+        : (
+          <>
+            {viewMode === "card" && (
+              <div className="ui three stackable cards">
+                {filteredCollections.map((c) => (
+                  <div
+                    className="card link"
+                    key={c.name}
+                    onClick={() => handleSelectContent(c.name)}
+                  >
+                    <div className="content">
+                      <div className="header">
+                        <i
+                          className={`icon ${
+                            c.type === "singleton"
+                              ? "file outline"
+                              : "folder outline"
+                          }`}
+                          style={{ marginRight: "0.5em" }}
+                        >
+                        </i>
+                        {c.label}
+                      </div>
+                      <div className="meta">
+                        {c.name}
+                      </div>
+                      <div className="description">
+                        {c.type === "singleton"
+                          ? "Singleton Content"
+                          : "Collection of entries"}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {viewMode === "list" && (
+              <div className="ui relaxed divided list">
+                {filteredCollections.map((c) => (
+                  <ContentListItem
+                    key={c.name}
+                    icon={
+                      <i
+                        className={`large icon ${
+                          c.type === "singleton"
+                            ? "file outline"
+                            : "folder outline"
+                        }`}
+                      />
+                    }
+                    primaryText={c.label}
+                    secondaryText={c.name}
+                    onClick={() => handleSelectContent(c.name)}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+    </div>
   );
 }

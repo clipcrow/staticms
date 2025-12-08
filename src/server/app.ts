@@ -1,7 +1,7 @@
 import { Application, Router } from "@oak/oak";
 
 import { listRepositories } from "@/server/api/repositories.ts";
-import { getContent } from "@/server/api/content.ts";
+import { deleteContent, getContent } from "@/server/api/content.ts";
 import { getRepoConfig, saveRepoConfig } from "@/server/api/config.ts";
 import {
   createPrHandler,
@@ -11,6 +11,7 @@ import {
 import { webhookHandler } from "@/server/api/webhooks.ts";
 import { addClient } from "@/server/sse.ts";
 import { authRouter } from "@/server/auth.ts";
+import { batchCommitHandler } from "@/server/api/commits.ts";
 
 export const app = new Application();
 const router = new Router();
@@ -56,6 +57,8 @@ router.get("/api/user/repos", listRepositories); // v1 compatibility
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
+router.delete("/api/repo/:owner/:repo/contents/(.*)", deleteContent);
+router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
 router.post("/api/repo/:owner/:repo/pr", createPrHandler);
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);

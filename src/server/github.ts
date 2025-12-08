@@ -166,4 +166,90 @@ export class GitHubUserClient {
       { token: this.token },
     );
   }
+
+  // Git Data API for Batch Commits
+  async createBlob(
+    owner: string,
+    repo: string,
+    content: string,
+    encoding: "utf-8" | "base64" = "utf-8",
+  ) {
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/git/blobs`,
+      {
+        method: "POST",
+        body: JSON.stringify({ content, encoding }),
+        token: this.token,
+      },
+    );
+  }
+
+  async createTree(
+    owner: string,
+    repo: string,
+    tree: {
+      path: string;
+      mode: "100644" | "100755" | "040000" | "160000" | "120000";
+      type: "blob" | "tree" | "commit";
+      sha?: string;
+      content?: string;
+    }[],
+    base_tree?: string,
+  ) {
+    // If base_tree is provided, it updates that tree.
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees`,
+      {
+        method: "POST",
+        body: JSON.stringify({ tree, base_tree }),
+        token: this.token,
+      },
+    );
+  }
+
+  async createCommit(
+    owner: string,
+    repo: string,
+    message: string,
+    tree: string,
+    parents: string[],
+  ) {
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/git/commits`,
+      {
+        method: "POST",
+        body: JSON.stringify({ message, tree, parents }),
+        token: this.token,
+      },
+    );
+  }
+
+  async updateRef(owner: string, repo: string, ref: string, sha: string) {
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/git/refs/${ref}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ sha }),
+        token: this.token,
+      },
+    );
+  }
+
+  async deleteFile(
+    owner: string,
+    repo: string,
+    path: string,
+    message: string,
+    sha: string,
+    branch: string,
+  ) {
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${path}`,
+      {
+        method: "DELETE",
+        body: JSON.stringify({ message, sha, branch }),
+        token: this.token,
+      },
+    );
+  }
 }

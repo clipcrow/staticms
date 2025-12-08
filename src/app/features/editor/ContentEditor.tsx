@@ -11,8 +11,10 @@ import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEd
 import {
   Content as V1Content,
   Field as V1Field,
+  FileItem,
 } from "@/app/components/editor/types.ts";
 import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
+import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
 
 // Simple Frontmatter Parser (Reuse existing)
 function parseFrontMatter(text: string) {
@@ -156,28 +158,66 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     showToast,
   ]);
 
+  const handleImageUpload = (file: File): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const content = (e.target?.result as string).split(",")[1];
+        const newImage: FileItem = {
+          name: file.name,
+          type: "file",
+          content: content,
+          path: folder ? `${folder}/${file.name}` : file.name,
+        };
+        setDraft((prev) => ({
+          ...prev,
+          pendingImages: [...(prev.pendingImages || []), newImage],
+        }));
+        resolve(file.name);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleValidation = () => {
+    // Basic validation
+    // deno-lint-ignore no-explicit-any
+    const title = (draft.frontMatter as any).title;
+    if (!title && mode === "new") {
+      // Only require title for new? Or always?
+      // For now, lenient.
+    }
+    return true;
+  };
+
   const handleSave = async () => {
+    if (!handleValidation()) return;
     setSaving(true);
     try {
       let savePath: string;
+      let filename: string;
+
+      // deno-lint-ignore no-explicit-any
+      const title = (draft.frontMatter as any).title as string;
 
       if (mode === "new") {
-        // deno-lint-ignore no-explicit-any
-        const title = (draft.frontMatter as any).title as string;
-        let filename = `post-${Date.now()}.md`;
+        filename = `post-${Date.now()}.md`;
         if (title) {
           filename = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
             /(^-|-$)/g,
             "",
           ) + ".md";
         } else {
-          const userInput = prompt(
-            "Enter filename (e.g. my-post.md):",
-            filename,
-          );
-          if (!userInput) throw new Error("Filename required");
-          filename = userInput;
+          // Fallback if title missing, user might have wanted explicit name
+          if (!articleName || articleName === "__new__") {
+            const userInput = prompt("Enter filename:", filename);
+            if (!userInput) throw new Error("Filename required");
+            filename = userInput;
+          } else {
+            filename = articleName;
+          }
         }
+        if (!filename.endsWith(".md")) filename += ".md";
 
         savePath = folder ? `${folder}/${filename}` : filename;
       } else {
@@ -191,18 +231,40 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         ? `---\n${frontMatterString}---\n\n${draft.body}`
         : draft.body;
 
+      // Prepare Batch Updates
+      const updates = [];
+
+      // 1. Markdown File
+      updates.push({
+        path: savePath,
+        content: btoa(unescape(encodeURIComponent(fileContent))),
+        encoding: "base64",
+      });
+
+      // 2. Pending Images
+      if (draft.pendingImages) {
+        for (const img of draft.pendingImages) {
+          if (img.content) {
+            updates.push({
+              path: img.path || img.name,
+              content: img.content,
+              encoding: "base64",
+            });
+          }
+        }
+      }
+
       const res = await fetch(
-        `/api/repo/${owner}/${repo}/contents/${savePath}`,
+        `/api/repo/${owner}/${repo}/batch-commit`,
         {
-          method: "PUT",
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             message: `Update ${savePath}`,
-            content: btoa(unescape(encodeURIComponent(fileContent))), // UTF-8 safe base64
-            branch: "main", // TODO: Configurable branch
-            sha: undefined, // TODO: We need SHA if updating
+            branch: "main", // TODO: Configurable
+            updates,
           }),
         },
       );
@@ -213,14 +275,20 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       }
 
       const data = await res.json();
+      // If backend returns PR info (not yet implemented in batch-commit but prepared for)
       if (data.pr) {
         setPrInfo({ prUrl: data.pr.html_url, prNumber: data.pr.number });
         showToast("Pull Request created/updated!", "success");
       } else {
         showToast("Saved successfully!", "success");
         clearDraft();
+        // If new, navigate to edit mode for the new file?
         if (mode === "new") {
-          // Redirect?
+          // Need navigation
+          // window.location.href = ... or navigate()
+          // For now just reload
+          // globalThis.location.reload();
+          // Better: just clear draft. The URL still says 'new' which is awkward.
         }
       }
     } catch (e) {
@@ -278,6 +346,9 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     label: mode === "new" ? "New Content" : effectiveArticleName,
   });
 
+  // Lock Logic: Locked if PR exists AND no local draft to override it.
+  const isLocked = !!prInfo && !fromStorage;
+
   return (
     <div className="ui container" style={{ marginTop: "2rem" }}>
       <Header
@@ -289,37 +360,53 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
                 href={prInfo.prUrl}
                 target="_blank"
                 rel="noreferrer"
-                style={{ marginRight: "1em" }}
+                className="ui basic label"
+                title="View Pull Request on GitHub"
               >
-                PR #{prInfo.prNumber} Open{" "}
-                <i className="external alternate icon"></i>
+                <i className="github icon"></i>
+                PR #{prInfo.prNumber}
+                <div className="detail">Open</div>
               </a>
             )}
-            {fromStorage && (mode === "edit") && (
+
+            {fromStorage && (
               <div
                 className="ui horizontal label orange"
-                style={{ marginRight: "1em" }}
+                title="You are viewing a local draft that hasn't been saved to GitHub yet."
               >
+                <i className="pencil alternate icon"></i>
                 Draft Restored
               </div>
             )}
-            {fromStorage && !prInfo && (
+
+            {/* Reset Button: Only show if we have local changes */}
+            {fromStorage && (
               <button
                 type="button"
-                className="ui button negative basic"
+                className="ui button negative basic compact"
                 onClick={handleReset}
                 disabled={saving}
+                title="Discard local draft and reload from server"
               >
                 Reset
               </button>
             )}
+
             <button
               type="button"
               className={`ui primary button ${saving ? "loading" : ""}`}
               onClick={handleSave}
-              disabled={saving || !!prInfo}
+              disabled={saving || isLocked}
+              title={isLocked
+                ? "Editing is locked because a PR is open"
+                : "Save changes like a text editor"}
             >
-              {prInfo ? "Locked (PR Created)" : "Save"}
+              <i className={prInfo ? "sync icon" : "plus icon"}></i>
+              {isLocked
+                ? "Locked (PR Open)"
+                : prInfo
+                ? "Update PR"
+                : "Create PR"}
             </button>
           </div>
         }
@@ -340,7 +427,7 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
             setFrontMatter={(fm) =>
               setDraft((prev) => ({ ...prev, frontMatter: fm }))}
             currentContent={currentContent}
-            isPrLocked={!!prInfo}
+            isPrLocked={isLocked}
           />
 
           {/* Markdown Editor */}
@@ -348,17 +435,35 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
             <MarkdownEditor
               body={draft.body}
               setBody={(body) => setDraft((prev) => ({ ...prev, body }))}
-              isPrLocked={!!prInfo}
+              isPrLocked={isLocked}
               currentContent={currentContent}
               height={600}
+              onImageUpload={handleImageUpload}
             />
           </div>
         </div>
         <div className="four wide column">
           {/* Future Sidebar (History, Images) */}
           <div className="ui segment">
-            <h4 className="ui header">Sidebar</h4>
-            <p>Coming back soon...</p>
+            <ContentImages
+              pendingImages={draft.pendingImages || []}
+              onUpload={(files) => Array.from(files).forEach(handleImageUpload)}
+              onRemovePending={(name) =>
+                setDraft((prev) => ({
+                  ...prev,
+                  pendingImages: prev.pendingImages?.filter((i) =>
+                    i.name !== name
+                  ),
+                }))}
+              onInsert={(name) => {
+                // Hacky insert: use clipboard or just append?
+                // Best would be to expose an insert method ref from MarkdownEditor,
+                // but for now let's just use clipboard or toast
+                navigator.clipboard.writeText(`![${name}](${name})`);
+                showToast(`Copied ![${name}](${name}) to clipboard`, "info");
+              }}
+              folderPath={folder || ""}
+            />
           </div>
         </div>
       </div>

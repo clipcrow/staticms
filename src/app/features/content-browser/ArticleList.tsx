@@ -1,11 +1,11 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { useRepoContent } from "@/app/hooks/useRepoContent.ts";
-import { ArticleList as V1ArticleList } from "@/app/components/common/ArticleList.tsx";
-import {
-  Content as V1Content,
-  FileItem,
-} from "@/app/components/editor/types.ts";
+import { FileItem } from "@/app/components/editor/types.ts";
+import { Header } from "@/app/components/common/Header.tsx";
+import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
+// import { getContentStatus } from "@/app/components/editor/utils.ts";
 
 export function ArticleList() {
   const { owner, repo, collectionName } = useParams();
@@ -26,47 +26,50 @@ export function ArticleList() {
       folder,
     );
 
+  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [newArticleName, setNewArticleName] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
+
   if (configLoading || (folder && contentLoading)) {
-    return <div className="ui active centered inline loader"></div>;
+    return (
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <Header
+          breadcrumbs={[
+            { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+            { label: collectionName || "" },
+          ]}
+        />
+        <div className="ui placeholder segment">
+          <div className="ui active inverted dimmer">
+            <div className="ui loader"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (configError) {
     return (
-      <div className="ui negative message">
-        Error loading config: {configError.message}
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui negative message">
+          Error loading config: {configError.message}
+        </div>
       </div>
     );
   }
 
   if (!collectionDef) {
     return (
-      <div className="ui warning message">
-        Collection "{collectionName}" not found.
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui warning message">
+          Collection "{collectionName}" not found.
+        </div>
       </div>
     );
   }
 
-  // Adapter for V1 Content object
-  const v1Content: V1Content = {
-    owner: owner || "",
-    repo: repo || "",
-    filePath: folder || "",
-    fields: collectionDef.fields?.map((f) => ({
-      name: f.name,
-      value: "",
-      defaultValue: "",
-    })) || [],
-    name: collectionDef.label,
-    type: "collection-files", // Simplified
-    collectionName: collectionDef.name,
-    collectionPath: folder,
-  };
-
-  // Convert files to compatible V1 FileItems if necessary
-  // Assuming useRepoContent returns compatible items, we cast them.
-  // We need 'sha' which might be missing in some v2 implementations?
-  // Let's assume compatibility for now or map them.
-  const v1Files: FileItem[] = files.map((f: any) => ({
+  const v1Files: FileItem[] = files.map((f: FileItem) => ({
     name: f.name,
     path: f.path,
     type: f.type,
@@ -74,67 +77,15 @@ export function ArticleList() {
     content: undefined,
   }));
 
-  const handleCreateArticle = (name: string) => {
-    // Generate filename logic
-    let filename = name;
-    if (!filename.endsWith(".md")) filename += ".md";
-    // For navigation, we just need the filename part if inside collection
-    navigate(
-      `/${owner}/${repo}/${collectionName}/new?filename=${
-        encodeURIComponent(filename)
-      }`,
-    ); // Pass via query param? Or just let Editor handle it?
-    // Actually v1 expects this function to return a path string if successful, then calls onSelectArticle.
-    // In v2 routing, we want to navigate to the "new" route.
-    // But the V1 component calls onSelectArticle(path) if this returns a path.
-    // So we can just return undefined and navigate manually here.
+  const filteredFiles = v1Files.filter((f) =>
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    // However, looking at v1 ArticleList:
-    // const path = createArticle(newArticleName);
-    // if (path) onSelectArticle(path);
-
-    // If we want to support "Create", we should navigate to the new route.
-    // But the new route `/:owner/:repo/:collectionName/new` handles creation.
-    // We can just navigate there and let the user type the name?
-    // BUT v1 ArticleList has an input field for "New article name".
-    // If user typed "My Post", we want to pass that to the editor.
-
-    // Let's navigate to `new` mode and pass filename in state or query.
-    // We'll update ContentEditor to respect it later if needed.
-    // For now, let's just return undefined to stop v1 component from doing prompt logic,
-    // and navigate immediately.
-
-    return undefined; // We navigate manually
-  };
-
-  // Override the internal handleCreateArticle of v1 by intercepting proper flow?
-  // No, we are passing `createArticle` prop.
-  // v1 ArticleList:
-  // onClick={handleCreateArticle} -> calls createArticle(newArticleName)
-
-  const handleCreateArticleProp = (name: string): string | undefined => {
-    // Just navigate
-    navigate(
-      `/${owner}/${repo}/${collectionName}/${
-        encodeURIComponent(name)
-      }.md?mode=new`,
-    );
-    // Note: This route might be intercepted as edit route if we are not careful.
-    // v2 routes: /:collectionName/new  vs /:collectionName/:articleName
-    // If name is "foo.md", it matches :articleName.
-    // If we want "new" mode with prefilled name, maybe we should use the /new route
-    // and pass title via state.
-
-    // Let's try navigating to /new.
-    // But we need to pass the name.
-    // For now, let's navigate to the "edit" route for a file that doesn't exist yet?
-    // No, that triggers 404 fetch.
-
-    // Let's stick to /new.
+  const handleCreateArticle = () => {
+    if (!newArticleName.trim()) return;
     navigate(`/${owner}/${repo}/${collectionName}/new`, {
-      state: { initialTitle: name },
+      state: { initialTitle: newArticleName },
     });
-    return undefined;
   };
 
   const handleSelectArticle = (path: string) => {
@@ -144,15 +95,270 @@ export function ArticleList() {
     navigate(`/${owner}/${repo}/${collectionName}/${filename}`);
   };
 
+  const handleDelete = async () => {
+    if (!deleteTarget || !deleteTarget.sha || !deleteTarget.path) {
+      alert("Cannot delete file: missing SHA or path");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `/api/repo/${owner}/${repo}/contents/${deleteTarget.path}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: `Delete ${deleteTarget.name}`,
+            sha: deleteTarget.sha,
+            branch: "main", // TODO: Configurable
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Delete failed");
+      }
+
+      // Reload to reflect changes
+      globalThis.location.reload();
+    } catch (e) {
+      console.error(e);
+      alert((e as Error).message);
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
   return (
-    <V1ArticleList
-      contentConfig={v1Content}
-      onSelectArticle={handleSelectArticle}
-      files={v1Files}
-      loading={contentLoading}
-      error={contentError ? contentError.message : null}
-      createArticle={handleCreateArticleProp}
-      isCreating={false}
-    />
+    <div className="ui container" style={{ marginTop: "2rem" }}>
+      <Header
+        breadcrumbs={[
+          { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+          { label: collectionDef.label },
+        ]}
+        rightContent={
+          <div style={{ display: "flex", gap: "0.5em" }}>
+            <div className="ui icon buttons basic">
+              <button
+                type="button"
+                className={`ui button ${viewMode === "card" ? "active" : ""}`}
+                onClick={() => setViewMode("card")}
+                title="Card View"
+              >
+                <i className="th icon"></i>
+              </button>
+              <button
+                type="button"
+                className={`ui button ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+                title="List View"
+              >
+                <i className="list icon"></i>
+              </button>
+            </div>
+          </div>
+        }
+      />
+
+      {/* Toolbar: Create New & Search */}
+      <div className="ui segment secondary form">
+        <div className="fields" style={{ margin: 0 }}>
+          {/* Search */}
+          <div className="eight wide field">
+            <div className="ui icon input fluid">
+              <input
+                type="text"
+                placeholder="Filter articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <i className="search icon"></i>
+            </div>
+          </div>
+          {/* Spacer */}
+          <div className="two wide field"></div>
+          {/* Create New */}
+          <div className="six wide field">
+            <div className="ui action input fluid">
+              <input
+                type="text"
+                placeholder="New article name (e.g. my-post)"
+                value={newArticleName}
+                onChange={(e) => setNewArticleName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleCreateArticle();
+                }}
+              />
+              <button
+                type="button"
+                className="ui primary button"
+                onClick={handleCreateArticle}
+              >
+                <i className="plus icon"></i>
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {contentError
+        ? <div className="ui message error">{contentError.message}</div>
+        : filteredFiles.length === 0
+        ? (
+          <div className="ui placeholder segment">
+            <div className="ui icon header">
+              <i className="file outline icon"></i>
+              No articles found
+            </div>
+            {searchQuery
+              ? <div className="inline">Your search returned no results.</div>
+              : (
+                <div className="inline">
+                  Create a new article above to get started!
+                </div>
+              )}
+          </div>
+        )
+        : (
+          <>
+            {viewMode === "card" && (
+              <div className="ui three stackable cards">
+                {filteredFiles.map((file) => {
+                  // TODO: Pass proper status
+                  const status = {
+                    hasDraft: false,
+                    hasPr: false,
+                    draftCount: 0,
+                    prCount: 0,
+                  };
+                  return (
+                    <div
+                      className="card link"
+                      key={file.path}
+                      onClick={() => handleSelectArticle(file.path || "")}
+                    >
+                      <div className="content">
+                        <div
+                          className="header"
+                          style={{ wordBreak: "break-all" }}
+                        >
+                          {file.name}
+                        </div>
+                        <div className="meta">
+                          Config: {collectionDef.label}
+                        </div>
+                      </div>
+                      <div className="extra content">
+                        <span className="right floated">
+                          <button
+                            type="button"
+                            className="ui icon button mini basic"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget(file);
+                            }}
+                            title="Delete Article"
+                          >
+                            <i className="trash icon red"></i>
+                          </button>
+                        </span>
+                        <span>
+                          {status.hasDraft && (
+                            <div className="ui label orange mini basic">
+                              Draft
+                            </div>
+                          )}
+                          {status.hasPr && (
+                            <div className="ui label blue mini basic">
+                              PR Open
+                            </div>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {viewMode === "list" && (
+              <div className="ui relaxed divided list">
+                {filteredFiles.map((file) => {
+                  // TODO: Pass proper status
+                  const status = {
+                    hasDraft: false,
+                    hasPr: false,
+                    draftCount: 0,
+                    prCount: 0,
+                  };
+                  return (
+                    <ContentListItem
+                      key={file.path}
+                      icon={<i className="large file outline icon" />}
+                      primaryText={file.name}
+                      secondaryText={file.path}
+                      status={status}
+                      actions={
+                        <button
+                          type="button"
+                          className="ui icon button mini basic"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteTarget(file);
+                          }}
+                          title="Delete Article"
+                        >
+                          <i className="trash icon red"></i>
+                        </button>
+                      }
+                      onClick={() => handleSelectArticle(file.path || "")}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="ui dimmer modals page visible active">
+          <div
+            className="ui standard test modal transition visible active"
+            style={{ display: "block !important", marginTop: "100px" }}
+          >
+            <div className="header">
+              Delete Article
+            </div>
+            <div className="content">
+              <p>
+                Are you sure you want to delete <b>{deleteTarget.name}</b>?
+              </p>
+              <div className="ui warning message">
+                <i className="warning icon"></i>
+                This action will commit a deletion to the repository.
+              </div>
+            </div>
+            <div className="actions">
+              <div
+                className="ui black deny button"
+                onClick={() => setDeleteTarget(null)}
+              >
+                Cancel
+              </div>
+              <div
+                className="ui negative right labeled icon button"
+                onClick={handleDelete}
+              >
+                Delete
+                <i className="trash icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
