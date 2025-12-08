@@ -130,13 +130,9 @@ export function ContentConfigEditor({
       const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "text/yaml",
         },
-        body: JSON.stringify({
-          message: `Update config for ${newCollection.label}`,
-          content: btoa(unescape(encodeURIComponent(yaml.dump(newConfig)))),
-          branch: "main",
-        }),
+        body: yaml.dump(newConfig),
       });
 
       if (!res.ok) {
@@ -165,12 +161,8 @@ export function ContentConfigEditor({
 
       const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: `Delete content config ${initialData?.label}`,
-          content: btoa(unescape(encodeURIComponent(yaml.dump(newConfig)))),
-          branch: "main",
-        }),
+        headers: { "Content-Type": "text/yaml" },
+        body: yaml.dump(newConfig),
       });
 
       if (!res.ok) throw new Error("Failed to delete");

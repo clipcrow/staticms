@@ -29,16 +29,21 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 - **Card View**:
   - 大きなアイコンとラベルで視認性を重視。
   - `Unsaved Draft` バッジをカード右上に配置。
+  - **Actions**: カード右下に「設定」(`cog` アイコン)
+    ボタンを配置。クリックで設定編集画面へ遷移。
 - **List View**:
   - 省スペースなテーブル表示。
   - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`, `Last Modified`,
     `Actions`。
+  - **Actions**:
+    - **Settings**: `cog` アイコン。クリックで設定編集画面へ遷移。
 
 ### インタラクション
 
 - カード全体がクリッカブルエリア。
 - コレクション -> `ArticleList` 画面へ。
 - シングルトン -> `ContentEditor` 画面へ。
+- 設定ボタン -> コンテンツ設定編集画面 (`/config/:collectionName`) へ。
 
 ### データフロー
 

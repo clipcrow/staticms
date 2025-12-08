@@ -1,17 +1,20 @@
+import React from "react";
 import { Route, Routes } from "react-router-dom";
 import { RepositorySelector } from "@/app/features/content-browser/RepositorySelector.tsx";
 import { ContentBrowser } from "@/app/features/content-browser/ContentBrowser.tsx";
 import { ContentRoute } from "@/app/features/content-browser/ContentRoute.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
+import { ConfigPage } from "@/app/features/config/ConfigPage.tsx";
 import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
 import { NotFound } from "@/app/components/common/NotFound.tsx";
 
 // Dependency Injection Interface
 export interface AppRoutesProps {
-  RepositorySelectorComponent?: React.ComponentType;
-  ContentBrowserComponent?: React.ComponentType;
-  ContentRouteComponent?: React.ComponentType;
-  ContentEditorComponent?: React.ComponentType<{ mode?: "new" | "edit" }>;
+  RepositorySelectorComponent?: React.ElementType;
+  ContentBrowserComponent?: React.ElementType;
+  ContentRouteComponent?: React.ElementType;
+  ContentEditorComponent?: React.ElementType;
+  ConfigPageComponent?: React.ElementType;
 }
 
 export function AppRoutes({
@@ -19,6 +22,7 @@ export function AppRoutes({
   ContentBrowserComponent = ContentBrowser,
   ContentRouteComponent = ContentRoute,
   ContentEditorComponent = ContentEditor,
+  ConfigPageComponent = ConfigPage,
 }: AppRoutesProps) {
   return (
     <Routes>
@@ -30,6 +34,17 @@ export function AppRoutes({
           </RequireAuth>
         }
       />
+
+      {/* Config Routes */}
+      <Route
+        path="/:owner/:repo/config/:collectionName"
+        element={
+          <RequireAuth>
+            <ConfigPageComponent />
+          </RequireAuth>
+        }
+      />
+
       <Route
         path="/:owner/:repo"
         element={

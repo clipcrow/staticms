@@ -45,6 +45,17 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
     navigate(`/${owner}/${repo}/${collectionName}`);
   };
 
+  const handleSettingsClick = (e: React.MouseEvent, collectionName: string) => {
+    e.stopPropagation();
+    // Navigate to settings editing page (Conceptual path)
+    navigate(`/${owner}/${repo}/config/${collectionName}`);
+  };
+
+  const handleAddNewContent = () => {
+    // Navigate to content type creation page (Conceptual path)
+    navigate(`/${owner}/${repo}/config/new`);
+  };
+
   return (
     <div className="ui container" style={{ marginTop: "2rem" }}>
       <Header
@@ -71,6 +82,14 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
                 <i className="list icon"></i>
               </button>
             </div>
+            <button
+              type="button"
+              className="ui primary button"
+              onClick={handleAddNewContent}
+            >
+              <i className="plus icon"></i>
+              Add New Content
+            </button>
           </div>
         }
       />
@@ -127,6 +146,16 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
                           : "Collection of entries"}
                       </div>
                     </div>
+                    <div className="extra content">
+                      <button
+                        type="button"
+                        className="ui icon button basic right floated mini"
+                        onClick={(e) => handleSettingsClick(e, c.name)}
+                        title="Settings"
+                      >
+                        <i className="cog icon"></i>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -148,6 +177,16 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
                     }
                     primaryText={c.label}
                     secondaryText={c.name}
+                    actions={
+                      <button
+                        type="button"
+                        className="ui icon button basic mini"
+                        onClick={(e) => handleSettingsClick(e, c.name)}
+                        title="Settings"
+                      >
+                        <i className="cog icon"></i>
+                      </button>
+                    }
                     onClick={() => handleSelectContent(c.name)}
                   />
                 ))}
