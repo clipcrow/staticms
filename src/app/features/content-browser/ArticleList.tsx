@@ -5,7 +5,7 @@ import { useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/app/components/editor/types.ts";
 import { Header } from "@/app/components/common/Header.tsx";
 import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
-// import { getContentStatus } from "@/app/components/editor/utils.ts";
+import { getContentStatus } from "@/app/components/editor/utils.ts";
 
 export function ArticleList() {
   const { owner, repo, collectionName } = useParams();
@@ -69,7 +69,9 @@ export function ArticleList() {
     );
   }
 
-  const v1Files: FileItem[] = files.map((f: FileItem) => ({
+  // cast to FileItem properly or use any if types are loose
+  // deno-lint-ignore no-explicit-any
+  const v1Files: FileItem[] = files.map((f: any) => ({
     name: f.name,
     path: f.path,
     type: f.type,
@@ -226,13 +228,13 @@ export function ArticleList() {
             {viewMode === "card" && (
               <div className="ui three stackable cards">
                 {filteredFiles.map((file) => {
-                  // TODO: Pass proper status
-                  const status = {
-                    hasDraft: false,
-                    hasPr: false,
-                    draftCount: 0,
-                    prCount: 0,
-                  };
+                  const status = getContentStatus(
+                    owner || "",
+                    repo || "",
+                    "main", // Assuming main branch for now
+                    file.path || "",
+                    false,
+                  );
                   return (
                     <div
                       className="card link"
@@ -286,13 +288,13 @@ export function ArticleList() {
             {viewMode === "list" && (
               <div className="ui relaxed divided list">
                 {filteredFiles.map((file) => {
-                  // TODO: Pass proper status
-                  const status = {
-                    hasDraft: false,
-                    hasPr: false,
-                    draftCount: 0,
-                    prCount: 0,
-                  };
+                  const status = getContentStatus(
+                    owner || "",
+                    repo || "",
+                    "main", // Assuming main branch for now
+                    file.path || "",
+                    false,
+                  );
                   return (
                     <ContentListItem
                       key={file.path}
