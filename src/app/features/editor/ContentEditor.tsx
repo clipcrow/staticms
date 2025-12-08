@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
@@ -45,8 +45,22 @@ function parseFrontMatter(text: string) {
   return { data: {}, content: text };
 }
 
-export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
-  const { owner, repo, collectionName, articleName } = useParams();
+export interface ContentEditorProps {
+  mode?: "new" | "edit";
+  collectionName?: string;
+  articleName?: string;
+}
+
+export function ContentEditor(
+  { mode = "edit", collectionName: propColName, articleName: propArtName }:
+    ContentEditorProps,
+) {
+  const params = useParams();
+  const location = useLocation();
+  const owner = params.owner;
+  const repo = params.repo;
+  const collectionName = propColName || params.collectionName;
+  const articleName = propArtName || params.articleName;
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
 
@@ -85,9 +99,29 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
     c.name === collectionName
   );
 
+  // Resolve File Path and Folder
+  let filePath = "";
+  let folder = "";
+  if (collection) {
+    if (collection.type === "singleton") {
+      filePath = collection.path || "";
+      if (collection.binding === "directory") {
+        filePath = `${filePath}/index.md`.replace("//", "/");
+      }
+
+      const parts = filePath.split("/");
+      if (parts.length > 1) folder = parts.slice(0, -1).join("/");
+    } else {
+      folder = collection.path || collection.folder || "";
+      filePath = folder && articleName
+        ? `${folder}/${articleName}`
+        : articleName || "";
+    }
+  }
+
   const user = localStorage.getItem("staticms_user") || "anonymous";
-  const effectiveArticleName = articleName || "__new__";
-  const folder = collection?.folder ? collection.folder : null;
+  const effectiveArticleName = articleName ||
+    (collection?.type === "singleton" ? "singleton" : "__new__");
   const draftKey =
     `draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
 
@@ -109,16 +143,14 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
       !owner ||
       !repo ||
       !collection ||
-      !articleName ||
+      !filePath ||
       fetching
     ) {
       return;
     }
 
-    const path = folder ? `${folder}/${articleName}` : articleName;
-
     setFetching(true);
-    fetch(`/api/repo/${owner}/${repo}/contents/${path}`)
+    fetch(`/api/repo/${owner}/${repo}/contents/${filePath}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to fetch remote content");
         return await res.text();
@@ -197,19 +229,14 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
     // Reconstruct currentContent for savePrStatus utility
     // It matches the one in render but needs to be accessible here
-    const collectionDef = config?.collections.find((c) =>
-      c.name === collectionName
-    );
-    const folderPath = collectionDef?.folder ? collectionDef.folder : null;
+    // Reconstruct currentContent for savePrStatus utility
     const currentArticleName = articleName || "__new__";
 
     // Slight duplication of currentContent construction logic, but safer than refactoring scope now
     const currentContent: V1Content = {
       owner: owner || "",
       repo: repo || "",
-      filePath: folderPath
-        ? `${folderPath}/${currentArticleName}`
-        : currentArticleName,
+      filePath: filePath,
       fields: [], // Not needed for key generation
       name: currentArticleName,
       type: "collection-files",
@@ -241,12 +268,13 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
         }
         if (!filename.endsWith(".md")) filename += ".md";
 
+        const folder = collection?.path || collection?.folder || "";
         savePath = folder ? `${folder}/${filename}` : filename;
 
         // Update currentContent filePath for correct PR key generation if it was new
         currentContent.filePath = savePath;
       } else {
-        savePath = folder ? `${folder}/${articleName}` : articleName!;
+        savePath = filePath;
       }
 
       const frontMatterString = Object.keys(draft.frontMatter || {}).length > 0
@@ -361,13 +389,19 @@ export function ContentEditor({ mode = "edit" }: { mode?: "new" | "edit" }) {
 
   if (collection) {
     breadcrumbs.push({
-      label: collection.label,
+      label: collection.label || collection.path || collectionName ||
+        "Collection",
       to: `/${owner}/${repo}/${collection.name}`,
     });
   }
 
+  // deno-lint-ignore no-explicit-any
+  const initialTitle = (location.state as any)?.initialTitle;
+
   breadcrumbs.push({
-    label: mode === "new" ? "New Content" : effectiveArticleName,
+    label: mode === "new"
+      ? (initialTitle || "New Content")
+      : effectiveArticleName,
   });
 
   // Lock Logic: Locked if PR exists AND no local draft to override it.

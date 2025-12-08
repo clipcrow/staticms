@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { useRepoContent } from "@/app/hooks/useRepoContent.ts";
@@ -18,7 +18,8 @@ export function ArticleList() {
   const collectionDef = config?.collections.find((c) =>
     c.name === collectionName
   );
-  const folder = collectionDef?.folder;
+  const folder = collectionDef?.path || collectionDef?.folder;
+  const binding = collectionDef?.binding || "file";
 
   const { files, loading: contentLoading, error: contentError } =
     useRepoContent(
@@ -31,6 +32,14 @@ export function ArticleList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [newArticleName, setNewArticleName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
+
+  // Pagination
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 50;
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   if (configLoading || (folder && contentLoading)) {
     return (
@@ -70,18 +79,30 @@ export function ArticleList() {
     );
   }
 
-  // cast to FileItem properly or use any if types are loose
+  // Filter and map files based on binding
   // deno-lint-ignore no-explicit-any
-  const v1Files: FileItem[] = files.map((f: any) => ({
-    name: f.name,
-    path: f.path,
-    type: f.type,
-    sha: f.sha || "unknown", // Fallback
-    content: undefined,
-  }));
+  const v1Files: FileItem[] = files
+    .filter((f: any) => {
+      if (binding === "directory") return f.type === "dir";
+      // Default/File: Only markdown files
+      return f.type === "file" && /\.(md|markdown|mdx)$/i.test(f.name);
+    })
+    .map((f: any) => ({
+      name: f.name,
+      path: f.path,
+      type: f.type,
+      sha: f.sha || "unknown",
+      content: undefined,
+    }));
 
   const filteredFiles = v1Files.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const totalPages = Math.ceil(filteredFiles.length / ITEMS_PER_PAGE);
+  const paginatedFiles = filteredFiles.slice(
+    (page - 1) * ITEMS_PER_PAGE,
+    page * ITEMS_PER_PAGE,
   );
 
   const handleCreateArticle = () => {
@@ -138,7 +159,10 @@ export function ArticleList() {
       <Header
         breadcrumbs={[
           { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
-          { label: collectionDef.label },
+          {
+            label: collectionDef.label || collectionDef.path ||
+              collectionName || "",
+          },
         ]}
         rightContent={
           <div style={{ display: "flex", gap: "0.5em" }}>
@@ -228,7 +252,7 @@ export function ArticleList() {
           <>
             {viewMode === "card" && (
               <div className="ui three stackable cards">
-                {filteredFiles.map((file) => {
+                {paginatedFiles.map((file) => {
                   const status = getContentStatus(
                     owner || "",
                     repo || "",
@@ -288,7 +312,7 @@ export function ArticleList() {
 
             {viewMode === "list" && (
               <div className="ui relaxed divided list">
-                {filteredFiles.map((file) => {
+                {paginatedFiles.map((file) => {
                   const status = getContentStatus(
                     owner || "",
                     repo || "",
@@ -320,6 +344,34 @@ export function ArticleList() {
                     />
                   );
                 })}
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div style={{ marginTop: "1em", textAlign: "center" }}>
+                <div className="ui pagination menu">
+                  <button
+                    type="button"
+                    className={`item ${page === 1 ? "disabled" : ""}`}
+                    onClick={() =>
+                      setPage((p) => Math.max(1, p - 1))}
+                  >
+                    &lt;
+                  </button>
+                  <div
+                    className="item disabled"
+                    style={{ color: "black", opacity: 1 }}
+                  >
+                    Page {page} of {totalPages}
+                  </div>
+                  <button
+                    type="button"
+                    className={`item ${page === totalPages ? "disabled" : ""}`}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  >
+                    &gt;
+                  </button>
+                </div>
               </div>
             )}
           </>
