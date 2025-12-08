@@ -2,139 +2,130 @@
 
 ## 概要
 
-記事エディタ画面は、StaticMS の中核機能であり、Markdown
+本画面（記事エディタ画面）は、Staticms の中核機能であり、Markdown
 コンテンツの作成・編集、FrontMatter（メタデータ）の管理、画像投稿、および GitHub
-への保存（Pull Request 作成）を行う画面です。
+への保存（Pull Request 作成）を行う画面です。 v2 では、**分割された直感的な UI**
+と **堅牢なドラフト保存機能**
+により、操作ユーザーが執筆に集中できる環境を提供します。
 
 ## UI 構成
 
-画面は以下の領域で構成されます。
+### レイアウト (Grid Layout)
 
-1. **ヘッダー (Header)**
-   - パンくずリスト: `Owner/Repo > Collection > Filename` などの階層表示。
-   - アクションボタン群 (右側配置):
-     - PR ステータス表示 (ロック状態など)
-     - `Draft Restored` ラベル (ローカルドラフト復元時)
-     - `Reset` ボタン (ローカル変更の破棄)
-     - `Save` / `Create PR` ボタン (保存実行)
+Semantic UI の Grid システムを使用し、画面を大きく2つのカラムに分割します。
 
-2. **メインエリア (左カラム: 12 wide)**
-   - **FrontMatter エディタ**:
-     - コレクション設定で定義されたフィールドごとの入力フォーム。
-     - `FrontMatterItemEditor` (単一アイテム) または `FrontMatterListEditor`
-       (リスト形式) を使用。
-     - 入力フィールドは動的に生成され、テキスト、数値、日付などをサポート（v2
-       では当面 String のみ）。
-   - **Markdown エディタ**:
-     - `MarkdownEditor` コンポーネントを使用。
-     - 本文 (`body`) の編集。
-     - プレビューモードへの切り替えタブ。
-     - **画像ドラッグ＆ドロップ / ペースト対応**（後述）。
+- **Main Column (12 wide)**: 執筆エリア
+- **Sidebar Column (4 wide)**: 支援ツール（画像管理、履歴、ヘルプなど）
 
-3. **サイドバー (右カラム: 4 wide)**
-   - **PR / ドラフト状態表示**:
-     - PR がオープンされている場合: PR 番号、タイトル、リンクを表示。
-     - PR 未作成の場合: ドラフト保存時刻、PR 作成用の Description
-       入力欄、`Create PR` ボタン。
-   - **画像管理 (ContentImages)**:
-     - `Images Nearby`: 記事と同じディレクトリにある画像ファイルの一覧を表示。
-     - `Pending`: 保存前のアップロード待機中画像を表示（黄色いラベル付き）。
-     - 画像クリックでプレビューモーダル表示。
-     - `Add Image` ボタンまたは D&D で画像追加。
-   - **更新履歴 (ContentHistory)**:
-     - 直近の Git コミットログを表示 (最大10件)。
-     - GitHub のコミット履歴ページへのリンク。
+### 1. ヘッダー (Header)
 
-## データフローと状態管理
+画面上部に固定され、ナビゲーションと主要アクションを提供します。
 
-### 状態 (State)
+- **Left**: パンくずリスト (`Owner/Repo > Collection > Filename`)
+  - コレクション部分は `ArticleList` へのリンクとなります。
+- **Right**: アクションボタン群
+  - **Status Indicator**: PR Open / Merged / Locked 等の状態表示。
+  - **Draft Restored Label**: ローカルドラフト復元時に表示（オレンジ色）。
+  - **Reset Button**: ローカルの変更（ドラフト）を破棄し、サーバーの状態へ戻す。
+  - **Save / Create PR Button**: 変更をコミットし、PR を作成/更新する（Primary
+    Action）。
 
-- **remoteContent**: GitHub API から取得したリモートのコンテンツ（FrontMatter +
-  Body）。
-- **localDraft**: `localStorage` に保存されるユーザーの作業中データ。
-  - Key: `draft_{username}|{owner}|{repo}|{branch}|{path}`
-  - 変更があるたびに `localDraft` を更新。
-- **pendingImages**: アップロード待機中の画像データ（Base64）。
-- **prInfo**: 関連する Pull Request の情報 (URL, Number, Status)。
+### 2. メインエリア (Main Column)
 
-### ロード処理 (Initialization)
+#### FrontMatter エディタ (FrontMatterItemEditor)
 
-1. `localStorage` から `localDraft` の取得を試みる。
-   - 存在する場合: ドラフトデータを採用し、`fromStorage` フラグを true にする。
-2. `remoteContent` を API からフェッチ。
-   - ドラフトがない場合: リモートデータをエディタにセット。
-   - ドラフトがある場合:
-     ドラフトを優先しつつ、リモートデータとの差異があればユーザーに通知（またはサイレントにドラフト優先）。
-3. PR 状態の確認。
-   - リモートデータのブランチに関連する PR
-     があれば、エディタを「ロック状態（編集不可）」にする（競合防止のため）。
-   - ただし、ドラフトがすでに存在する場合はドラフトの編集を許可する（場合による）。
+- 画面最上部に配置。
+- コンテンツ設定 (Config)
+  で定義されたフィールドに基づき、フォームを動的に生成します。
+- **Design**: カード形式、またはアコーディオン形式でメタデータを整理して表示。
+- **Widgets**:
+  - `string`: テキスト入力
+  - `boolean`: トグルスイッチ
+  - `image`: 画像選択（モーダル連携）
 
-### 保存処理 (Save / Create PR)
+#### Markdown エディタ (MarkdownEditor)
 
-1. **バリデーション**: 必須フィールドの確認など。
-2. **ペイロード作成**:
-   - FrontMatter オブジェクトを YAML 文字列に変換。
-   - `---\n{yaml}---\n{body}` の形式でファイルコンテンツを作成。
-   - Base64 エンコード。
-3. **API リクエスト**:
-   - `PUT /api/repo/:owner/:repo/contents/:path`
-   - `pendingImages` がある場合、それらも同時に（あるいは順次）コミットする。
-   - コミットメッセージには PR Description またはデフォルトメッセージを使用。
-4. **保存後処理**:
-   - 成功時: `localDraft` をクリア (`localStorage.removeItem`).
-   - Toast で成功メッセージを表示。
-   - 作成された PR 情報を State
-     に反映し、画面をロック状態にする（必要であれば）。
+- `react-md-editor` をベースとしたリッチな執筆エリア。
+- **Tabs**: `Write` / `Preview` 切り替え。
+- **Drag & Drop**:
+  エディタ領域への画像ファイルのドロップを受け付け、自動的にアップロード待機リストに追加し、Markdown
+  にリンクを挿入します。
+- **Toolbar**: 太字、斜体、リンク、画像挿入などの標準ツールバー。
 
-### 画像処理 (Image Handling)
+### 3. サイドバー (Sidebar Column)
 
-- **追加**: D&D またはファイル選択 -> `FileReader` で Base64 化 ->
-  `pendingImages` State に追加 -> `localStorage` にも保存。
-- **参照**: Markdown 内での参照は相対パス (`./image.png` or `image.png`)
-  を使用。
-- **プレビュー**:
-  - エディタプレビュー: `markdown-it`
-    等のレンダラで、相対パスを解決して表示する必要がある。
-  - `pendingImages` にある画像は DataURI (`data:image/...`) として表示。
-  - リモートにある画像は API 経由 (`/api/content?media=true`) で取得して表示。
+#### ステータスパネル (Info Panel)
 
-## コンポーネント詳細仕様
+- **PR Status**: 関連する PR
+  があれば、番号・タイトル・リンク・ステータス（Open/Merged/Closed）を表示。
+- **Draft Status**: 最終保存時刻を表示。「Unsaved changes」警告など。
 
-### `MarkdownEditor`
+#### 画像管理パネル (ContentImages)
 
-- ライブラリ: `react-md-editor` (v3.6.0)
-- **Props**:
-  - `body`: string
-  - `setBody`: (val: string) => void
-  - `onImageUpload`: (file: File) => Promise<string>
-- **機能**:
-  - Paste イベント: クリップボードの画像を検知し、`onImageUpload`
-    を呼ぶ。戻り値（ファイル名）を使って Markdown に `![image](filename)`
-    を挿入。
-  - Drop イベント: ファイルドロップを検知し、同様に処理。
-  - プレビュー時の画像パス解決: カスタムレンダラを使用し、`src`
-    属性を書き換える（Pending 画像なら DataURI、そうでなければ API Proxy URL）。
+タブ切り替えにより、コンテキストに応じた画像を表示します。
 
-### `ContentImages`
+1. **Nearby (同階層)**:
+   - 編集中の記事と同じディレクトリに存在する画像ファイルを表示。
+   - クリックで Markdown へのリンクコピー、またはプレビュー表示。
+2. **Pending (アップロード待ち)**:
+   - 今回の編集セッションで追加されたが、まだ GitHub
+     にコミットされていない画像。
+   - サムネイル表示。
+   - 削除ボタン（アップロード取り消し）。
+3. **Upload Area**:
+   - 「Drop images here」エリア。
 
-- **Props**:
-  - `images`: リモート画像リスト
-  - `pendingImages`: ローカル追加画像リスト
-- **機能**:
-  - 統合リスト表示。
-  - Pending 画像にはバッジを表示。
-  - プレビューモーダル機能。
+#### 履歴パネル (ContentHistory)
 
----
+- このファイルに対する直近の Git Commit ログ（最大 5-10 件）を表示。
+- 各コミットへの GitHub リンク。
+- コミットを行ったユーザーのアバターの表示。
 
-**実装状況メモ (v2)**:
+## データフローとロジック
 
-- [x] `ContentEditor` レイアウト (Grid, Header)
-- [x] `FrontMatterItemEditor`
-- [x] `MarkdownEditor` (Basic)
-- [ ] `ContentImages` (サイドバー未実装)
-- [ ] `ContentHistory` (サイドバー未実装)
-- [ ] 画像アップロードロジック (`onImageUpload` 未接続)
-- [ ] PR ロック制御の厳密な実装
-- [ ] ドラフト破棄(`Reset`)の詳細挙動
+### 1. 初期化プロセス (Initialization)
+
+1. **Draft Loading**: `localStorage` から `localDraft` を取得。
+2. **Remote Fetching**: GitHub API から最新のコンテンツを取得。
+3. **Conflict Resolution**:
+   - ドラフトが存在する場合: ドラフトを優先表示し、UI に「Draft
+     Restored」と表示。
+   - ドラフトがない場合: リモートコンテンツを表示。
+4. **Lock Check**:
+   - オープンな PR が存在する場合、原則として編集をロック（Read-Only）する。
+   - **Locking Logic (Simple Lock)**:
+     - 原則: **オープンな PR が存在する場合、編集不可（Read-Only）** とする。
+     - 例外: **ローカルドラフトが存在する場合**
+       は、ドラフトの内容を優先し、編集および PR
+       の更新を許可する（操作ユーザー自身が作成者の場合を想定）。
+
+### 2. 保存プロセス (Save / Create PR)
+
+1. **Validation**: 必須 FrontMatter フィールドのチェック。
+2. **Image Processing**:
+   - `pendingImages` にある画像を Base64 エンコード。
+3. **Commit Construction**:
+   - 記事 (`.md`) と画像ファイル群をひとつの Commit (Tree) として構成。
+4. **API Request**:
+   - `PUT /api/repo/:owner/:repo/contents` (または Batch API) をコール。
+5. **Clean up**:
+   - 成功時、`localStorage` のドラフトを削除。
+   - 作成された PR 情報を State に反映し、完了トーストを表示。
+
+### 3. 画像アップロード (Image Upload)
+
+- 画像は即座にサーバーに送るのではなく、一旦 `pendingImages` State と
+  `localStorage` に保存します（ドラフトの一部）。
+- Markdown プレビュー時には、`pendingImages` 内の画像は Data URI
+  (`data:image/...`) として展開し、即時プレビューを実現します。
+
+## UI Polish Guidelines
+
+- **Spacing**: セクション間には十分なマージン (`2rem`) を設ける。
+- **Colors**:
+  - アクションボタン: Semantic UI Primary Blue
+  - 警告/ドラフト: Orange / Yellow
+  - 削除/危険: Red
+- **Feedback**:
+  - 保存中 (`Saving...`) はボタンを Loading 状態にする。
+  - 成功・失敗は必ず Toast 通知でフィードバックする。

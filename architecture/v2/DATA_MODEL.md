@@ -21,9 +21,7 @@ KV**
 - **Key**: `["config", <owner>, <repo>]`
 - **Value**: `object` (Config Object)
 - **初期化**:
-  - 初回アクセス時、KVに設定が存在しない場合は、リポジリ内の
-    `.github/staticms.yml` (存在すれば) を読み込み、初期値としてKVに保存します。
-  - ファイルも存在しない場合は、デフォルトのテンプレート設定を使用します。
+  - 初回アクセス時、KVに設定が存在しない場合は、デフォルトのテンプレート設定を使用します。
 
 ---
 
@@ -62,11 +60,11 @@ KV**
 
 ### 3.1 Config (Repository Configuration)
 
-リポジトリごとのコンテンツ定義です。`src/app/hooks/useContentConfig.ts`
-で定義されています。
+リポジリごとのコンテンツ定義（コレクション設定など）を管理します。 v2
+では、**Deno KV 上に直接保存**されます。
 
 ```typescript
-export interface Config {
+interface Config {
   collections: Collection[];
 }
 

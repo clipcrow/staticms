@@ -2,65 +2,61 @@
 
 ## 概要
 
-`staticms.yml` (Config) 内の `collections` 定義を追加・編集するための画面です。
-GUI を通じて、コンテンツの種類（コレクション/シングルトン）、パス、および
-FrontMatter のフィールド定義を行います。
+本画面は、コンテンツ設定（Config）内の `collections`
+定義を追加・編集するための画面です。 GUI
+を通じて、コンテンツの種類（コレクション/シングルトン）、パス、および使用するフィールド定義（Schema）を管理します。
+設定情報は Staticms サーバーのデータベース (Deno KV)
+に保存され、リポジトリ内のファイルには影響しません。
 
 ## UI 構成
 
-- **ヘッダー**:
-  - パンくずリスト: `Owner/Repo > Add Content` または `Edit Content`。
-- **フォーム (`ContentSettings`)**:
-  1. **基本設定**:
-     - **Content Name**: 表示名 (Label)。
-     - **Content Type**: `Singleton` / `Collection` ラジオボタン。
-     - **Content Binding**: `File` / `Directory` ラジオボタン。
-       - 組み合わせにより4パターン (`singleton-file`, `singleton-dir`,
-         `collection-files`, `collection-dirs`) を内部で判定。
-  2. **パス設定**:
-     - **Path**: ファイルパスまたはディレクトリパス。プレースホルダーで例示
-       (`e.g. content/blog`).
-     - **Branch**: 対象ブランチ（任意）。
-  3. **フィールド定義 (Front Matter Template)**:
-     - `FrontMatterItemPanel` (v1) を再利用して、FrontMatter のスキーマを定義。
-     - フィールドの追加、削除、名前変更、デフォルト値設定が可能。
-     - v2 では現在 `string` 型のみ簡易サポートだが、v1 UI
-       はリッチなフィールド定義を持つ。
-  4. **Archetype (Collectionのみ)**:
-     - 新規記事作成時の Markdown 本文テンプレート。
-     - 簡易 `MarkdownEditor` で編集。
-  5. **アクション**:
-     - `Cancel`: 戻る。
-     - `Add` / `Update`: 保存。
-     - `Delete` (編集時のみ): 設定の削除。
+### 1. 基本設定フォーム (Basic Settings)
+
+- **Content Name**: UI 上での表示名 (`label`)。必須。
+- **Identifier**: システム内部で使用するスラッグ (`name`)。必須・一意。
+- **Type**:
+  - `Collection` (Folder based): 複数の記事を持つタイプ。
+  - `Singleton` (File based): 単一のファイル（例: トップページ、Aboutページ）。
+- **Binding Path**:
+  - `Folder Path` (Collection時): `content/posts` など。
+  - `File Path` (Singleton時): `content/about.md` など。
+
+### 2. フィールド定義エディタ (Field Schema Editor)
+
+コンテンツが持つべきメタデータ（FrontMatter）の構造を定義します。
+
+- **Field List**:
+  システムは、定義済みのフィールド一覧を表示します。ドラッグ＆ドロップでの並び替えに対応。
+- **Field Editor (Modal / Inline)**:
+  - **Label**: 表示名。
+  - **Name**: FrontMatter のキー名。
+  - **Widget**: 入力タイプを選択。
+    - v2.5 サポート: `string` (短文), `text` (長文), `boolean` (スイッチ),
+      `image` (画像選択)。
+    - Future: `date`, `list`, `object`。
+  - **Required**: 必須項目かどうか。
+  - **Default**: 初期値。
+
+### 3. テンプレート設定 (Archetype) - Collection Only
+
+- **Archetype Body**: 新規作成時に初期挿入される Markdown 本文のテンプレート。
+
+### 4. アクション
+
+- **Save**: 設定を保存する (Primary)。
+  - 即座にサーバー (Deno KV) に反映されます。Pull Request は作成されません。
+- **Delete**: このコレクション定義を削除する。
 
 ## データフロー
 
-- **Load**:
-  - 編集モード: 既存の `Collection` 定義を読み込み、v1 の `Content`
-    オブジェクト形式に変換してフォーム初期値とする。
-  - 追加モード: 空のフォーム（またはデフォルト値）で開始。
-- **Save**:
-  - フォームの内容をバリデーション。
-  - v1 `Content` オブジェクトから v2 `Collection` 定義へ変換。
-  - `POST /api/repo/:owner/:repo/config` へ送信し、`staticms.yml` を更新して
-    Commit/PR を作成。
-
-## コンポーネント詳細
-
-### `FrontMatterItemPanel` (Schema Mode)
-
-- 通常は記事エディタで「値」を入力するために使われるが、設定画面では「スキーマ（フィールド名や初期値）」を定義するために使用される。
-- `editableKeys`: true
-  に設定することで、キー（フィールド名）自体の編集を許可する。
-
----
-
-**実装状況メモ (v2)**:
-
-- [x] `ContentSettings` コンポーネント (共通)
-- [x] `ContentConfigEditor` (v2 Container / Adapter)
-- [x] Config API (`POST /api/repo/.../config`) 実装済み
-- [ ] FrontMatter フィールド定義の完全な型サポート（現在は String
-      のみ扱っているため、Select や Date などの Widget
-      定義が保存されない可能性がある）
+1. **Load**:
+   - `GET /api/repo/:owner/:repo/config`
+   - Deno KV からリポジトリの設定を読み込み、フォーム初期値に反映。
+2. **Validation**:
+   - `name` の重複チェック。
+   - パス形式の整合性チェック。
+3. **Transformation**:
+   - UI 上のステートから保存用の JSON オブジェクトへ変換。
+4. **Save**:
+   - `POST /api/repo/:owner/:repo/config`
+   - サーバー側で Deno KV を更新。

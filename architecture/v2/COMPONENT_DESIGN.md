@@ -17,10 +17,13 @@ Staticms v2 では、UIの一貫性と開発効率を両立するため、Semant
 
 3. **Container / Presenter Pattern**:
    ロジック（状態管理、データ取得）と表示（スタイル、レイアウト）を明確に分離します。
-4. **Light Mode Only**: UI
-   は常にライトモードで提供します。ダークモードはサポートせず、`prefers-color-scheme`
-   メディアクエリへの応答もしません。これは Markdown エディタ (CodeMirror 等)
-   のシンタックスハイライトにおける可読性を最優先するためです。
+4. **Visual Style (GitHub-like)**:
+   - **Base**: Semantic UI
+     の基本セットを尊重します。コンポーネントの構造やクラス名は維持します。
+   - **Theme**: **GitHub に似せたクリーンなライトモード**で固定します。
+   - **Background**: 背景色は純粋な白 (`#ffffff`)
+     とし、ダークモードはサポートしません。
+   - **Typography**: システムフォントを使用し、可読性を最優先します。
 
 ## 2. Directory Structure Review
 

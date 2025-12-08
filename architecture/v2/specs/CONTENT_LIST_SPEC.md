@@ -2,35 +2,43 @@
 
 ## 概要
 
-リポジトリ内のコンテンツ管理を行うための画面群です。 **コンテンツ一覧
-(`ContentList`)**
+本仕様書は、リポジトリ内のコンテンツ管理を行うための画面群の仕様を定義します。
+**コンテンツ一覧 (`ContentList`)**
 で管理対象のコレクション（またはシングルトン）を選択し、**記事一覧
 (`ArticleList`)** で具体的なファイルを選択、作成、または削除します。
 
 ## 1. コンテンツ一覧画面 (ContentList)
 
-`staticms.yml` (v2 では Config API)
-で定義されたコンテンツ設定の一覧を表示します。
+Config API (Deno KV) から取得したコンテンツ設定の一覧を表示します。
 
 ### UI 構成
 
 - **ヘッダー**:
-  - パンくずリスト: `Owner/Repo` (現在地)
-  - アクション: `+ Add New Content` ボタン -> 設定追加画面
-    (`ContentConfigEditor`) へ遷移。
-- **リスト表示 (`ContentList`)**:
-  - 各行にコンテンツ設定を表示。
-  - **アイコン**: フォルダ (`collection`系) または ファイル (`singleton`系)。
-  - **メインテキスト**: ラベル (`name` または `filePath`)。
-  - **サブテキスト**: 内部識別子 (`name`)。
-  - **ラベル**: ブランチ名 (`main` 等) が指定されていれば表示。
-  - **ステータスアイコン**:
-    ローカルドラフトがある場合、その旨を表示（緑色のドットなど）。
-  - **アクションボタン**:
-    - `Edit Config` (鉛筆アイコン): 設定編集画面へ遷移。
-  - **クリック時の挙動**:
-    - コレクションの場合 -> 記事一覧画面 (`ArticleList`) へ遷移。
-    - シングルトンの場合 -> 記事エディタ画面 (`ContentEditor`) へ遷移。
+  - **Breadcrumbs**: `Owner/Repo` (現在地)
+  - **Actions**:
+    - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
+    - **Add New Content**: 設定追加画面への遷移ボタン。
+
+### 検索・フィルタ (Search Bar)
+
+- **Search Input**: コンテンツ名でリアルタイムフィルタリングするための入力欄。
+- **Filter**: `Collection` / `Singleton` の種別フィルタ（将来的な拡張）。
+
+### リスト表示 (`ContentList`)
+
+- **Card View**:
+  - 大きなアイコンとラベルで視認性を重視。
+  - `Unsaved Draft` バッジをカード右上に配置。
+- **List View**:
+  - 省スペースなテーブル表示。
+  - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`, `Last Modified`,
+    `Actions`。
+
+### インタラクション
+
+- カード全体がクリッカブルエリア。
+- コレクション -> `ArticleList` 画面へ。
+- シングルトン -> `ContentEditor` 画面へ。
 
 ### データフロー
 
@@ -46,34 +54,54 @@
 ### UI 構成
 
 - **ヘッダー**:
-  - パンくずリスト: `Owner/Repo > CollectionName`
-  - **新規作成フォーム** (右側):
-    - テキスト入力: `New article name...`
-    - `Create` ボタン:
-      入力値をファイル名として、新規記事作成モードでエディタへ遷移。
-- **リスト表示 (`ArticleList`)**:
-  - コレクションの対象ディレクトリ内のファイルを一覧表示。
-  - **アイコン**: ファイル (`file outline`) または フォルダ (`folder`)。
-  - **メインテキスト**: ファイル名（拡張子 `.md` は省略される場合あり）。
-  - **ステータス**: ドラフト有無、PR有無を表示（`ContentList`同様）。
-  - **アクションボタン**:
-    - `Delete` (ゴミ箱アイコン): **[v1未実装/課題]** 記事の削除機能。
-  - **クリック時の挙動**: 内容の編集画面 (`ContentEditor`) へ遷移。
+  - **Breadcrumbs**: `Owner/Repo > CollectionName`
+  - **Actions**:
+    - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
+    - **New Article**: 入力欄と `Create` ボタン。
 
-### v1 からの課題と新規仕様案
+### 検索・フィルタ (Search Bar)
 
-- **削除機能**: v1 ではボタンのみで機能未実装 (`alert` のみ)。v2 では API
-  (`DELETE /api/repo/...`) と連携して実装する必要がある。
-- **ページネーション/フィルタ**: ファイル数が多い場合の対応（v1は全件表示）。
-- **新規作成のUX**:
-  現在はシンプルな入力欄だが、Archetype（テンプレート）選択や、ファイル名自動生成（日付プレフィクス等）の機能強化が望ましい。
+- **Search Input**: ファイル名でリアルタイムフィルタリングするための入力欄。
+- **Pagination**: クライアントサイドでのページネーション（1ページあたり 50
+  件）。
 
----
+### リスト表示 (`ArticleList`)
 
-**実装状況メモ (v2)**:
+- **Card View**:
+  - ファイルをカードとして表示。画像ファイルの場合はサムネイルプレビューを表示。
+  - Markdown の場合は概要（Excerpt）を表示（Future Scope）。
+- **List View**:
+  - 標準的なファイル一覧テーブル。
+  - **Columns**:
+    - **Name**: ファイル名 (クリックで編集画面へ)。
+    - **Updated**: 最終更新日時 (Git Commit Date)。
+    - **Status**: `Draft` / `PR Open` 等のステータスバッジ。
+    - **Actions**: `Delete` ボタン。
 
-- [x] `ContentList` コンポーネント (共通)
-- [x] `ArticleList` コンポーネント (共通)
-- [x] `ContentListItem` (共通パーツ) status 表示ロジック含む
-- [ ] **Delete 機能の実装**
-- [ ] 新規作成時のファイル名正規化ロジックの強化
+### インタラクション詳細
+
+#### 1. 記事の新規作成 (Create New)
+
+1. 操作ユーザーがヘッダーの入力欄にファイル名（例:
+   `my-new-post`）を入力し、Create ボタンを押下。
+2. アプリは入力値を正規化し（拡張子 `.md` の補完など）、URL 生成。
+3. `/:owner/:repo/:collection/new?filename=my-new-post.md` へ遷移。
+4. エディタ画面が「新規モード」で開き、FrontMatter の `title`
+   等にファイル名がプリセットされる。
+
+#### 2. 記事の削除 (Delete)
+
+1. リスト上の `Delete` ボタンを押下。
+2. **確認モーダル (Confirmation Modal)** が表示される。
+   - Message: "Are you sure you want to delete 'example.md'?"
+   - Warning: "This action will create a delete commit/PR."
+3. `Confirm` 押下で API 呼び出し。
+   - `DELETE /api/repo/:owner/:repo/contents/:path`
+4. 成功時、トーストを表示しリストをリフレッシュ。
+
+## UI Polish Guidelines
+
+- **Empty States**: 記事が0件の場合、「No articles found. Create
+  one!」といったフレンドリーなメッセージとCTAを表示する。
+- **Loading**: スケルトンローディング `Placeholder`
+  を使用し、体感速度を向上させる。

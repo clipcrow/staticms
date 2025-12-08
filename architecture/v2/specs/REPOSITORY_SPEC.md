@@ -2,56 +2,77 @@
 
 ## 概要
 
-ログイン直後に表示される、編集対象のリポジトリを選択する画面です。 GitHub App
+本画面は、操作ユーザーがログインした直後に表示される、編集対象のリポジトリを選択する画面です。
+Staticms GitHub App
 がインストールされているリポジトリの一覧を表示し、ユーザーをコンテンツブラウザ（ダッシュボード）へ誘導します。
 
 ## UI 構成
 
-- **ヘッダー**:
-  - パンくずリスト: `Repositories` (固定)
-  - アクション: `Connect Repository` ボタン (GitHub App
-    インストールページへ遷移)。
-- **リスト表示 (`RepositorySelector`)**:
-  - ログインユーザーがアクセス権を持つ（GitHub App
-    が導入された）リポジトリ一覧。
-  - **アイコン**: GitHub リポジトリなど (`github` icon)。
-  - **メインテキスト**: `Owner/Repo` 名。
-  - **サブテキスト**: 説明文 (Description) や Private/Public 表示。
-  - **クリック時の挙動**: コンテンツ一覧画面 (`/:owner/:repo`) へ遷移。
+### レイアウト
+
+シンプルで見やすいカードリスト、またはリスト形式を採用します。
+
+### 1. ヘッダー (Header)
+
+- **Label**: `Repositories`
+- **Actions**:
+  - **View Toggle**: 表示モード切替ボタン (Icons: `th` / `list`)。
+    - **Card View**: グリッド形式でカードを表示。
+    - **List View**: 詳細情報をテーブル形式で表示。
+    - ※ 選択設定は `localStorage` に保存して維持する。
+  - **Connect Repository**: `Connect` ボタン (Secondary)。
+    - Staticms GitHub App
+      のインストールページへ遷移し、新しいリポジトリへの権限を付与します。
+
+### 2. 検索・フィルタ (Search Bar)
+
+- **Search Input**: リポジトリ名でリアルタイムフィルタリングするための入力欄。
+- **Filter**: `Public` / `Private` / `Fork` のフィルタリング。
+
+### 3. リポジトリリスト (Repository List)
+
+データは選択されたビューモードに応じてレンダリングされます。
+
+#### Card View (Default)
+
+- **Card Item**:
+  - **Icon**: Private (`lock`) / Public (`globe`) / Fork (`code branch`)。
+  - **Name**: `Owner / Repo` (強調表示)。
+  - **Description**: GitHub 上のリポジトリ説明文（2行で切り詰め）。
+  - **Stats**: Star 数や最終更新日。
+
+#### List View
+
+- **Table Row**:
+  - **Name**: リポジトリ名とアイコン。
+  - **Visibility**: Public/Private バッジ。
+  - **Updated**: 最終更新日時。
+  - **Action**: 選択ボタン。
+
+### 4. Empty State (リポジトリなし)
+
+- 操作ユーザーが初めて利用する場合などで、リポジトリが一つも接続されていない場合：
+  - **Illustration**: 分かりやすいイラストやアイコン。
+  - **Message**: "No repositories connected yet."
+  - **Call to Action**: 大きな `Connect your first repository` ボタン。
 
 ## データフローとロジック
 
 ### 1. リポジトリ取得
 
-- **API**: `GET /api/user/repos` (v2 では `src/server/app.ts` で
-  `/api/repositories` のエイリアスとして実装)。
-- **レスポンス**: GitHub App Installation に紐付くリポジトリのリスト。
+- **API**: `GET /api/repositories` (Internal alias for User Repos)
+- **Response**: GitHub App Installation に紐付くリポジトリのリスト。
 
-### 2. リポジトリ追加 (Connect)
+### 2. Connect Flow
 
-- **ボタン**: `Connect Repository`
-- **挙動**: `https://github.com/apps/YOUR_APP_NAME/installations/new`
-  (環境変数で設定される GitHub App URL)
-  へ遷移させて、ユーザーにリポジトリへの権限付与を行わせる。
+1. 操作ユーザーが `Connect Repository` をクリック。
+2. `https://github.com/apps/YOUR_APP_NAME/installations/new` へ遷移。
+3. GitHub 側でリポジトリ選択 -> Save。
+4. StaticMS 側へリダイレクト、または戻ってきた際に SSE / Polling
+   でリストを自動更新。
 
-### 3. リアルタイム更新 (SSE)
+### 3. Real-time Updates
 
-- **イベント**: `repository_update`
-- GitHub 側で App が追加/削除された際、Webhook を経由してサーバーから SSE
-  が飛んでくる。
-- 画面はこれを受け取り、リポジトリリストを自動でリロードする。
-
-### v1 からの課題と新規仕様案
-
-- **空の状態**:
-  初回ログイン時など、リポジトリが一つも接続されていない場合のガイダンス表示（v1実装済みだが、UX向上の余地あり）。
-- **検索/フィルタ**: リポジトリ数が多い場合の検索機能。
-
----
-
-**実装状況メモ (v2)**:
-
-- [x] `RepositorySelector` コンポーネント (共通)
-- [x] API APIエンドポイント実装 (`/api/repositories`, `/api/user/repos`)
-- [x] SSE 基盤 (`ServerSentEvents`)
-- [ ] 検索機能の実装（未実装）
+- **SSE (Server-Sent Events)**: `repository_update` イベントを購読。
+- 他のタブや別ウィンドウ、あるいは GitHub
+  側での操作による権限変更を即座にリストに反映します。
