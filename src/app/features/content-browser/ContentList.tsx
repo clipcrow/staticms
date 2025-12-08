@@ -15,6 +15,11 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const handleAddNewContent = () => {
+    // Navigate to content type creation page (Conceptual path)
+    navigate(`/${owner}/${repo}/config/new`);
+  };
+
   if (!collections || collections.length === 0) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
@@ -29,7 +34,15 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
             No content definitions found.
           </div>
           <div className="inline">
-            Please add collections to your staticms.config.yml.
+            <p>Start by adding your first content collection.</p>
+            <button
+              type="button"
+              className="ui primary button"
+              onClick={handleAddNewContent}
+            >
+              <i className="plus icon"></i>
+              Add New Content
+            </button>
           </div>
         </div>
       </div>
@@ -52,11 +65,6 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
     e.stopPropagation();
     // Navigate to settings editing page (Conceptual path)
     navigate(`/${owner}/${repo}/config/${collectionName}`);
-  };
-
-  const handleAddNewContent = () => {
-    // Navigate to content type creation page (Conceptual path)
-    navigate(`/${owner}/${repo}/config/new`);
   };
 
   return (

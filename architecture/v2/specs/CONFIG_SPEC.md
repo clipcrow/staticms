@@ -15,7 +15,9 @@
 - **Content Name**: UI 上での表示名 (`label`)。オプション。
   - 値がある場合: カード/リスト行とヘッダのパンくずリストに表示されます。
   - 値がない場合: **Path** の値が表示に使用されます。
-- **Identifier**: システム内部で使用するスラッグ (`name`)。必須・一意。
+- **Identifier**: システム内部で使用するスラッグ (`name`)。
+  - **Note**: ユーザーによる直接編集は行いません。Path と Target Branch
+    の値を組み合わせ、リポジトリ内で一意になるよう自動生成されます。
 - **Content Binding**:
   - **Type**: `Collection` または `Singleton`。
   - **Binding**: `File` または `Directory`。
@@ -93,6 +95,11 @@ Markdown の本文 (Body) は自動的に扱われるため、ここで定義す
      - Field Names (FrontMatter Keys)
 4. **Transformation**:
    - UI 上のステートから保存用の JSON オブジェクトへ変換。
+   - **Identifier Generation**:
+     - 以下のルールで `name` を自動生成します。
+     - 基本フォーマット: `[branch]-[path]` (Branch が未設定の場合は `[path]`
+       のみ)
+     - サニタイズ: 英数字以外の文字は `-` に置換し、小文字化します。
 5. **Branch Creation**:
    - (Target Branch が設定された場合のみ)
    - 指定されたブランチの存在確認を行い、存在しない場合はデフォルトブランチから新たに作成します。

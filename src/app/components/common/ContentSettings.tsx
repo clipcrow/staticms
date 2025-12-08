@@ -66,166 +66,159 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
   return (
     <div className="ui container">
-      <form onSubmit={onSave} className="ui form">
+      <form onSubmit={onSave}>
         {/* Basic Settings */}
         <div className="ui segment">
           <h4 className="ui dividing header">Basic Settings</h4>
+          <div className="ui form">
+            {/* Content Name (Label) */}
+            <div className="field">
+              <label>Content Name (Label) - Optional</label>
+              <input
+                type="text"
+                placeholder="e.g. Blog Post"
+                value={formData.label || ""}
+                onChange={(e) => handleChange("label", e.target.value)}
+                disabled={loading}
+              />
+              <small className="helper-text">
+                Display name in UI. If empty, the Path will be used.
+              </small>
+            </div>
 
-          {/* Content Name (Label) */}
-          <div className="field">
-            <label>Content Name (Label) - Optional</label>
-            <input
-              type="text"
-              placeholder="e.g. Blog Post"
-              value={formData.label || ""}
-              onChange={(e) => handleChange("label", e.target.value)}
-              disabled={loading}
-            />
-            <small className="helper-text">
-              Display name in UI. If empty, the Path will be used.
-            </small>
-          </div>
-
-          {/* Identifier (Name) */}
-          <div className="required field">
-            <label>Identifier (Slug)</label>
-            <input
-              type="text"
-              placeholder="e.g. posts"
-              value={formData.name || ""}
-              onChange={(e) => handleChange("name", e.target.value.trim())} // Trim implied
-              required
-              disabled={loading || editingIndex !== null} // Identifier shouldn't change on edit usually? Spec doesn't say, but it's ID.
-            />
-            <small className="helper-text">
-              Internal ID. Must be unique.
-            </small>
-          </div>
-
-          <div className="ui divider"></div>
-
-          {/* Type Selection */}
-          <div className="field">
-            <label>Content Type</label>
-            <div className="inline fields">
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentType"
-                    checked={formData.type === "collection" || !formData.type}
-                    onChange={() => handleChange("type", "collection")}
-                    disabled={loading}
-                  />
-                  <label>Collection (Folder based)</label>
+            {/* Type Selection */}
+            <div className="field">
+              <label>Content Type</label>
+              <div className="inline fields">
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentType"
+                      checked={formData.type === "collection" || !formData.type}
+                      onChange={() => handleChange("type", "collection")}
+                      disabled={loading}
+                    />
+                    <label>Collection (Folder based)</label>
+                  </div>
                 </div>
-              </div>
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentType"
-                    checked={formData.type === "singleton"}
-                    onChange={() => handleChange("type", "singleton")}
-                    disabled={loading}
-                  />
-                  <label>Singleton (File/One-off)</label>
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentType"
+                      checked={formData.type === "singleton"}
+                      onChange={() => handleChange("type", "singleton")}
+                      disabled={loading}
+                    />
+                    <label>Singleton (File/One-off)</label>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Binding Selection */}
-          <div className="field">
-            <label>Binding</label>
-            <div className="inline fields">
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentBinding"
-                    checked={binding === "file"}
-                    onChange={() => handleChange("binding", "file")}
-                    disabled={loading}
-                  />
-                  <label>File</label>
+            {/* Binding Selection */}
+            <div className="field">
+              <label>Binding</label>
+              <div className="inline fields">
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentBinding"
+                      checked={binding === "file"}
+                      onChange={() => handleChange("binding", "file")}
+                      disabled={loading}
+                    />
+                    <label>File</label>
+                  </div>
+                </div>
+                <div className="field">
+                  <div className="ui radio checkbox">
+                    <input
+                      type="radio"
+                      name="contentBinding"
+                      checked={binding === "directory"}
+                      onChange={() => handleChange("binding", "directory")}
+                      disabled={loading}
+                    />
+                    <label>Directory</label>
+                  </div>
                 </div>
               </div>
-              <div className="field">
-                <div className="ui radio checkbox">
-                  <input
-                    type="radio"
-                    name="contentBinding"
-                    checked={binding === "directory"}
-                    onChange={() => handleChange("binding", "directory")}
-                    disabled={loading}
-                  />
-                  <label>Directory</label>
-                </div>
+              <div
+                className="ui info message mini"
+                style={{ marginTop: "5px" }}
+              >
+                <p style={{ fontSize: "0.9em" }}>
+                  {isCollection && binding === "file" &&
+                    "Collection + File: Manages multiple Markdown files in the folder."}
+                  {isCollection && binding === "directory" &&
+                    "Collection + Directory: Manages subfolders with index.md in the folder."}
+                  {!isCollection && binding === "file" &&
+                    "Singleton + File: Edits a specific file (Markdown/YAML)."}
+                  {!isCollection && binding === "directory" &&
+                    "Singleton + Directory: Edits index.md in the specific folder."}
+                </p>
               </div>
             </div>
-            <div className="ui info message mini" style={{ marginTop: "5px" }}>
-              <p style={{ fontSize: "0.9em" }}>
-                {isCollection && binding === "file" &&
-                  "Collection + File: Manages multiple Markdown files in the folder."}
-                {isCollection && binding === "directory" &&
-                  "Collection + Directory: Manages subfolders with index.md in the folder."}
-                {!isCollection && binding === "file" &&
-                  "Singleton + File: Edits a specific file (Markdown/YAML)."}
-                {!isCollection && binding === "directory" &&
-                  "Singleton + Directory: Edits index.md in the specific folder."}
-              </p>
+
+            {/* Path */}
+            <div className="required field">
+              <label>{getPathLabel()}</label>
+              <input
+                type="text"
+                placeholder={binding === "directory"
+                  ? "content/posts"
+                  : "content/about.md"}
+                value={formData.path || ""}
+                onChange={(e) => handleChange("path", e.target.value)}
+                required
+                disabled={loading}
+              />
             </div>
-          </div>
 
-          {/* Path */}
-          <div className="required field">
-            <label>{getPathLabel()}</label>
-            <input
-              type="text"
-              placeholder={binding === "directory"
-                ? "content/posts"
-                : "content/about.md"}
-              value={formData.path || ""}
-              onChange={(e) => handleChange("path", e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          {/* Target Branch */}
-          <div className="field">
-            <label>Target Branch (Optional)</label>
-            <input
-              type="text"
-              placeholder="e.g. features/preview"
-              value={formData.branch || ""}
-              onChange={(e) => handleChange("branch", e.target.value)}
-              disabled={loading}
-            />
-            <small className="helper-text">
-              If set, this branch is used for content. If it doesn't exist, it
-              will be created on save.
-            </small>
+            {/* Target Branch */}
+            <div className="field">
+              <label>Target Branch (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. features/preview"
+                value={formData.branch || ""}
+                onChange={(e) => handleChange("branch", e.target.value)}
+                disabled={loading}
+              />
+              <small className="helper-text">
+                If set, this branch is used for content. If it doesn't exist, it
+                will be created on save.
+              </small>
+            </div>
           </div>
         </div>
 
         {/* Field Schema Editor */}
         <div className="ui segment">
           <h4 className="ui dividing header">Field Schema</h4>
-          <FieldList
-            fields={formData.fields || []}
-            onChange={(fields) => handleChange("fields", fields)}
-            isCollection={isCollection}
-            disabled={loading}
-          />
+          <div className="ui form">
+            <FieldList
+              fields={formData.fields || []}
+              onChange={(fields) => handleChange("fields", fields)}
+              isCollection={isCollection}
+              disabled={loading}
+            />
+          </div>
         </div>
 
         {/* Archetype (Collection Only) */}
         {isCollection && (
           <div className="ui segment">
             <h4 className="ui dividing header">Archetype Template</h4>
-            <div style={{ border: "1px solid #ddd", borderRadius: "4px" }}>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+              }}
+            >
               <MarkdownEditor
                 body={formData.archetype || ""} // Assuming we store archetype in extra key or similar? Spec says "Archetype Body".
                 // We need to add 'archetype' key to Collection interface as loose prop [key:string]: any allows it.

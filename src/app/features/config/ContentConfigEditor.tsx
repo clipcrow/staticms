@@ -49,10 +49,19 @@ export function ContentConfigEditor({
     setError(null);
 
     try {
+      // 0. Generate Identifier
+      const rawId = formData.branch
+        ? `${formData.branch}-${formData.path}`
+        : formData.path;
+      const generatedName = (rawId || "").toLowerCase().replace(
+        /[^a-z0-9]+/g,
+        "-",
+      ).replace(/(^-|-$)/g, "");
+
       // 1. Sanitization
       const sanitizedCollection: Collection = {
         ...formData,
-        name: formData.name.trim(),
+        name: generatedName,
         label: formData.label?.trim() || undefined, // Optional
         path: formData.path?.trim() || "",
         branch: formData.branch?.trim() || undefined,
