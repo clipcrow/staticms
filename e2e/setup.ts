@@ -95,3 +95,42 @@ export async function demoDelay() {
     await new Promise((r) => setTimeout(r, delay));
   }
 }
+
+import { closeKv, kv } from "@/server/auth.ts";
+export { closeKv, kv };
+
+// Helper: Login as test user
+export async function loginAsTestUser(
+  // deno-lint-ignore no-explicit-any
+  page: any,
+  username = "testuser",
+  extraHandlers: Record<
+    string,
+    (req: Request) => Response | Promise<Response>
+  > = {},
+) {
+  const sessionId = crypto.randomUUID();
+  const token = "mock_token_" + sessionId;
+  await kv.set(["sessions", sessionId], token, { expireIn: 60 * 60 });
+
+  // Navigate to test login endpoint which sets the cookie
+  await page.goto(`${TEST_BASE_URL}/api/test/login?id=${sessionId}`);
+
+  // Wait for redirect to / (or checking 401 if failed)
+  // The test/login endpoint redirects to / on success
+
+  // Mock GitHub API for this user
+  const apiStub = mockGitHubApi({
+    "/user": () =>
+      new Response(
+        JSON.stringify({
+          login: username,
+          avatar_url: "https://example.com/avatar.png",
+          name: "Test User",
+        }),
+      ),
+    ...extraHandlers,
+  });
+
+  return { token, apiStub };
+}

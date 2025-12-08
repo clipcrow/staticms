@@ -448,7 +448,7 @@ export function ContentEditor(
   const isLocked = !!prInfo && (!fromStorage || prInfo.author !== currentUser);
 
   return (
-    <div className="ui container" style={{ marginTop: "2rem" }}>
+    <div className="ui container content-editor" style={{ marginTop: "2rem" }}>
       <Header
         breadcrumbs={breadcrumbs}
         rightContent={

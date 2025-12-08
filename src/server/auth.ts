@@ -10,6 +10,7 @@ const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
 // Deno KV for session storage
 export const kv = await Deno.openKv();
+export const closeKv = () => kv.close();
 
 export const authRouter = new Router();
 
