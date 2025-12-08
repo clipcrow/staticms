@@ -76,6 +76,10 @@ export interface Collection {
   // Content Location & Binding
   path: string; // File path or Folder path, trimmed
   binding?: "file" | "directory";
+  branch?: string; // Target branch (Optional), trimmed
+  // If set, content operations (read/write/PR base) target this branch.
+  // If unset, defaults to repository's default branch (e.g. main).
+
   // Combinations:
   // 1. Collection + File (default): 'path' is folder, manages multiple files inside.
   // 2. Collection + Directory: 'path' is folder, manages subfolders' index.md.

@@ -3,19 +3,30 @@ import yaml from "js-yaml";
 
 export interface Field {
   name: string;
-  label: string;
   widget: string;
+  label?: string;
+  default?: unknown;
+  required?: boolean;
   // deno-lint-ignore no-explicit-any
   [key: string]: any;
 }
 
 export interface Collection {
   name: string;
-  label: string;
-  folder?: string;
-  files?: Array<{ name: string; file: string; label: string }>;
-  fields?: Field[];
+  label?: string; // Optional in v2
   type?: "collection" | "singleton";
+
+  // v2 Location & Binding
+  path?: string;
+  binding?: "file" | "directory";
+  branch?: string;
+
+  // Legacy / Decap Compatibility
+  folder?: string;
+  file?: string;
+  files?: Array<{ name: string; file: string; label: string }>;
+
+  fields?: Field[];
   // deno-lint-ignore no-explicit-any
   [key: string]: any;
 }

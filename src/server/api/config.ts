@@ -68,6 +68,9 @@ collections:
   ctx.response.type = "text/yaml";
 };
 
+import { parse } from "@std/yaml";
+// ... (existing imports)
+
 // POST /api/repo/:owner/:repo/config
 export const saveRepoConfig = async (
   ctx: RouterContext<"/api/repo/:owner/:repo/config">,
@@ -90,6 +93,56 @@ export const saveRepoConfig = async (
     const bodyText = await ctx.request.body.text();
     if (!bodyText) {
       ctx.throw(400, "Empty config body");
+    }
+
+    // 1. Parse Config to check for branches
+    // deno-lint-ignore no-explicit-any
+    let config: any;
+    try {
+      config = parse(bodyText);
+    } catch (_e) {
+      ctx.throw(400, "Invalid YAML config");
+    }
+
+    // 2. Check and Create Branches
+    if (config && Array.isArray(config.collections)) {
+      const client = new GitHubUserClient(token);
+      let repoInfo: { default_branch: string } | null = null;
+
+      for (const collection of config.collections) {
+        if (collection.branch) {
+          const branchName = collection.branch;
+          try {
+            // Check if branch exists
+            await client.getBranch(owner, repo, branchName);
+          } catch (e) {
+            if (e instanceof GitHubAPIError && e.status === 404) {
+              // Branch does not exist, create it
+              console.log(`Branch ${branchName} not found. Creating...`);
+
+              // Get default branch info if not already fetched
+              if (!repoInfo) {
+                repoInfo = await client.getRepository(owner, repo);
+              }
+              const defaultBranch = repoInfo!.default_branch;
+
+              // Get SHA of default branch head
+              const defaultBranchRef = await client.getBranch(
+                owner,
+                repo,
+                defaultBranch,
+              );
+              // deno-lint-ignore no-explicit-any
+              const sha = (defaultBranchRef as any).object.sha;
+
+              await client.createBranch(owner, repo, branchName, sha);
+              console.log(`Created branch ${branchName} from ${defaultBranch}`);
+            } else {
+              throw e; // Rethrow other errors
+            }
+          }
+        }
+      }
     }
 
     // Save to Deno KV

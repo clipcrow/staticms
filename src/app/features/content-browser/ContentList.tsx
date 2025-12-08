@@ -36,8 +36,11 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
     );
   }
 
+  const getDisplayName = (c: Collection) =>
+    c.label || c.path || c.folder || c.file || c.name;
+
   const filteredCollections = collections.filter((c) =>
-    c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    getDisplayName(c).toLowerCase().includes(searchQuery.toLowerCase()) ||
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -135,7 +138,7 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
                           style={{ marginRight: "0.5em" }}
                         >
                         </i>
-                        {c.label}
+                        {getDisplayName(c)}
                       </div>
                       <div className="meta">
                         {c.name}
@@ -175,7 +178,7 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
                         }`}
                       />
                     }
-                    primaryText={c.label}
+                    primaryText={getDisplayName(c)}
                     secondaryText={c.name}
                     actions={
                       <button

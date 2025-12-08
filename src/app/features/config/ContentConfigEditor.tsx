@@ -1,8 +1,7 @@
 import { useState } from "react";
 import yaml from "js-yaml";
-import { Collection, Config } from "@/app/hooks/useContentConfig.ts";
+import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
 import { ContentSettings } from "@/app/components/common/ContentSettings.tsx";
-import { Content as V1Content } from "@/app/components/editor/types.ts";
 
 interface ContentConfigEditorProps {
   owner: string;
@@ -23,78 +22,26 @@ export function ContentConfigEditor({
   onCancel,
   onSave,
 }: ContentConfigEditorProps) {
-  // Adapter: toV1Content
-  const toV1Content = (col: Collection | undefined): V1Content => {
-    if (!col && mode === "add") {
-      return {
-        owner,
-        repo,
-        filePath: "",
-        fields: [],
-        type: "collection-files",
-        name: "",
-      };
-    }
-
-    const c = col!;
-    let type: V1Content["type"] = "collection-files";
-    if (c.type === "singleton") {
-      type = c.folder ? "singleton-dir" : "singleton-file";
-    } else {
-      type = "collection-files"; // defaulting to collection-files
-    }
-
-    return {
-      owner,
-      repo,
-      name: c.label,
-      filePath: c.folder || c.file || "",
-      fields: c.fields?.map((f) => ({
-        name: f.name,
-        value: "",
-        defaultValue: "",
-      })) || [],
-      type,
-    };
+  const defaultCollection: Collection = {
+    name: "",
+    label: "",
+    type: "collection",
+    binding: "file",
+    path: "",
+    fields: [
+      { name: "title", widget: "string", required: true },
+    ],
+    // archetype is stored as loose prop in Collection interface
+    archetype: "",
   };
 
-  const [formData, setFormData] = useState<V1Content>(toV1Content(initialData));
+  const [formData, setFormData] = useState<Collection>(
+    initialData ? JSON.parse(JSON.stringify(initialData)) : defaultCollection,
+  );
+
   const [saving, setSaving] = useState(false);
   // deno-lint-ignore no-unused-vars
   const [error, setError] = useState<string | null>(null);
-
-  // Adapter: fromV1Content
-  const fromV1Content = (content: V1Content): Collection => {
-    const isSingleton = content.type?.startsWith("singleton");
-
-    const label = content.name || "Untitled";
-    let name = initialData?.name;
-    if (!name || mode === "add") {
-      name = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
-        /(^-|-$)/g,
-        "",
-      );
-    }
-
-    const col: Collection = {
-      name: name!,
-      label: label,
-      type: isSingleton ? "singleton" : "collection",
-      fields: content.fields.map((f) => ({
-        name: f.name,
-        label: f.name,
-        widget: "string",
-      })),
-    };
-
-    if (content.type === "singleton-file") {
-      col.file = content.filePath;
-    } else {
-      col.folder = content.filePath;
-    }
-
-    return col;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,31 +49,46 @@ export function ContentConfigEditor({
     setError(null);
 
     try {
-      const newCollection = fromV1Content(formData);
+      // 1. Sanitization
+      const sanitizedCollection: Collection = {
+        ...formData,
+        name: formData.name.trim(),
+        label: formData.label?.trim() || undefined, // Optional
+        path: formData.path?.trim() || "",
+        branch: formData.branch?.trim() || undefined,
+        fields: formData.fields?.map((f: Field) => ({
+          ...f,
+          name: f.name.trim(),
+        })) || [],
+      };
 
-      // Deep copy config
+      // If label is empty, remove it or leave undefined? Spec says: "If absent, Path is used".
+      if (!sanitizedCollection.label) delete sanitizedCollection.label;
+      // If branch is empty, remove
+      if (!sanitizedCollection.branch) delete sanitizedCollection.branch;
+
+      // 2. Validation (Basic)
+      if (!sanitizedCollection.name) throw new Error("Identifier is required");
+      if (!sanitizedCollection.path) throw new Error("Path is required");
+
+      // 3. Update Config
       const newConfig: Config = JSON.parse(JSON.stringify(config));
       if (!newConfig.collections) newConfig.collections = [];
 
       if (mode === "add") {
-        if (!newCollection.fields || newCollection.fields.length === 0) {
-          newCollection.fields = [
-            { name: "title", label: "Title", widget: "string" },
-            { name: "body", label: "Body", widget: "markdown" },
-          ];
-        }
-        newConfig.collections.push(newCollection);
+        newConfig.collections.push(sanitizedCollection);
       } else {
         const index = newConfig.collections.findIndex((c) =>
           c.name === initialData?.name
         );
         if (index >= 0) {
-          newConfig.collections[index] = newCollection;
+          newConfig.collections[index] = sanitizedCollection;
         } else {
-          newConfig.collections.push(newCollection);
+          newConfig.collections.push(sanitizedCollection);
         }
       }
 
+      // 4. Save
       const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: {
@@ -143,6 +105,7 @@ export function ContentConfigEditor({
     } catch (e) {
       console.error(e);
       setError((e as Error).message);
+      alert((e as Error).message);
     } finally {
       setSaving(false);
     }

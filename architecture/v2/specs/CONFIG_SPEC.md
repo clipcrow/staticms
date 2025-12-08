@@ -24,6 +24,12 @@
       の選択に応じて動的に変化します。
     - Binding = `File` の場合: **"Content File Path"**
     - Binding = `Directory` の場合: **"Content Folder Path"**
+- **Target Branch**: コンテンツを管理するブランチ名（オプション）。
+  - 設定された場合: 指定されたブランチ (`branch`)
+    上のコンテンツを参照・更新します。
+    - **Note**:
+      指定されたブランチが存在しない場合、設定保存時に自動的にブランチを作成します（デフォルトブランチから分岐）。
+  - 設定されない場合: リポジトリのデフォルトブランチ (`main` 等) を使用します。
 
   ### 組み合わせの挙動定義:
 
@@ -83,10 +89,13 @@ Markdown の本文 (Body) は自動的に扱われるため、ここで定義す
    - 以下のフィールドは保存時に前後の空白がトリムされます。
      - Content Name
      - Path
-     - Branch (将来的な拡張)
+     - Branch
      - Field Names (FrontMatter Keys)
 4. **Transformation**:
    - UI 上のステートから保存用の JSON オブジェクトへ変換。
-5. **Save**:
+5. **Branch Creation**:
+   - (Target Branch が設定された場合のみ)
+   - 指定されたブランチの存在確認を行い、存在しない場合はデフォルトブランチから新たに作成します。
+6. **Save**:
    - `POST /api/repo/:owner/:repo/config`
    - サーバー側で Deno KV を更新。
