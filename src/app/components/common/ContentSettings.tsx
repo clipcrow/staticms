@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Collection } from "@/app/hooks/useContentConfig.ts";
-import { Header } from "./Header.tsx";
 import { MarkdownEditor } from "../editor/MarkdownEditor.tsx";
 import { FieldList } from "@/app/features/config/ContentConfigHelpers.tsx";
 // Use Content type only for MarkdownEditor shim
@@ -67,20 +66,6 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
 
   return (
     <div className="ui container">
-      <Header
-        breadcrumbs={[
-          {
-            label: `${repoInfo.owner}/${repoInfo.repo}`,
-            to: `/${repoInfo.owner}/${repoInfo.repo}`,
-          },
-          {
-            label: editingIndex !== null
-              ? "Edit Content Config"
-              : "Add Content Config",
-          },
-        ]}
-      />
-
       <form onSubmit={onSave} className="ui form">
         {/* Basic Settings */}
         <div className="ui segment">
