@@ -40,6 +40,9 @@ Staticms GitHub App
   - **Name**: `Owner / Repo` (強調表示)。
   - **Description**: GitHub 上のリポジトリ説明文（2行で切り詰め）。
   - **Stats**: Star 数や最終更新日。
+  - **Status Tags**:
+    - `localStorage` 内のドラフト数 (`Draft (N)`) や PR数 (`PR (N)`)
+      を集計して表示。
 
 #### List View
 
@@ -47,6 +50,7 @@ Staticms GitHub App
   - **Name**: リポジトリ名とアイコン。
   - **Visibility**: Public/Private バッジ。
   - **Updated**: 最終更新日時。
+  - **Status**: ドラフト数やPR数をバッジで表示。
   - **Action**: 選択ボタン。
 
 ### 4. Empty State (リポジトリなし)

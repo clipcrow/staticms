@@ -26,12 +26,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = (
       );
     case "pr_open":
       return (
-        <span
-          className={`ui label green tiny basic ${className || ""}`}
-          style={style}
-        >
+        <span className="ui label green tiny basic">
           <i className="code branch icon" />
-          {prNumber ? ` #${prNumber}` : " PR Open"}
+          {prNumber
+            ? ` #${prNumber}`
+            : count && count > 1
+            ? ` PR Open (${count})`
+            : " PR Open"}
         </span>
       );
     case "merged":

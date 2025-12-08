@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Header } from "@/app/components/common/Header.tsx";
 import { useRepositories } from "@/app/hooks/useRepositories.ts";
 import { getRepoStatus } from "@/app/components/editor/utils.ts";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 
 export function RepositorySelector() {
   const navigate = useNavigate();
@@ -167,10 +168,10 @@ export function RepositorySelector() {
                 <div className="extra content">
                   <span className="right floated">
                     {status.hasDraft && (
-                      <div className="ui label orange mini basic">Draft</div>
+                      <StatusBadge status="draft" count={status.draftCount} />
                     )}
                     {status.hasPr && (
-                      <div className="ui label blue mini basic">PR Open</div>
+                      <StatusBadge status="pr_open" count={status.prCount} />
                     )}
                   </span>
                   <span>
@@ -233,10 +234,10 @@ export function RepositorySelector() {
                   </td>
                   <td>
                     {status.hasDraft && (
-                      <div className="ui label orange mini basic">Draft</div>
+                      <StatusBadge status="draft" count={status.draftCount} />
                     )}
                     {status.hasPr && (
-                      <div className="ui label blue mini basic">PR Open</div>
+                      <StatusBadge status="pr_open" count={status.prCount} />
                     )}
                   </td>
                   <td>
