@@ -99,6 +99,10 @@ Router を最新の v7 にアップグレードしました。
      - `architecture/v2/specs/EDITOR_SPEC.md` (特に Image Handling セクション)
      - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
      - `architecture/v2/specs/REPOSITORY_SPEC.md`
+     - `architecture/v2/specs/CONFIG_SPEC.md`
+     - `architecture/v2/specs/STATUS_LABELS_SPEC.md`
+     - `architecture/v2/specs/HEADER_SPEC.md`
+     - `architecture/v2/specs/NOT_FOUND_SPEC.md`
      - `src/app/features/editor/ContentEditor.tsx` (現状の実装)
      - `src/app/features/editor/ContentImages.tsx` (現状の実装)
      - `src/app/components/editor/MarkdownEditor.tsx` (現状の実装)
