@@ -29,7 +29,7 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   // Initialize type/binding if missing (e.g. fresh add)
   useEffect(() => {
     if (!formData.type) {
-      setFormData({ ...formData, type: "collection" });
+      setFormData({ ...formData, type: "singleton" });
     }
     // Default binding based on type if not set?
     // Actually, "Binding" is mostly for Singleton. For Collection it implies behavior.
@@ -95,11 +95,11 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                     <input
                       type="radio"
                       name="contentType"
-                      checked={formData.type === "collection" || !formData.type}
-                      onChange={() => handleChange("type", "collection")}
+                      checked={formData.type === "singleton" || !formData.type}
+                      onChange={() => handleChange("type", "singleton")}
                       disabled={loading}
                     />
-                    <label>Collection (Folder based)</label>
+                    <label>Singleton (File/One-off)</label>
                   </div>
                 </div>
                 <div className="field">
@@ -107,11 +107,11 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
                     <input
                       type="radio"
                       name="contentType"
-                      checked={formData.type === "singleton"}
-                      onChange={() => handleChange("type", "singleton")}
+                      checked={formData.type === "collection"}
+                      onChange={() => handleChange("type", "collection")}
                       disabled={loading}
                     />
-                    <label>Singleton (File/One-off)</label>
+                    <label>Collection (Folder based)</label>
                   </div>
                 </div>
               </div>

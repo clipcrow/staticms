@@ -25,7 +25,7 @@ export function ContentConfigEditor({
   const defaultCollection: Collection = {
     name: "",
     label: "",
-    type: "collection",
+    type: "singleton",
     binding: "file",
     path: "",
     fields: [

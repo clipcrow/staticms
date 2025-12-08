@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
@@ -66,6 +66,7 @@ export function ContentEditor(
 
   const [saving, setSaving] = useState(false);
   const [fetching, setFetching] = useState(false);
+  const fetchedPathRef = useRef<string | null>(null);
   const [prInfo, setPrInfo] = useState<
     { prUrl: string; prNumber: number } | null
   >(null);
@@ -134,8 +135,33 @@ export function ContentEditor(
     },
   );
 
+  // Warn if singleton draft is empty (potential bug artifact)
+  useEffect(() => {
+    if (
+      loaded &&
+      fromStorage &&
+      !draft.body &&
+      Object.keys(draft.frontMatter || {}).length === 0 &&
+      collection?.type === "singleton"
+    ) {
+      showToast(
+        "Local draft is empty. If unexpected, please click 'Reset' to reload remote content.",
+        "warning",
+      );
+    }
+  }, [loaded, fromStorage, draft, collection, showToast]);
+
   // Fetch remote content (Keep existing logic)
   useEffect(() => {
+    console.log("[ContentEditor] Fetch Effect Check:", {
+      mode,
+      loaded,
+      fromStorage,
+      collectionName,
+      filePath,
+      fetching,
+      fetched: fetchedPathRef.current,
+    });
     if (
       mode === "new" ||
       !loaded ||
@@ -144,12 +170,14 @@ export function ContentEditor(
       !repo ||
       !collection ||
       !filePath ||
-      fetching
+      fetching ||
+      fetchedPathRef.current === filePath
     ) {
       return;
     }
 
     setFetching(true);
+    fetchedPathRef.current = filePath;
     fetch(`/api/repo/${owner}/${repo}/contents/${filePath}`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Failed to fetch remote content");
@@ -171,8 +199,8 @@ export function ContentEditor(
         }
       })
       .catch((e) => {
-        console.error(e);
-        showToast("Failed to load content", "error");
+        console.error("[ContentEditor] Fetch failed:", e);
+        showToast(`Failed to load content: ${e.message}`, "error");
       })
       .finally(() => {
         setFetching(false);
@@ -354,7 +382,7 @@ export function ContentEditor(
   const handleReset = () => {
     if (confirm("Discard local changes?")) {
       clearDraft();
-      globalThis.location.reload();
+      fetchedPathRef.current = null;
     }
   };
 
@@ -398,11 +426,13 @@ export function ContentEditor(
   // deno-lint-ignore no-explicit-any
   const initialTitle = (location.state as any)?.initialTitle;
 
-  breadcrumbs.push({
-    label: mode === "new"
-      ? (initialTitle || "New Content")
-      : effectiveArticleName,
-  });
+  if (collection?.type !== "singleton") {
+    breadcrumbs.push({
+      label: mode === "new"
+        ? (initialTitle || "New Content")
+        : effectiveArticleName,
+    });
+  }
 
   // Lock Logic: Locked if PR exists AND no local draft to override it.
   const isLocked = !!prInfo && !fromStorage;
