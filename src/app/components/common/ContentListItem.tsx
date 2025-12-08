@@ -93,7 +93,13 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
         <div className="staticms-content-list-labels">
           {status && (
             status.hasDraft
-              ? <StatusBadge status="draft" style={{ marginLeft: "0.5em" }} />
+              ? (
+                <StatusBadge
+                  status="draft"
+                  count={status.draftCount}
+                  style={{ marginLeft: "0.5em" }}
+                />
+              )
               : status.hasPr
               ? (
                 <StatusBadge

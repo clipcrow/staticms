@@ -5,12 +5,13 @@ export type ContentStatusType = "draft" | "pr_open" | "merged" | "clean";
 interface StatusBadgeProps {
   status: ContentStatusType;
   prNumber?: number;
+  count?: number;
   className?: string;
   style?: React.CSSProperties;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = (
-  { status, prNumber, className, style },
+  { status, prNumber, count, className, style },
 ) => {
   switch (status) {
     case "draft":
@@ -19,7 +20,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = (
           className={`ui label orange tiny basic ${className || ""}`}
           style={style}
         >
-          <i className="pencil alternate icon" /> Draft
+          <i className="pencil alternate icon" />{" "}
+          Draft{count && count > 1 ? ` (${count})` : ""}
         </span>
       );
     case "pr_open":

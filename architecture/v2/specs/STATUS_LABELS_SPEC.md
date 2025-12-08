@@ -12,11 +12,13 @@
 
 操作ユーザーがブラウザ上で編集中の状態で、まだサーバー（GitHub）に保存されていない変更が存在することを示します。
 
-- **Label**: `Draft` / `Unsaved`
+- **Label**: `Draft`, `Draft (N)`
 - **Color**: **Orange** / **Yellow**
 - **Icon**: `pencil alternate` (Semantic UI)
 - **Description**:
   - `localStorage` に保存された未送信の変更がある状態。
+  - Collection の場合、内包するドラフト記事数を集計し、複数ある場合は
+    `Draft (3)` のように件数を接尾表示します。
   - 最も優先順位が高く、ユーザーに「保存忘れ」を気付かせるために目立たせる必要があります。
 
 ### 2. PR オープン中 (PR Open)
@@ -63,8 +65,9 @@
 
 スペースが限られているため、コンパクトな「バッジ」または「アイコン」を使用します。
 
-- **Draft**: コンテンツ名の右側、またはステータスカラムに `Orange Label (Mini)`
-  で `Draft` と表示。
+- **Draft**:
+  - コンテンツ名の右側、またはステータスカラムに `Orange Label (Mini)` で表示。
+  - Collection 行の場合、ドラフト数を集計し `Draft (3)` のように表示する。
 - **PR Open**: ステータスカラムに `Green Label (Mini)` で `PR #123`
   と表示。クリックで PR へのリンク。
 
@@ -92,31 +95,39 @@
 
 ```tsx
 // StatusBadge Component Example
-import { Icon, Label } from "semantic-ui-react";
+import React from "react";
 
 type ContentStatus = "draft" | "pr_open" | "merged" | "clean";
 
-export const StatusBadge = (
-  { status, prNumber }: { status: ContentStatus; prNumber?: number },
-) => {
+export const StatusBadge = ({
+  status,
+  prNumber,
+  count, // Added for aggregation
+}: {
+  status: ContentStatus;
+  prNumber?: number;
+  count?: number;
+}) => {
   switch (status) {
     case "draft":
       return (
-        <Label color="orange" size="tiny">
-          <Icon name="pencil" /> Draft
-        </Label>
+        <span className="ui label orange tiny basic">
+          <i className="pencil alternate icon" /> Draft
+          {count && count > 1 ? ` (${count})` : ""}
+        </span>
       );
     case "pr_open":
       return (
-        <Label color="green" size="tiny" as="a" href={`.../pull/${prNumber}`}>
-          <Icon name="code branch" /> #{prNumber}
-        </Label>
+        <span className="ui label green tiny basic">
+          <i className="code branch icon" />
+          {prNumber ? ` #${prNumber}` : " PR Open"}
+        </span>
       );
     case "merged":
       return (
-        <Label color="purple" size="tiny">
-          <Icon name="check" /> Merged
-        </Label>
+        <span className="ui label purple tiny basic">
+          <i className="check circle icon" /> Merged
+        </span>
       );
     default:
       return null;

@@ -28,13 +28,17 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 - **Card View**:
   - 大きなアイコンとラベルで視認性を重視。
-  - `Unsaved Draft` バッジをカード右上に配置。
+  - **Status Tags**:
+    - **Collection**:
+      構成記事のステータスを集計し、同種のタグが複数ある場合は件数を接尾表示（例:
+      `Draft (3)`）。
+    - **Singleton**: 単体のステータス（`Draft`, `PR`）を表示。
   - **Actions**: カード右下に「設定」(`cog` アイコン)
     ボタンを配置。クリックで設定編集画面へ遷移。
 - **List View**:
   - 省スペースなテーブル表示。
-  - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`, `Last Modified`,
-    `Actions`。
+  - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`
+    (Collectionの場合は集計数を表示), `Last Modified`, `Actions`。
   - **Actions**:
     - **Settings**: `cog` アイコン。クリックで設定編集画面へ遷移。
 
@@ -74,6 +78,7 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 - **Card View**:
   - ファイルをカードとして表示。画像ファイルの場合はサムネイルプレビューを表示。
+  - **Status Tags**: `Draft`, `PR` 等のステータスを表示。
   - Markdown の場合は概要（Excerpt）を表示（Future Scope）。
 - **List View**:
   - 標準的なファイル一覧テーブル。

@@ -3,6 +3,8 @@ import type { Collection } from "@/app/hooks/useContentConfig.ts";
 import { useNavigate } from "react-router-dom";
 import { Header } from "@/app/components/common/Header.tsx";
 import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
+import { getContentStatus } from "@/app/components/editor/utils.ts";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 
 interface ContentListProps {
   collections: Collection[];
@@ -129,78 +131,126 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
           <>
             {viewMode === "card" && (
               <div className="ui three stackable cards">
-                {filteredCollections.map((c) => (
-                  <div
-                    className="card link"
-                    key={c.name}
-                    onClick={() => handleSelectContent(c.name)}
-                  >
-                    <div className="content">
-                      <div className="header">
-                        <i
-                          className={`icon ${
-                            c.type === "singleton"
-                              ? "file outline"
-                              : "folder outline"
-                          }`}
-                          style={{ marginRight: "0.5em" }}
-                        >
-                        </i>
-                        {getDisplayName(c)}
+                {filteredCollections.map((c) => {
+                  const isSingleton = c.type === "singleton";
+                  const statusPath = isSingleton
+                    ? `${c.name}/singleton`
+                    : c.name;
+                  const status = getContentStatus(
+                    owner,
+                    repo,
+                    "main",
+                    statusPath,
+                    !isSingleton,
+                  );
+
+                  return (
+                    <div
+                      className="card link"
+                      key={c.name}
+                      onClick={() => handleSelectContent(c.name)}
+                    >
+                      <div className="content">
+                        <div className="header">
+                          <i
+                            className={`icon ${
+                              c.type === "singleton"
+                                ? "file outline"
+                                : "folder outline"
+                            }`}
+                            style={{ marginRight: "0.5em" }}
+                          >
+                          </i>
+                          {getDisplayName(c)}
+                        </div>
+                        <div className="meta">
+                          {c.name}
+                        </div>
+                        <div className="description">
+                          {c.type === "singleton"
+                            ? "Singleton Content"
+                            : "Collection of entries"}
+                        </div>
                       </div>
-                      <div className="meta">
-                        {c.name}
-                      </div>
-                      <div className="description">
-                        {c.type === "singleton"
-                          ? "Singleton Content"
-                          : "Collection of entries"}
+                      <div className="extra content">
+                        <span className="right floated">
+                          <button
+                            type="button"
+                            className="ui icon button basic mini"
+                            onClick={(e) => handleSettingsClick(e, c.name)}
+                            title="Settings"
+                          >
+                            <i className="cog icon"></i>
+                          </button>
+                        </span>
+                        <span>
+                          {status.hasDraft
+                            ? (
+                              <StatusBadge
+                                status="draft"
+                                count={status.draftCount}
+                              />
+                            )
+                            : status.hasPr
+                            ? (
+                              <StatusBadge
+                                status="pr_open"
+                                prNumber={status.prNumber}
+                              />
+                            )
+                            : null}
+                        </span>
                       </div>
                     </div>
-                    <div className="extra content">
-                      <button
-                        type="button"
-                        className="ui icon button basic right floated mini"
-                        onClick={(e) => handleSettingsClick(e, c.name)}
-                        title="Settings"
-                      >
-                        <i className="cog icon"></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
             {viewMode === "list" && (
               <div className="ui relaxed divided list">
-                {filteredCollections.map((c) => (
-                  <ContentListItem
-                    key={c.name}
-                    icon={
-                      <i
-                        className={`large icon ${
-                          c.type === "singleton"
-                            ? "file outline"
-                            : "folder outline"
-                        }`}
-                      />
-                    }
-                    primaryText={getDisplayName(c)}
-                    secondaryText={c.name}
-                    actions={
-                      <button
-                        type="button"
-                        className="ui icon button basic mini"
-                        onClick={(e) => handleSettingsClick(e, c.name)}
-                        title="Settings"
-                      >
-                        <i className="cog icon"></i>
-                      </button>
-                    }
-                    onClick={() => handleSelectContent(c.name)}
-                  />
-                ))}
+                {filteredCollections.map((c) => {
+                  const isSingleton = c.type === "singleton";
+                  const statusPath = isSingleton
+                    ? `${c.name}/singleton`
+                    : c.name;
+                  const status = getContentStatus(
+                    owner,
+                    repo,
+                    "main",
+                    statusPath,
+                    !isSingleton,
+                  );
+
+                  return (
+                    <ContentListItem
+                      key={c.name}
+                      icon={
+                        <i
+                          className={`large icon ${
+                            c.type === "singleton"
+                              ? "file outline"
+                              : "folder outline"
+                          }`}
+                        />
+                      }
+                      primaryText={getDisplayName(c)}
+                      secondaryText={c.name}
+                      actions={
+                        <button
+                          type="button"
+                          className="ui icon button basic mini"
+                          onClick={(e) => handleSettingsClick(e, c.name)}
+                          title="Settings"
+                        >
+                          <i className="cog icon"></i>
+                        </button>
+                      }
+                      onClick={() => handleSelectContent(c.name)}
+                      status={status}
+                    />
+                  );
+                })}
               </div>
             )}
           </>

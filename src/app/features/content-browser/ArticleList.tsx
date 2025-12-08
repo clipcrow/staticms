@@ -293,7 +293,12 @@ export function ArticleList() {
                         </span>
                         <span>
                           {status.hasDraft
-                            ? <StatusBadge status="draft" />
+                            ? (
+                              <StatusBadge
+                                status="draft"
+                                count={status.draftCount}
+                              />
+                            )
                             : status.hasPr
                             ? (
                               <StatusBadge
