@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
-import { useRepoContent } from "@/app/hooks/useRepoContent.ts";
+import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/app/components/editor/types.ts";
 import { Header } from "@/app/components/common/Header.tsx";
 import { ContentListItem } from "@/app/components/common/ContentListItem.tsx";
@@ -80,14 +80,13 @@ export function ArticleList() {
   }
 
   // Filter and map files based on binding
-  // deno-lint-ignore no-explicit-any
   const v1Files: FileItem[] = files
-    .filter((f: any) => {
+    .filter((f: GitHubFile) => {
       if (binding === "directory") return f.type === "dir";
       // Default/File: Only markdown files
       return f.type === "file" && /\.(md|markdown|mdx)$/i.test(f.name);
     })
-    .map((f: any) => ({
+    .map((f: GitHubFile) => ({
       name: f.name,
       path: f.path,
       type: f.type,
