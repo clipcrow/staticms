@@ -25,6 +25,7 @@
     "sass": "npm:sass@^1.71.0",
     "@std/fs": "jsr:@std/fs@^0.218.0",
     "@std/fmt": "jsr:@std/fmt@^0.225.0",
+    "@std/encoding/base64": "jsr:@std/encoding@^1.0.0/base64",
     "@std/encoding": "jsr:@std/encoding@^1.0.0",
     "esbuild": "npm:esbuild@0.20.2",
     "react-md-editor": "./mocks/react_md_editor.tsx",
