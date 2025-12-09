@@ -1,8 +1,8 @@
 import React from "react";
 // import MDEditor from "react-md-editor";
-// deno-lint-ignore no-explicit-any
 const MDEditor = React.lazy(() =>
   import("react-md-editor") as unknown as Promise<
+    // deno-lint-ignore no-explicit-any
     { default: React.ComponentType<any> }
   >
 );

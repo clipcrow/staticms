@@ -8,7 +8,7 @@ Appとして動作することで、リポジトリ内のMarkdownやYAMLファ�
 
 エンドユーザー（執筆者）向けの詳しい使い方は以下のガイドをご覧ください。
 
-- **[ユーザーガイド (User Guide)](./project_docs/USER_GUIDE.md)**:
+- **[ユーザーガイド (User Guide)](./USER_GUIDE.md)**:
   ログイン、編集、画像アップロード、設定ファイルの書き方など。
 
 ## Staticms v2 の特徴
