@@ -132,7 +132,7 @@ try {
 
 GitHub Actions 等の CI 環境で以下を実行します。
 
-1. `deno task test` (Unit & E2E)
+1. `deno task test` (Unit & Integration)
 2. `deno task build` (Generate `public/js/bundle.js`)
 3. 成果物（`src/server`,
    `public`）をDockerイメージ化、またはデプロイ対象サーバーへ転送。

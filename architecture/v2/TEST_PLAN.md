@@ -3,13 +3,14 @@
 Staticms v2 における品質保証の全体像です。
 「動く状態を維持する」ために、どのようなテストを、いつ、どのように実行するかを定義します。
 
-## 1. Testing Pyramid Strategy
+## 1. Testing Strategy
 
-テストピラミッドの原則に従い、コストと実行速度のバランスを取ります。
+E2Eテストの維持コスト高騰に伴い、品質保証の中心を**ユニットテスト (Unit Tests)
+と結合テスト (Integration Tests)** に置きます。 ユーザー体験 (UX)
+の検証は開発者の手動テストによって担保します。
 
 | Layer           | Tool                            | Scope                                                   | 実行頻度                  | 目的                                         |
 | :-------------- | :------------------------------ | :------------------------------------------------------ | :------------------------ | :------------------------------------------- |
-| **E2E**         | Astral                          | 主要ユーザーストーリー (`USER_STORIES.md`)              | デプロイ前 / PRマージ時   | ユーザー体験の保証、機能間連携の検証         |
 | **Integration** | `deno test` + `testing-library` | Feature (Container) コンポーネント                      | 随時 (関連ファイル変更時) | 状態管理、データフロー、ルーター制御の正しさ |
 | **Unit**        | `deno test`                     | Primitive Component, Hooks, Utilities, Helper Functions | 常に (TDDサイクル内)      | 個別機能の正しさ、境界値・エラー処理の検証   |
 
@@ -21,16 +22,16 @@ Staticms v2 における品質保証の全体像です。
 
 1. **Red**: 実装対象に対して、失敗する Unit Test または Integration Test
    を書く。
-   - `deno task test:unit --watch src/app/feature/target.test.ts`
+   - `deno task test --watch src/app/features/target.test.ts`
 2. **Green**: 実装を行い、テストをパスさせる。
 3. **Refactor**: コードを整理する。
 
 ### 2.2 Feature Completion Check
 
-機能実装がひと段落したタイミングで、手元の環境で E2E テストを実行する。
+機能実装がひと段落したタイミングで、すべてのユニットテストを実行し、回帰バグがないことを確認する。
 
 ```bash
-deno task test:e2e
+deno task test
 ```
 
 ### 2.3 CI/CD (GitHub Actions)
@@ -38,38 +39,32 @@ deno task test:e2e
 Pull Request 作成時および `main` ブランチへのマージ時に自動実行される。
 
 1. **Lint / Format Check**: `deno lint`, `deno fmt --check`
-2. **Unit Tests**: `deno task test:unit`
+2. **Unit / Integration Tests**: `deno task test`
 3. **Build Check**: `deno task build` (ビルドエラーがないか)
-4. **E2E Tests**: `deno task test:e2e`
-   (必要に応じてヘッドレスブラウザ環境をセットアップ)
 
 ## 3. Test Case Definition Guidelines
 
-### 3.1 E2E Scenarios (Astral)
+### 3.1 Unit / Integration Tests (徹底)
 
-`architecture/v2/USER_STORIES.md`
-の各シナリオをそのままテストケースとして実装します。 外部サービス (GitHub API)
-への依存については、以下のいずれかの戦略を採ります：
-
-- **Mocking Strategy**: サーバー側で外部HTTPリクエストをモックする（`fetch`
-  のインターセプト）。これにより、GitHubのレート制限やネットワーク不安定性の影響を受けずにテスト可能。
-- **Sandbox Strategy**: 実際の GitHub Sandbox
-  リポジトリを使用する（より現実に近いが、遅くて不安定になりがち）。
-
-**Staticms v2 では原則として「Mocking Strategy」を採用します。**
-Astralで操作するブラウザからリクエストを受けるサーバー（テスト用インスタンス）内部で、GitHub
-APIへのリクエストをモックします。
-
-### 3.2 Integration / Unit Tests
+E2Eテスト廃止の代替として、ユニットテストでのロジック検証を徹底します。
 
 - **UI Components**:
   - `render` した結果、正しいロール (`button`, `heading` 等)
     とテキストが含まれているか。
-  - イベント (`click`, `change`) に対して、正しいコールバックが呼ばれたか。
-  - 見た目（CSS）の詳細すぎるテストは避ける（変更に弱くなるため）。
+  - ユーザー操作 (`click`, `change`, `input`)
+    に対して、正しいコールバックが呼ばれ、ステートが期待通り遷移するか。
+  - エッジケース（空データ、エラー状態、ローディング状態）を網羅的にテストする。
 - **Hooks / Logic**:
-  - `renderHook` を使用して、ステート遷移が正しいか検証する。
-  - 非同期処理を含む場合、`waitFor` 等で完了を待機する。
+  - `renderHook` を使用して、複雑な状態遷移や副作用 (`useEffect`)
+    が正しく動作するか検証する。
+  - API呼び出し等は `globalThis.fetch`
+    のスタブを用いてモックし、ネットワーク依存を排除する。
+
+### 3.2 Manual Verification (User Stories)
+
+`architecture/v2/USER_STORIES.md`
+の各シナリオは、開発者がブラウザを用いて手動で検証します。
+E2Eテストの知見については `architecture/v2/E2E.md` を参照してください。
 
 ## 4. Test Data Management
 
@@ -81,6 +76,5 @@ APIへのリクエストをモックします。
 
 ## 5. Metrics
 
-初期段階ではカバレッジ率（Coverage）の数値目標は設定しません。 代わりに
-**「ユーザーストーリーの網羅率」** を重視します。すべての重要機能が E2E
-テストまたは結合テストでカバーされている状態を目指します。
+カバレッジ率の数値目標は設定しませんが、**ロジックを含む全てのコードパス**
+がユニットテストで保護されていることを目指します。

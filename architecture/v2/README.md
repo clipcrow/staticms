@@ -11,7 +11,7 @@ Staticms V2
 
 - [**USER_STORIES.md**](./USER_STORIES.md)
   - ユーザー要件定義書。
-  - 開発のベースとなるユーザーストーリー（US）とシナリオ。E2Eテストの仕様はこのドキュメントに準拠します。
+  - 開発のベースとなるユーザーストーリー（US）とシナリオ。検証（自動・手動）の仕様はこのドキュメントに準拠します。
 
 ## 設計と実装 (Design & Implementation)
 
@@ -32,8 +32,9 @@ Staticms V2
   - Semantic-UI を利用した UI 戦略。
 
 - [**TEST_PLAN.md**](./TEST_PLAN.md)
-  - Astral (E2E) と HappyDOM/RTL (Unit) によるテスト戦略。
-  - Deno 特有のテスト設定（リーク検出回避など）のノウハウ。
+  - HappyDOM/RTL (Unit & Integration) によるテスト戦略。
+  - Deno 特有のテスト設定のノウハウ。
+  - [**E2E.md**](./E2E.md) : E2E廃止の経緯と知見のアーカイブ。
 
 ## プロジェクト運用 (Operations)
 
