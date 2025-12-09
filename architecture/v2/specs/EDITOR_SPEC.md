@@ -86,9 +86,32 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 
 ## データフローとロジック
 
-### 1. 初期化プロセス (Initialization)
+### 1. データ構造と永続化 (Data Persistence)
 
-1. **Draft Loading**: `localStorage` から `localDraft` を取得。
+`localStorage`
+を使用し、ドラフトおよび関連するPR情報を**単一のオブジェクト**として管理します。
+これにより、データの整合性を保ちつつ、PRクローズ時の一括クリーンアップを容易にします。
+
+- **Key**: `staticms_draft_${username}|${owner}|${repo}|${branch}|${filePath}`
+- **Structure**:
+  ```typescript
+  interface ContentState {
+    frontMatter: Record<string, any>;
+    body: string;
+    pendingImages: PendingImage[];
+    pr?: { // 統合されたPR情報
+      number: number;
+      url: string;
+      state: "open" | "closed" | "merged";
+    };
+    updatedAt: number;
+  }
+  ```
+
+### 2. 初期化プロセス (Initialization)
+
+1. **State Loading**: `localStorage`
+   から上記オブジェクトを取得。ドラフト内容とPR情報の両方を復元します。
 2. **Remote Fetching**: GitHub API から最新のコンテンツを取得。
 3. **Conflict Resolution**:
    - ドラフトが存在する場合: ドラフトを優先表示し、UI に「Draft
@@ -102,16 +125,39 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
        作成者が操作ユーザーと一致する場合**
        は、ドラフトの内容を優先し、編集および PR の更新を許可する。
 
-### 2. 編集プロセス (Editing)
+### 3. コンテンツ処理ルール (Content Processing Rules)
 
-1. **Dirty Check**:
-   - 編集のたびに、ローカル内容（Draft）とリモート内容（Original）を比較する。
-   - **一致する場合 (Clean)**: `localStorage` からドラフトを削除し、Clean
-     状態へ戻す。
-   - **不一致の場合 (Dirty)**: `localStorage` にドラフトを保存し、Dirty
-     状態（未保存）とする。
+フロントマターと本文の区切りや、空行の扱いに関する正規化ルールを定義します。
 
-### 3. 保存プロセス (Save / Create PR)
+1. **読み込み時 (Normalization on Load)**:
+   - フロントマターブロック (`---` ... `---`)
+     終了後の改行について、**直後の改行（セパレータ分）1つだけ**をシステム区切り文字として削除します。
+   - 3つ以上の改行がある場合、それ以降は**ユーザーが意図した本文先頭の空白**として保持します。
+   - これにより、一般的なフォーマットのファイルは先頭空白なしで読み込まれ、意図的な空白は維持されます。
+
+2. **保存時 (Normalization on Save)**:
+   - フロントマターと本文を結合する際、システム側で**常に1つの空行**
+     (`\n---\n\n`) を挿入します。
+   - ユーザーが手動で空行管理をする必要をなくし、ファイルフォーマットを統一します。
+
+3. **Empty PR 防止 (Prevent Empty PR)**:
+   - 保存プロセス開始時に、正規化後のコンテンツが前回保存時（または最新のリモートコンテンツ）と完全に一致する場合は、保存処理を中断し、ユーザーに通知します。
+
+### 4. 編集プロセス (Editing)
+
+1. **Dirty Check (Local Comparison)**:
+   - 編集操作（キー入力等）のたびに、現在のエディタ内容（Draft）と、**初期ロード時（または同期時）に取得済み**のオリジナル内容（Cached
+     Original）をメモリ上で比較する。
+   - **Github API 通信は発生しない**ため、高頻度かつリアルタイムに実行する。
+   - **状態判定**:
+     - **一致する場合 (Clean)**:
+       - PR情報が**ない**場合: `localStorage` からオブジェクトを削除する。
+       - PR情報が**ある**場合: `body`/`frontMatter`
+         はリモート一致状態としつつ、`pr`
+         情報を保持するためにオブジェクトを保存・維持する。
+     - **不一致の場合 (Dirty)**: `localStorage` に保存し、Dirty 状態とする。
+
+### 5. 保存プロセス (Save / Create PR)
 
 1. **Validation**: 必須 FrontMatter フィールドのチェック。
 2. **Image Processing**:
@@ -120,11 +166,25 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
    - 記事 (`.md`) と画像ファイル群をひとつの Commit (Tree) として構成。
 4. **API Request**:
    - `PUT /api/repo/:owner/:repo/contents` (または Batch API) をコール。
-5. **Clean up**:
-   - 成功時、`localStorage` のドラフトを削除。
-   - 作成された PR 情報を State に反映し、完了トーストを表示。
+5. **Update State**:
+   - 成功時、`localStorage` のオブジェクトを更新：
+     - `body`/`frontMatter` は最新（Clean）とする。
+     - `pr` フィールドに新規作成/更新されたPR情報を格納する。
 
-### 4. 画像アップロード (Image Upload)
+### 6. 外部イベント連携 (External Updates)
+
+**Webhook / SSE** により PR の `closed` または `merged` を検知した場合：
+
+1. **Clean Check**: 現在のエディタ内容がリモート最新と一致するか確認。
+2. **State Update**:
+   - `localStorage` 内のオブジェクトから `pr` フィールドを削除（`undefined`
+     化）する。
+   - もしコンテンツも Clean
+     であれば、オブジェクトごと削除する（完全なクリーンアップ）。
+   - コンテンツが Dirty
+     であれば、ドラフト（未保存の変更）として保持する（PRとの紐付けのみ解除）。
+
+### 7. 画像アップロード (Image Upload)
 
 - 画像は即座にサーバーに送るのではなく、一旦 `pendingImages` State と
   `localStorage` に保存します（ドラフトの一部）。

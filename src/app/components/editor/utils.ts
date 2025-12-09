@@ -1,4 +1,35 @@
-import { Content, Draft } from "./types.ts";
+import yaml from "js-yaml";
+import { Content } from "./types.ts";
+import { Draft } from "@/shared/types.ts";
+
+export function parseFrontMatter(text: string) {
+  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+  if (match) {
+    try {
+      // deno-lint-ignore no-explicit-any
+      const data = yaml.load(match[1]) as any;
+      // Normalize: Remove the first newline (system separator) only.
+      // Standard format "\n---\n\nBody" results in match[2] starting with "\n".
+      return { data, content: match[2].replace(/^(\r?\n)/, "") };
+    } catch (e) {
+      console.warn("Failed to parse YAML frontmatter", e);
+    }
+  }
+  if (text.startsWith("---")) {
+    const parts = text.split("---");
+    if (parts.length >= 3) {
+      try {
+        // deno-lint-ignore no-explicit-any
+        const data = yaml.load(parts[1]) as any;
+        const content = parts.slice(2).join("---").replace(/^(\r?\n)/, "");
+        return { data, content };
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+  }
+  return { data: {}, content: text };
+}
 
 // Retrieve the logged‑in username saved by useAuth
 export const getUsername = (): string => {
@@ -7,14 +38,7 @@ export const getUsername = (): string => {
 
 export const getDraftKey = (content: Content, username?: string) => {
   const user = username || getUsername();
-  return `draft_${user}|${content.owner}|${content.repo}|${
-    content.branch || ""
-  }|${content.filePath}`;
-};
-
-export const getPrKey = (content: Content, username?: string) => {
-  const user = username || getUsername();
-  return `pr_${user}|${content.owner}|${content.repo}|${
+  return `staticms_draft_${user}|${content.owner}|${content.repo}|${
     content.branch || ""
   }|${content.filePath}`;
 };
@@ -31,16 +55,6 @@ export const getDraft = (content: Content, username?: string): Draft | null => {
   }
 };
 
-export const savePrStatus = (
-  content: Content,
-  prNumber: number,
-  prUrl: string,
-) => {
-  const key = getPrKey(content);
-  const value = JSON.stringify({ number: prNumber, url: prUrl });
-  localStorage.setItem(key, value);
-};
-
 export interface ContentStatus {
   hasDraft: boolean;
   hasPr: boolean;
@@ -49,17 +63,24 @@ export interface ContentStatus {
   prNumber?: number;
 }
 
-const countByPrefix = (
-  draftPrefix: string,
-  prPrefix: string,
-): ContentStatus => {
+const scanStorage = (prefix: string): ContentStatus => {
   let draftCount = 0;
   let prCount = 0;
 
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
-    if (key?.startsWith(draftPrefix)) draftCount++;
-    if (key?.startsWith(prPrefix)) prCount++;
+    if (!key?.startsWith(prefix)) continue;
+
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      // deno-lint-ignore no-explicit-any
+      const val = JSON.parse(raw) as any;
+      if (val.isDirty) draftCount++;
+      if (val.pr) prCount++;
+    } catch {
+      // ignore
+    }
   }
 
   return {
@@ -80,10 +101,8 @@ export const getRepoStatus = (
     return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
   }
 
-  const draftPrefix = `draft_${user}|${owner}|${repo}|`;
-  const prPrefix = `pr_${user}|${owner}|${repo}|`;
-
-  return countByPrefix(draftPrefix, prPrefix);
+  const prefix = `staticms_draft_${user}|${owner}|${repo}|`;
+  return scanStorage(prefix);
 };
 
 export const getContentStatus = (
@@ -99,37 +118,34 @@ export const getContentStatus = (
     return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
   }
 
-  const prefixBase = `${owner}|${repo}|${branch || ""}|${path}`;
-  const draftPrefix = `draft_${user}|${prefixBase}`;
-  const prPrefix = `pr_${user}|${prefixBase}`;
+  const keyBase = `staticms_draft_${user}|${owner}|${repo}|${
+    branch || ""
+  }|${path}`;
 
   if (isCollection) {
     // Collection (directory): check for prefix + "/"
-    return countByPrefix(`${draftPrefix}/`, `${prPrefix}/`);
+    return scanStorage(keyBase + "/");
   } else {
-    // Single file: check exact match
-    const hasDraft = !!localStorage.getItem(draftPrefix);
-    const prValue = localStorage.getItem(prPrefix);
-    const hasPr = !!prValue;
-
-    let prNumber: number | undefined;
-    if (prValue) {
-      try {
-        const parsed = JSON.parse(prValue);
-        if (typeof parsed === "object" && parsed.number) {
-          prNumber = parsed.number;
-        }
-      } catch {
-        // Ignore parse errors, treat as generic PR existence
-      }
+    // Single file
+    const saved = localStorage.getItem(keyBase);
+    if (!saved) {
+      return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
     }
 
-    return {
-      hasDraft,
-      hasPr,
-      draftCount: hasDraft ? 1 : 0,
-      prCount: hasPr ? 1 : 0,
-      prNumber,
-    };
+    try {
+      // deno-lint-ignore no-explicit-any
+      const val = JSON.parse(saved) as any;
+      const hasDraft = !!val.isDirty;
+      const hasPr = !!val.pr;
+      return {
+        hasDraft,
+        hasPr,
+        draftCount: hasDraft ? 1 : 0,
+        prCount: hasPr ? 1 : 0,
+        prNumber: val.pr?.number,
+      };
+    } catch {
+      return { hasDraft: false, hasPr: false, draftCount: 0, prCount: 0 };
+    }
   }
 };

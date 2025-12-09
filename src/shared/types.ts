@@ -10,4 +10,11 @@ export interface Draft {
   frontMatter: Record<string, unknown>;
   body: string;
   pendingImages?: FileItem[];
+  pr?: {
+    number: number;
+    url: string;
+    state?: string;
+  };
+  updatedAt?: number;
+  isDirty?: boolean;
 }

@@ -16,7 +16,8 @@ export function useDraft(key: string, initialData: Draft) {
         const parsed = JSON.parse(saved);
         setInternalDraft(parsed);
         setFromStorage(true);
-        setIsSynced(false);
+        // If explicitly clean, treat as synced. Default (undefined) is dirty (legacy).
+        setIsSynced(parsed.isDirty === false);
       } catch (e) {
         console.error("Failed to parse draft", e);
       }
@@ -28,10 +29,21 @@ export function useDraft(key: string, initialData: Draft) {
   }, [key]);
 
   useEffect(() => {
-    if (loaded && !isSynced) {
-      localStorage.setItem(key, JSON.stringify(draft));
-    } else if (loaded && isSynced) {
-      localStorage.removeItem(key);
+    if (!loaded) return;
+
+    if (!isSynced) {
+      // Dirty: Save with isDirty=true
+      const toSave = { ...draft, isDirty: true };
+      localStorage.setItem(key, JSON.stringify(toSave));
+    } else {
+      // Synced: Check if we need to keep PR info
+      if (draft.pr) {
+        const toSave = { ...draft, isDirty: false };
+        localStorage.setItem(key, JSON.stringify(toSave));
+      } else {
+        // Clean and no PR -> Remove
+        localStorage.removeItem(key);
+      }
     }
   }, [key, draft, loaded, isSynced]);
 
@@ -51,7 +63,14 @@ export function useDraft(key: string, initialData: Draft) {
     if (loadedVal !== undefined) setLoaded(loadedVal);
     if (sync !== undefined) {
       setIsSynced(sync);
-      if (sync) setFromStorage(false);
+      if (sync) {
+        // If syncing, we are potentially loading from storage (if clean PR object) or remote
+        // But usually sync=true means "MATCHES REMOTE".
+        // We set fromStorage=false usually, but if we loaded a Clean PR Object, fromStorage was true?
+        // Let's reset fromStorage to false if we are syncing (Clean),
+        // effectively treating it as "Not a draft restoration event".
+        setFromStorage(false);
+      }
     } else {
       setIsSynced(false);
     }

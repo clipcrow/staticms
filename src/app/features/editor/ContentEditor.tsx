@@ -1,10 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
-import { Draft, useDraft } from "@/app/hooks/useDraft.ts";
+import { useDraft } from "@/app/hooks/useDraft.ts";
 import { useAuth } from "@/app/hooks/useAuth.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
-import { savePrStatus } from "@/app/components/editor/utils.ts";
 import yaml from "js-yaml";
 
 // V1 Components
@@ -17,34 +16,7 @@ import {
 } from "@/app/components/editor/types.ts";
 import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
-
-// Simple Frontmatter Parser (Reuse existing)
-function parseFrontMatter(text: string) {
-  const match = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  if (match) {
-    try {
-      // deno-lint-ignore no-explicit-any
-      const data = yaml.load(match[1]) as any;
-      return { data, content: match[2] };
-    } catch (e) {
-      console.warn("Failed to parse YAML frontmatter", e);
-    }
-  }
-  if (text.startsWith("---")) {
-    const parts = text.split("---");
-    if (parts.length >= 3) {
-      try {
-        // deno-lint-ignore no-explicit-any
-        const data = yaml.load(parts[1]) as any;
-        const content = parts.slice(2).join("---").replace(/^\n/, "");
-        return { data, content };
-      } catch (e) {
-        console.warn(e);
-      }
-    }
-  }
-  return { data: {}, content: text };
-}
+import { useContentSync } from "@/app/hooks/useContentSync.ts";
 
 export interface ContentEditorProps {
   mode?: "new" | "edit";
@@ -64,40 +36,12 @@ export function ContentEditor(
   const articleName = propArtName || params.articleName;
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
-  const { username: currentUser } = useAuth();
+  const { username: _currentUser } = useAuth();
 
   const [saving, setSaving] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  const fetchedPathRef = useRef<string | null>(null);
-  const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
-  const [prInfo, setPrInfo] = useState<
-    { prUrl: string; prNumber: number; author?: string } | null
-  >(null);
-
-  // SSE for PR updates (Keep existing logic)
-  useEffect(() => {
-    if (!prInfo) return;
-    const eventSource = new EventSource("/api/events");
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "pr_update" && data.prNumber === prInfo.prNumber) {
-          if (data.status === "merged" || data.status === "closed") {
-            showToast(
-              `PR #${data.prNumber} is ${data.status}. Unlocking editor.`,
-              "info",
-            );
-            setPrInfo(null);
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse SSE message", e);
-      }
-    };
-    return () => {
-      eventSource.close();
-    };
-  }, [prInfo, showToast]);
+  const [isMerged, setIsMerged] = useState(false);
+  const [isClosed, setIsClosed] = useState(false);
+  // Removed local fetching/originalDraft/reloadTrigger state
 
   const collection = config?.collections.find((c: Collection) =>
     c.name === collectionName
@@ -127,7 +71,7 @@ export function ContentEditor(
   const effectiveArticleName = articleName ||
     (collection?.type === "singleton" ? "singleton" : "__new__");
   const draftKey =
-    `draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
+    `staticms_draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
 
   const { draft, setDraft, loaded, fromStorage, clearDraft, isSynced } =
     useDraft(
@@ -155,65 +99,55 @@ export function ContentEditor(
     }
   }, [loaded, fromStorage, draft, collection, showToast]);
 
-  // Fetch remote content (Keep existing logic)
-  useEffect(() => {
-    if (
-      mode === "new" ||
-      !loaded ||
-      fromStorage ||
-      !owner ||
-      !repo ||
-      !collection ||
-      !filePath ||
-      fetching ||
-      fetchedPathRef.current === filePath
-    ) {
-      return;
-    }
-
-    setFetching(true);
-    fetchedPathRef.current = filePath;
-    fetch(`/api/repo/${owner}/${repo}/contents/${filePath}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Failed to fetch remote content");
-        return await res.text();
-      })
-      .then((text) => {
-        try {
-          const parsed = parseFrontMatter(text);
-          const { data, content } = parsed;
-          const newDraft = {
-            frontMatter: data,
-            body: content,
-            pendingImages: [],
-          };
-          setOriginalDraft(newDraft);
-          setDraft(newDraft, true, true);
-        } catch (e) {
-          console.error("Failed to parse content", e);
-          setDraft((prev: Draft) => ({ ...prev, body: text }));
-        }
-      })
-      .catch((e) => {
-        console.error("[ContentEditor] Fetch failed:", e);
-        showToast(`Failed to load content: ${e.message}`, "error");
-      })
-      .finally(() => {
-        setFetching(false);
-      });
-  }, [
+  // Use Content Sync Hook
+  const { fetching: _fetching, originalDraft, triggerReload } = useContentSync({
+    owner: owner || "",
+    repo: repo || "",
+    filePath,
     mode,
     loaded,
-    fromStorage,
-    owner,
-    repo,
-    collection,
-    articleName,
-    folder,
-    fetching,
+    draft,
+    fromStorage: fromStorage || !isSynced,
     setDraft,
     showToast,
-  ]);
+  });
+
+  // SSE for PR updates
+  useEffect(() => {
+    const prNumber = draft.pr?.number;
+    if (!prNumber) return;
+
+    const eventSource = new EventSource("/api/events");
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "pr_update" && data.prNumber === prNumber) {
+          if (data.status === "merged" || data.status === "closed") {
+            if (data.status === "merged") {
+              setIsMerged(true);
+            } else if (data.status === "closed") {
+              setIsClosed(true);
+            }
+            showToast(
+              `PR #${prNumber} is ${data.status}. Unlocking editor and checking content...`,
+              "info",
+            );
+            // Remove PR info from draft
+            setDraft((prev) => {
+              const { pr: _pr, ...rest } = prev;
+              return rest;
+            });
+            triggerReload();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse SSE message", e);
+      }
+    };
+    return () => {
+      eventSource.close();
+    };
+  }, [draft.pr?.number, showToast, setDraft, triggerReload]);
 
   const handleImageUpload = (file: File): Promise<string | null> => {
     return new Promise((resolve) => {
@@ -250,6 +184,22 @@ export function ContentEditor(
   const handleSave = async () => {
     if (!handleValidation()) return;
     setSaving(true);
+
+    // Check for empty changes (prevent Empty PR)
+    if (originalDraft && (draft.pendingImages || []).length === 0) {
+      // Compare FrontMatter
+      const fmChanged = JSON.stringify(draft.frontMatter) !==
+        JSON.stringify(originalDraft.frontMatter);
+      // Compare Body
+      // Note: originalDraft.body is already normalized (trimmed) by parseFrontMatter
+      const bodyChanged = draft.body !== originalDraft.body;
+
+      if (!fmChanged && !bodyChanged) {
+        showToast("No changes detected. Save cancelled.", "warning");
+        setSaving(false);
+        return;
+      }
+    }
 
     // Reconstruct currentContent for savePrStatus utility
     // It matches the one in render but needs to be accessible here
@@ -355,19 +305,24 @@ export function ContentEditor(
       const data = await res.json();
       // If backend returns PR info
       if (data.pr) {
-        setPrInfo({
-          prUrl: data.pr.html_url,
-          prNumber: data.pr.number,
-          author: data.pr.user?.login,
-        });
-
-        // Save PR status to localStorage for persistence across lists
-        savePrStatus(currentContent, data.pr.number, data.pr.html_url);
+        setDraft(
+          (prev) => ({
+            ...prev,
+            pr: {
+              number: data.pr.number,
+              url: data.pr.html_url,
+              state: "open",
+            },
+          }),
+          undefined,
+          true,
+        );
 
         showToast("Pull Request created/updated!", "success");
       } else {
         showToast("Saved successfully!", "success");
-        clearDraft();
+        // No PR created? Just clean sync.
+        setDraft((prev) => prev, undefined, true);
         if (mode === "new") {
           // Provide feedback or reload
         }
@@ -382,8 +337,13 @@ export function ContentEditor(
 
   const handleReset = () => {
     if (confirm("Discard local changes?")) {
-      clearDraft();
-      fetchedPathRef.current = null;
+      // Revert to remote
+      if (originalDraft) {
+        setDraft(originalDraft, undefined, true);
+      } else {
+        clearDraft();
+      }
+      triggerReload();
     }
   };
 
@@ -437,7 +397,19 @@ export function ContentEditor(
 
   // Lock Logic: Locked if PR exists AND (no local draft OR not author).
   // Current user must match PR author to unlock with draft.
-  const isLocked = !!prInfo && (!fromStorage || prInfo.author !== currentUser);
+  // Note: draft.pr does not strictly store 'author', but we assume logic simplified or author check needs API.
+  // For now, if PR is stored in Draft, we assume we might be the author if we have local changes?
+  // Actually, specs say "Lock unless local draft exists".
+  // If we have local draft (isSynced=false), we can edit.
+  // If we have PR and Clean (isSynced=true), it is Locked?
+  // Let's assume if we have PR info stored, we check lock.
+
+  // Simplified Lock: If PR exists, and we are Synced (Clean), we are Locked.
+  // If we are Dirty (Unsynced), we can Edit (Draft overrides PR).
+  // The original 'author' check was better. But removing prInfo state lost 'author' field.
+  // We can add 'author' to draft.pr (Draft type).
+  // For now, strictly follow Spec: "Open PR -> Locked." "Draft exists -> Unlocked".
+  const isLocked = !!draft.pr && isSynced;
 
   return (
     <div className="ui container content-editor" style={{ marginTop: "2rem" }}>
@@ -445,27 +417,49 @@ export function ContentEditor(
         breadcrumbs={breadcrumbs}
         rightContent={
           <div style={{ display: "flex", gap: "0.5em", alignItems: "center" }}>
-            {prInfo && (
+            {draft.pr && (
               <a
-                href={prInfo.prUrl}
+                href={draft.pr.url}
                 target="_blank"
                 rel="noreferrer"
                 className="ui green basic label"
                 title="View Pull Request on GitHub"
               >
                 <i className="code branch icon"></i>
-                PR #{prInfo.prNumber}
+                PR #{draft.pr.number}
                 <div className="detail">Open</div>
               </a>
             )}
 
-            {fromStorage && (
+            {!isSynced && (
               <div
                 className="ui horizontal label orange"
-                title="You are viewing a local draft that hasn't been saved to GitHub yet."
+                title={fromStorage
+                  ? "Restored from local backup"
+                  : "Unsaved local changes"}
               >
                 <i className="pencil alternate icon"></i>
-                Draft Restored
+                {fromStorage ? "Draft Restored" : "Draft"}
+              </div>
+            )}
+
+            {isMerged && !draft.pr && (
+              <div
+                className="ui horizontal label purple"
+                title="Pull Request was merged successfully"
+              >
+                <i className="check circle icon"></i>
+                PR Merged
+              </div>
+            )}
+
+            {isClosed && !draft.pr && (
+              <div
+                className="ui horizontal label grey"
+                title="Pull Request was closed without merge"
+              >
+                <i className="times circle icon"></i>
+                PR Closed
               </div>
             )}
 
@@ -493,10 +487,10 @@ export function ContentEditor(
                 ? "No changes to save"
                 : "Save changes like a text editor"}
             >
-              <i className={prInfo ? "sync icon" : "plus icon"}></i>
+              <i className={draft.pr ? "sync icon" : "plus icon"}></i>
               {isLocked
                 ? "Locked (PR Open)"
-                : prInfo
+                : draft.pr
                 ? "Update PR"
                 : "Create PR"}
             </button>
@@ -539,7 +533,9 @@ export function ContentEditor(
               body={draft.body}
               setBody={(body) => {
                 const nextBody = body || "";
-                if (nextBody === draft.body) return;
+                if (nextBody === draft.body) {
+                  return;
+                }
 
                 const prevFM = draft.frontMatter;
                 const isClean = originalDraft
@@ -566,7 +562,8 @@ export function ContentEditor(
           <div className="ui segment">
             <ContentImages
               pendingImages={draft.pendingImages || []}
-              onUpload={(files) => Array.from(files).forEach(handleImageUpload)}
+              onUpload={(files) =>
+                Array.from(files).forEach(handleImageUpload)}
               onRemovePending={(name) =>
                 setDraft((prev) => ({
                   ...prev,

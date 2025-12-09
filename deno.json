@@ -48,7 +48,7 @@
     "@std/http": "jsr:@std/http@^1.0.0",
     "@oak/oak": "jsr:@oak/oak@^17.0.0",
     "djwt": "https://deno.land/x/djwt@v3.0.1/mod.ts",
-    "@testing-library/react": "npm:@testing-library/react@^16.0.0",
+    "@testing-library/react": "npm:@testing-library/react@^14.0.0",
     "@happy-dom/global-registrator": "npm:@happy-dom/global-registrator@^15.0.0",
     "astral": "jsr:@astral/astral@^0.4.0",
     "semantic-ui-css": "npm:semantic-ui-css@^2.5.0",
