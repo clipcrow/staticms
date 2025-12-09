@@ -14,7 +14,6 @@ Staticms は、GitHub
    - [画像のアップロードと挿入](#画像のアップロードと挿入)
    - [ドラフト（自動保存）機能](#ドラフト自動保存機能)
 4. [保存と公開](#4-保存と公開)
-5. [設定ファイル (staticms.yml)](#5-設定ファイル-staticmsyml)
 
 ---
 
@@ -88,37 +87,3 @@ Images」にも表示され、記事の保存時に一緒にGitHubへアップ�
 3. **公開**:
    - GitHub 上で PR をマージすると、本番サイトに変更が反映され、Staticms
      上のロックも解除されます。
-
-## 5. 設定ファイル (staticms.yml)
-
-Staticms を動作させるには、リポジトリの `.github/staticms.yml`
-に設定ファイルを配置する必要があります。
-
-### 設定例
-
-```yaml
-config:
-  # 画像の保存先
-  media_folder: "public/images/uploads"
-  public_folder: "/images/uploads"
-
-collections:
-  - name: "posts" # システム上の識別子
-    label: "Blog Posts" # 表示名
-    folder: "content/posts" # 記事ファイルの保存先フォルダ
-    create: true # 新規作成を許可するか
-    slug: "{{slug}}" # ファイル名のルール
-    fields: # 入力項目定義
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Publish Date", name: "date", widget: "datetime" }
-      - { label: "Body", name: "body", widget: "markdown" }
-```
-
-### 主なフィールドタイプ (Widget)
-
-- `string`: 1行テキスト入力
-- `text`: 複数行テキスト入力
-- `markdown`: 本文入力用リッチエディタ
-- `datetime`: 日時選択
-- `boolean`: ON/OFF スイッチ
-- `image`: 画像選択（標準アップローダー使用時）

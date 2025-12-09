@@ -503,7 +503,7 @@ export function ContentEditor(
           {(!collection.fields || collection.fields.length === 0) && (
             <div className="ui warning message">
               <div className="header">No Fields Defined</div>
-              <p>Please define 'fields' in your staticms.yml.</p>
+              <p>Please define 'fields' in your content configuration.</p>
             </div>
           )}
 

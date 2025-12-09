@@ -1,7 +1,6 @@
 import { RouterContext } from "@oak/oak";
 import { getSessionToken, kv } from "@/server/auth.ts";
 import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
-import { decodeBase64 } from "@std/encoding/base64";
 
 // GET /api/repo/:owner/:repo/config
 export const getRepoConfig = async (
@@ -22,32 +21,6 @@ export const getRepoConfig = async (
     ctx.response.body = kvResult.value;
     ctx.response.type = "text/yaml";
     return;
-  }
-
-  // 2. Fallback: Try to fetch from GitHub (.github/staticms.yml)
-  const client = new GitHubUserClient(token);
-  const configPath = ".github/staticms.yml";
-
-  try {
-    // deno-lint-ignore no-explicit-any
-    const data: any = await client.getContent(owner, repo, configPath);
-    if (!Array.isArray(data)) {
-      const rawContent = data.content.replace(/\n/g, "");
-      const decodedBytes = decodeBase64(rawContent);
-      const content = new TextDecoder().decode(decodedBytes);
-
-      ctx.response.body = content;
-      ctx.response.type = "text/yaml";
-      return;
-    }
-  } catch (e) {
-    // Ignore 404, throw others
-    if (!(e instanceof GitHubAPIError && e.status === 404)) {
-      console.error(`Failed to fetch config at ${configPath}:`, e);
-      ctx.response.status = 500;
-      ctx.response.body = { error: "Failed to fetch config from GitHub" };
-      return;
-    }
   }
 
   // 3. Last resort: Return default template

@@ -26,32 +26,6 @@ export const getContent = async (
   try {
     const client = new GitHubUserClient(token);
 
-    // Check if we are requesting config file
-    if (path === "staticms.config.yml" || path === ".github/staticms.yml") {
-      // Special handling for config to support fallback
-      try {
-        // deno-lint-ignore no-explicit-any
-        const data: any = await client.getContent(owner, repo, path);
-        // Config file should be a file
-        if (Array.isArray(data)) throw new Error("Config path is a directory");
-
-        const binary = decodeBase64(data.content.replace(/\n/g, ""));
-        const text = new TextDecoder().decode(binary);
-
-        ctx.response.body = text;
-        ctx.response.type = "text/yaml";
-        return;
-      } catch (e) {
-        if (e instanceof GitHubAPIError && e.status === 404) {
-          // Config not found
-          ctx.response.status = 404;
-          ctx.response.body = "Config not found";
-          return;
-        }
-        throw e;
-      }
-    }
-
     // deno-lint-ignore no-explicit-any
     const data: any = await client.getContent(owner, repo, path);
 
