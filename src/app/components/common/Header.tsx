@@ -21,15 +21,28 @@ export const Header = ({
   return (
     <div className="staticms-header-container">
       <div className="staticms-header-left">
-        <h1 className="ui header staticms-header-title">
-          <i className="edit icon"></i>
-          <div className="content">
-            Staticms
+        <div className="staticms-header-title">
+          <img
+            src="/logo.svg"
+            alt="Staticms"
+            style={{ height: "40px", verticalAlign: "middle" }}
+          />
+          <div
+            className="content"
+            style={{
+              display: "inline-block",
+              verticalAlign: "middle",
+              marginLeft: "10px",
+            }}
+          >
+            <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+              Staticms
+            </span>
             <div className="sub header staticms-header-subtitle">
               Manage headless contents with GitHub
             </div>
           </div>
-        </h1>
+        </div>
         {breadcrumbs && (
           <div className="staticms-header-children">
             <div className="ui breadcrumb staticms-header-breadcrumb">
