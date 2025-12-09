@@ -7,7 +7,7 @@ import { Content } from "../editor/types.ts";
 
 interface ContentSettingsProps {
   formData: Collection;
-  setFormData: (data: Collection) => void;
+  setFormData: React.Dispatch<React.SetStateAction<Collection>>;
   editingIndex: number | null;
   onSave: (e: React.FormEvent) => void;
   onCancel: () => void;
@@ -29,16 +29,12 @@ export const ContentSettings: React.FC<ContentSettingsProps> = ({
   // Initialize type/binding if missing (e.g. fresh add)
   useEffect(() => {
     if (!formData.type) {
-      setFormData({ ...formData, type: "singleton" });
+      setFormData((prev) => ({ ...prev, type: "singleton" }));
     }
-    // Default binding based on type if not set?
-    // Actually, "Binding" is mostly for Singleton. For Collection it implies behavior.
-    // Spec says: "Content Binding" -> Type: Collection/Singleton, Binding: File/Directory.
-    // If Collection, spec says "Collection + File" is default.
   }, []);
 
   const handleChange = (key: keyof Collection, value: unknown) => {
-    setFormData({ ...formData, [key]: value });
+    setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
   // Helper to determine path label

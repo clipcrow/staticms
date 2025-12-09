@@ -59,9 +59,6 @@
     "deno_esbuild": "jsr:@luca/esbuild-deno-loader@^0.10.3"
   },
   "deno.suggest": {
-    "imports": true,
-    "names": true,
-    "paths": true,
     "npm-not-installed": "off"
   }
 }
