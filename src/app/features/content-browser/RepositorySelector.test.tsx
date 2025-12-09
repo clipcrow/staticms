@@ -23,30 +23,34 @@ Deno.test({
               name: "my-repo",
               full_name: "user/my-repo",
               description: "desc1",
+              owner: { login: "user" },
             },
             {
               id: 2,
               name: "other-repo",
               full_name: "user/other-repo",
               description: "desc2",
+              owner: { login: "user" },
             },
           ])),
         ),
     );
 
     try {
-      const { findByText, getAllByRole } = render(
+      const { findByText, container, unmount } = render(
         <MemoryRouter>
           <RepositorySelector />
         </MemoryRouter>,
       );
 
       // Wait for items to appear (this implicitly waits for loading to disappear)
-      const firstItem = await findByText("user/my-repo");
-      assertEquals(!!firstItem, true);
+      // Text is split by <br/> so exact match "user/my-repo" fails. Match part of it.
+      const repoName = await findByText("my-repo");
+      assertEquals(!!repoName, true);
 
-      const items = getAllByRole("listitem");
+      const items = container.querySelectorAll(".card");
       assertEquals(items.length, 2);
+      unmount();
     } finally {
       fetchStub.restore();
     }

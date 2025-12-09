@@ -1,5 +1,11 @@
 import React from "react";
-import MDEditor from "react-md-editor";
+// import MDEditor from "react-md-editor";
+// deno-lint-ignore no-explicit-any
+const MDEditor = React.lazy(() =>
+  import("react-md-editor") as unknown as Promise<
+    { default: React.ComponentType<any> }
+  >
+);
 import rehypeHighlight from "rehype-highlight";
 
 import { Content } from "./types.ts";
@@ -126,37 +132,41 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
 
   return (
     <>
-      {/* @ts-ignore: MDEditor type compatibility issue */}
-      <MDEditor
-        data-color-mode="light"
-        value={body}
-        onChange={(val: string | undefined) =>
-          !isPrLocked && setBody(val || "")}
-        preview={isPrLocked ? "preview" : "edit"}
-        onPaste={handlePaste}
-        onDrop={handleDrop}
-        previewOptions={{
-          rehypePlugins: [[rehypeHighlight, {
-            detect: true,
-            ignoreMissing: true,
-          }]],
-          components: {
-            img: (
-              { src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement>,
-            ) => (
-              <img
-                src={src ? resolveImageSrc(src) : undefined}
-                alt={alt}
-                {...props}
-                style={{ maxWidth: "100%" }}
-              />
-            ),
-          },
-        }}
-        height={height}
-        visibleDragbar={!isPrLocked}
-        hideToolbar={isPrLocked}
-      />
+      <React.Suspense fallback={<div className="ui active loader"></div>}>
+        {/* @ts-ignore: MDEditor type compatibility issue */}
+        <MDEditor
+          data-color-mode="light"
+          value={body}
+          onChange={(val: string | undefined) =>
+            !isPrLocked && setBody(val || "")}
+          preview={isPrLocked ? "preview" : "edit"}
+          onPaste={handlePaste}
+          onDrop={handleDrop}
+          previewOptions={{
+            rehypePlugins: [[rehypeHighlight, {
+              detect: true,
+              ignoreMissing: true,
+            }]],
+            components: {
+              img: (
+                { src, alt, ...props }: React.ImgHTMLAttributes<
+                  HTMLImageElement
+                >,
+              ) => (
+                <img
+                  src={src ? resolveImageSrc(src) : undefined}
+                  alt={alt}
+                  {...props}
+                  style={{ maxWidth: "100%" }}
+                />
+              ),
+            },
+          }}
+          height={height}
+          visibleDragbar={!isPrLocked}
+          hideToolbar={isPrLocked}
+        />
+      </React.Suspense>
     </>
   );
 };
