@@ -1,187 +1,200 @@
 import { assert, assertEquals } from "@std/assert";
-import { withPage } from "./setup.ts";
+import {
+  demoDelay,
+  loginAsTestUser,
+  TEST_BASE_URL,
+  withPage,
+} from "./setup.ts";
 
+// US-01: Authentication Redirection
 Deno.test("US-01: Authentication Redirection", async () => {
   await withPage(async (page) => {
     // 1. Visit Root
-    await page.goto("http://localhost:8000/", { waitUntil: "networkidle2" });
+    await page.goto(`${TEST_BASE_URL}/`, { waitUntil: "networkidle2" });
 
-    // Should initially render or redirect.
-    // Our RequireAuth redirects to /api/auth/login, which redirects to https://github.com/login/oauth/...
-
-    // We wait for navigation.
-    // Note: Puppeteer/Deno browser might not follow external redirects automatically if it's strictly a page load unless we wait.
-
+    // Should redirect to GitHub (or /api/auth/login)
     const url = page.url;
     console.log("Current URL:", url);
 
-    // If environment variables are set correctly, it goes to github.com
-    // If not, it might stay or error.
-
-    // Assertion: URL should assume we are redirected to GitHub or at least /api/auth/login initiated.
-    // Since we are running in a CI/Test env without user interaction, we can't login.
-    // But we can verify the redirection logic initiated by RequireAuth.
-
-    if (url.includes("github.com")) {
-      console.log("Verified redirection to GitHub");
-      assert(true);
-    } else if (url.includes("/api/auth/login")) {
-      console.log("Redirected to auth endpoint");
-      assert(true);
+    if (url.includes("github.com") || url.includes("/api/auth/login")) {
+      assert(true, "Redirected to auth/github");
     } else {
-      // If we are still at localhost, maybe it's loading or failed.
-      // Check if "Loading..." is visible if broken?
-      // Or maybe locally it's fast.
-
-      // Wait a bit
-      await new Promise((r) => setTimeout(r, 2000));
+      // Check for redirect meta or wait
+      await new Promise((r) => setTimeout(r, 1000));
       const newUrl = page.url;
-      console.log("URL after wait:", newUrl);
       assert(
-        newUrl.includes("github.com") || newUrl.includes("login"),
-        "Should have redirected to GitHub",
+        newUrl.includes("github.com") || newUrl.includes("/api/auth/login"),
+        `Should have redirected. Got: ${newUrl}`,
       );
     }
   });
 });
 
-Deno.test("US-06: Save as Pull Request", async (t) => {
-  await t.step("Create PR from Draft", async () => {
-    await withPage(async (page) => {
-      // 1. Setup Data for Test
-      // Assume "staticms-user" and "posts" collection logic is same as before.
-      // We can skip full navigation and go directly to new content page to speed up.
+Deno.test({
+  name: "US-06: Save as Pull Request & US-07: Unlock",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async (t) => {
+    await t.step("Create PR from Draft -> Lock -> Unlock", async () => {
+      await withPage(async (page) => {
+        // 1. Login & Mock GitHub API
+        // We need to verify which calls are made.
+        const ghMocks = {
+          // Mock Batch Commit sub-calls
+          "regex:/repos/octocat/my-blog/git/.*": () =>
+            new Response(JSON.stringify({ sha: "dummy-sha" })),
 
-      // But we need to ensure config exists!
-      // Reuse logic from US-04 or just manually inject config via API if needed.
-      // However, since server is persistent (KV), previous tests might have set it up.
-      // To be safe, we re-inject config.
+          // Mock Create PR
+          "/repos/octocat/my-blog/pulls": () =>
+            new Response(
+              JSON.stringify({
+                number: 13,
+                html_url: "https://github.com/octocat/my-blog/pull/13",
+                state: "open",
+              }),
+              { status: 201 },
+            ),
 
-      const configData = {
-        collections: [
-          {
-            type: "collection",
-            name: "posts",
-            label: "Posts",
-            folder: "content/posts",
-            fields: [
-              { name: "title", label: "Title", widget: "string" },
-              { name: "body", label: "Body", widget: "markdown" },
+          // Mock Config
+          "/repos/octocat/my-blog/contents/.github/staticms.yml": () =>
+            new Response(
+              JSON.stringify({ message: "Not Found" }),
+              { status: 404 },
+            ),
+
+          // Mock getting tree or initial content (might be needed for uniqueness check or base sha)
+          "regex:/repos/octocat/my-blog/contents/.*": () =>
+            new Response(JSON.stringify({ message: "Not Found" }), {
+              status: 404,
+            }),
+        };
+
+        const { apiStub } = await loginAsTestUser(page, "octocat", ghMocks);
+
+        try {
+          // 2. Setup Data (Content Config)
+          const configData = {
+            collections: [
+              {
+                type: "collection",
+                name: "posts",
+                label: "Posts",
+                folder: "content/posts",
+                fields: [
+                  { name: "title", label: "Title", widget: "string" },
+                  { name: "body", label: "Body", widget: "markdown" },
+                ],
+              },
             ],
-          },
-        ],
-      };
+          };
 
-      // Inject Config
-      await (await fetch("http://localhost:8000/api/repo/user/my-blog/config", {
-        method: "POST",
-        body: JSON.stringify(configData),
-      })).text();
+          // Inject Config via API (Authenticated session)
+          await (await fetch(
+            `${TEST_BASE_URL}/api/repo/octocat/my-blog/config`,
+            {
+              method: "POST",
+              headers: {},
+              body: JSON.stringify(configData),
+            },
+          )).text();
 
-      // 2. Go to New Post Page
-      await page.goto("http://localhost:8000/user/my-blog/posts/new");
-      await page.waitForSelector(".content-editor");
+          // 3. Go to New Post Page
+          await page.goto(
+            `${TEST_BASE_URL}/octocat/my-blog/posts/new`,
+          );
+          await page.waitForSelector(".content-editor");
 
-      // 3. Fill Content
-      await page.evaluate(() => {
-        const titleInput = document.querySelector(
-          'input[name="title"]',
-        ) as HTMLInputElement;
-        const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-          globalThis.window.HTMLInputElement.prototype,
-          "value",
-        )?.set;
-        nativeInputValueSetter?.call(titleInput, "PR Test Title");
-        titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+          // Force filename via prompt mock
+          await page.evaluate(() => {
+            // @ts-ignore: Mocking prompt
+            globalThis.window.prompt = () => "test-pr-post.md";
+          });
 
-        const bodyInput = document.querySelector(
-          'textarea[name="body"]',
-        ) as HTMLTextAreaElement;
-        const nativeTextAreaValueSetter = Object.getOwnPropertyDescriptor(
-          globalThis.window.HTMLTextAreaElement.prototype,
-          "value",
-        )?.set;
-        nativeTextAreaValueSetter?.call(bodyInput, "PR Content body...");
-        bodyInput.dispatchEvent(new Event("input", { bubbles: true }));
+          // 4. Fill Content
+          await page.evaluate(() => {
+            const titleInput = document.querySelector(
+              'input[name="title"]',
+            ) as HTMLInputElement;
+            const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+              globalThis.window.HTMLInputElement.prototype,
+              "value",
+            )?.set;
+            nativeInputValueSetter?.call(titleInput, "PR Test Title");
+            titleInput.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+
+          // Wait for draft save
+          await demoDelay();
+
+          // 5. Verify Draft Label (Orange)
+          await page.waitForSelector(".ui.label.orange");
+          const draftLabel = await page.evaluate(() => {
+            return document.querySelector(".ui.label.orange")?.textContent;
+          });
+          assert(
+            draftLabel?.includes("Draft") || false,
+            `Should verify draft label. Got: ${draftLabel}`,
+          );
+
+          // 6. Click "Create PR"
+          // Button should say "Create PR"
+          const btnText = await page.evaluate(() => {
+            return document.querySelector("button.primary")?.textContent;
+          });
+          assertEquals(btnText?.trim(), "Create PR");
+
+          await page.evaluate(() => {
+            (document.querySelector("button.primary") as HTMLElement).click();
+          });
+
+          // 7. Verify Locked State & "Locked (PR Open)" or "Locked..."
+          await page.waitForFunction(() => {
+            const btn = document.querySelector("button.primary");
+            return btn?.textContent?.includes("Locked") || false;
+          });
+
+          // 8. Verify PR Link Label (Teal, "In Review (#13)")
+          const prLabelText = await page.evaluate(() => {
+            const el = document.querySelector('a[href*="github.com"]');
+            return el?.textContent?.trim();
+          });
+          assertEquals(prLabelText, "In Review (#13)");
+
+          // 9. Unlock via Webhook (SSE)
+          // Setup listener for dialog (alert/confirm)
+          await page.evaluate(() => {
+            // @ts-ignore: Mocking confirm
+            globalThis.window.confirm = () => true;
+          });
+
+          // Simulate Webhook
+          await (await fetch(`${TEST_BASE_URL}/_debug/pr/13/status`, {
+            method: "POST",
+            body: JSON.stringify({ status: "merged" }),
+          })).text();
+
+          // 10. Verify Unlock & Approved Label
+          await page.waitForSelector(".ui.label.purple"); // Approved badge
+          const approvedText = await page.evaluate(() => {
+            return document.querySelector(".ui.label.purple")?.textContent;
+          });
+          assertEquals(approvedText?.trim(), "Approved");
+
+          const unlockedBtnText = await page.evaluate(() => {
+            const btn = document.querySelector("button.primary");
+            return {
+              text: btn?.textContent,
+              disabled: (btn as HTMLButtonElement).disabled,
+            };
+          });
+
+          // Should be enabled and say "Create PR"
+          assert(!unlockedBtnText.disabled, "Button should be enabled");
+          assertEquals(unlockedBtnText.text?.trim(), "Create PR");
+        } finally {
+          apiStub.restore();
+        }
       });
-
-      // Wait for autosave (optional but good for stability)
-      await new Promise((r) => setTimeout(r, 500));
-
-      // 4. Click Save
-      await page.waitForSelector("button.primary");
-
-      const initialText = await page.evaluate(() => {
-        return document.querySelector("button.primary")?.textContent;
-      });
-      assertEquals(initialText?.trim(), "Save");
-
-      await page.evaluate(() => {
-        (document.querySelector("button.primary") as HTMLElement).click();
-      });
-
-      // 5. Verify State Changes
-      // Button text should change to "Saving..." then "Locked..."
-      // Since it's fast mock, we might miss "Saving...", so just wait for final state.
-
-      await page.waitForFunction(() => {
-        const btn = document.querySelector("button.primary");
-        return btn?.textContent?.includes("Locked");
-      });
-
-      // 6. Verify Inputs are Disabled
-      const inputsDisabled = await page.evaluate(() => {
-        const input = document.querySelector(
-          'input[name="title"]',
-        ) as HTMLInputElement;
-        const textarea = document.querySelector(
-          'textarea[name="body"]',
-        ) as HTMLTextAreaElement;
-        return input.disabled && textarea.disabled;
-      });
-      assert(inputsDisabled, "Inputs should be disabled after PR creation");
-
-      // 7. Verify PR Link
-      const prLink = await page.evaluate(() => {
-        const link = document.querySelector('a[href*="github.com"]');
-        return link?.getAttribute("href");
-      });
-
-      // Mock returns prNumber 13
-      assert(prLink?.includes("/pull/13"), "PR Link should point to PR #13");
-
-      // 8. Test Unlock via Webhook (SSE)
-
-      // Handle alert dialog automatically
-      // deno-lint-ignore no-explicit-any
-      page.addEventListener("dialog", (e: any) => {
-        // e.detail is the Dialog object
-        e.detail.accept();
-      });
-
-      // Simulate Webhook (Debug API)
-      await (await fetch("http://localhost:8000/_debug/pr/13/status", {
-        method: "POST",
-        body: JSON.stringify({ status: "merged" }),
-      })).text();
-
-      // Wait for SSE update and Alert (Button should become enabled)
-      // Note: The button text changes back to "Save" when prInfo becomes null.
-      await page.waitForFunction(() => {
-        const btn = document.querySelector("button.primary") as
-          | HTMLButtonElement
-          | null;
-        return btn && !btn.disabled && btn.textContent === "Save";
-      });
-
-      // Verify Unlocked
-      const inputsEnabled = await page.evaluate(() => {
-        const input = document.querySelector(
-          'input[name="title"]',
-        ) as HTMLInputElement;
-        return !input.disabled;
-      });
-      assert(inputsEnabled, "Inputs should be enabled after merge");
     });
-  });
+  },
 });

@@ -1,6 +1,11 @@
 import React from "react";
 
-export type ContentStatusType = "draft" | "pr_open" | "merged" | "clean";
+export type ContentStatusType =
+  | "draft"
+  | "pr_open"
+  | "merged"
+  | "clean"
+  | "declined";
 
 interface StatusBadgeProps {
   status: ContentStatusType;
@@ -26,13 +31,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = (
       );
     case "pr_open":
       return (
-        <span className="ui label green tiny basic">
-          <i className="code branch icon" />
+        <span className="ui label teal tiny basic">
+          <i className="eye icon" />
           {prNumber
-            ? ` #${prNumber}`
+            ? ` In Review (#${prNumber})`
             : count && count > 1
-            ? ` PR Open (${count})`
-            : " PR Open"}
+            ? ` In Review (${count})`
+            : " In Review"}
         </span>
       );
     case "merged":
@@ -41,7 +46,16 @@ export const StatusBadge: React.FC<StatusBadgeProps> = (
           className={`ui label purple tiny basic ${className || ""}`}
           style={style}
         >
-          <i className="check circle icon" /> Merged
+          <i className="check circle icon" /> Approved
+        </span>
+      );
+    case "declined":
+      return (
+        <span
+          className={`ui label red tiny basic ${className || ""}`}
+          style={style}
+        >
+          <i className="times circle icon" /> Declined
         </span>
       );
     default:

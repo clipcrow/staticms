@@ -42,15 +42,15 @@ KV**
 編集中の記事や設定の変更内容を保存します。オートセーブ機能により、文字入力や画像ドロップのたびに更新されます。
 
 - **Key Pattern**:
-  `draft_<username>|<owner>|<repo>|<branch>|<collectionName>/<filePath>`
+  `staticms_draft_<username>|<owner>|<repo>|<branch>|<filePath>`
 
   - `username`: `staticms_user` の値（未ログイン時は 'anonymous'）
   - `owner`, `repo`: 対象リポジトリ
-  - `branch`: 編集対象ブランチ（デフォルト 'main'）
-  - `collectionName`: コンテンツコレクション名（例 'posts'）
-  - `filePath`: 記事のファイルパス。新規作成時は `__new__` を使用。
+  - `branch`: 対象ブランチ（デフォルト 'main'）
+  - `filePath`:
+    編集対象のファイルパス（コレクション内の記事パス、またはシングルトンファイルパス）。新規時は相対パス。
 
-  例: `draft_octocat|my-org|my-blog|main|posts/__new__`
+  例: `staticms_draft_octocat|my-org|my-blog|main|content/posts/my-new-post.md`
 
 - **Value**: JSON String (`Draft` Interface)
 
@@ -119,11 +119,15 @@ export interface Draft {
   // 画像アップロード用（未コミット画像）
   pendingImages?: FileItem[];
 
-  // PR関連メタデータ (Planned for US-06)
-  prTitle?: string;
-  prBody?: string;
+  // 統合されたPR情報
+  pr?: {
+    number: number;
+    url: string;
+    state: "open" | "closed" | "merged";
+  };
 
-  // 更新日時
+  // 変更管理
+  isDirty?: boolean; // ローカル変更があるかどうか（true: 編集中/未保存, false: Clean）
   updatedAt?: number;
 }
 ```

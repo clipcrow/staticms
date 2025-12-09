@@ -104,6 +104,7 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
       url: string;
       state: "open" | "closed" | "merged";
     };
+    isDirty?: boolean; // ローカル変更があるかどうか
     updatedAt: number;
   }
   ```

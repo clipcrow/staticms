@@ -422,12 +422,11 @@ export function ContentEditor(
                 href={draft.pr.url}
                 target="_blank"
                 rel="noreferrer"
-                className="ui green basic label"
+                className="ui horizontal label teal"
                 title="View Pull Request on GitHub"
               >
-                <i className="code branch icon"></i>
-                PR #{draft.pr.number}
-                <div className="detail">Open</div>
+                <i className="eye icon"></i>
+                In Review (#{draft.pr.number})
               </a>
             )}
 
@@ -443,23 +442,23 @@ export function ContentEditor(
               </div>
             )}
 
-            {isMerged && !draft.pr && (
+            {isMerged && !draft.pr && isSynced && (
               <div
                 className="ui horizontal label purple"
                 title="Pull Request was merged successfully"
               >
                 <i className="check circle icon"></i>
-                PR Merged
+                Approved
               </div>
             )}
 
-            {isClosed && !draft.pr && (
+            {isClosed && !draft.pr && isSynced && (
               <div
-                className="ui horizontal label grey"
+                className="ui horizontal label red"
                 title="Pull Request was closed without merge"
               >
                 <i className="times circle icon"></i>
-                PR Closed
+                Declined
               </div>
             )}
 
