@@ -12,7 +12,13 @@ collections:
 `;
 
 const MOCK_FILES = [
-  { name: "test-post.md", path: "content/posts/test-post.md", size: 100 },
+  {
+    name: "test-post.md",
+    path: "content/posts/test-post.md",
+    size: 100,
+    type: "file",
+    sha: "dummy-sha",
+  },
 ];
 
 Deno.test({
