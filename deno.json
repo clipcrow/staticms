@@ -57,5 +57,11 @@
     "react-md-editor": "npm:@uiw/react-md-editor@^4.0.0",
     "rehype-highlight": "npm:rehype-highlight@^7.0.0",
     "deno_esbuild": "jsr:@luca/esbuild-deno-loader@^0.10.3"
+  },
+  "deno.suggest": {
+    "imports": true,
+    "names": true,
+    "paths": true,
+    "npm-not-installed": "off"
   }
 }

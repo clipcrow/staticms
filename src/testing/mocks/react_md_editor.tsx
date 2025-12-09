@@ -1,5 +1,3 @@
-import React from "react";
-
 // Mock component for react-md-editor to avoid CSS import issues in Deno tests
 // deno-lint-ignore no-explicit-any
 export default function MDEditor(props: any) {
