@@ -11,7 +11,7 @@
     "build": "deno run -A scripts/build.ts && deno run -A scripts/build_css.ts",
     "build:js": "deno run -A scripts/build.ts",
     "build:css": "deno run -A scripts/build_css.ts",
-    "test": "deno test -A --unstable-kv --import-map=import_map_test.json src/"
+    "test": "deno test -A --unstable-kv --import-map=src/testing/import_map_test.json src/"
   },
   "compilerOptions": {
     "jsx": "react-jsx",
