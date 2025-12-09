@@ -188,3 +188,90 @@ HappyDOM で `useAuth`
 2. **Container/Presenter**: ロジックと表示を分離し、テストしやすくする。
 3. **DI (Dependency Injection)**:
    子コンポーネントやAPIクライアントをPropsで注入可能にし、テスト時にモックに差し替えられるようにする。
+
+## 6. Tips & Troubleshooting (v2.1 追加)
+
+### 6.1 非同期状態と `waitFor` (Async State Updates)
+
+Reactコンポーネントのテスト（特にフォーム入力）では、`fireEvent`
+でイベントを発火させた後、Reactの状態更新（State
+Updates）が完了する前に次のアサーションや操作が実行されてしまい、テストが失敗することがあります（例:
+入力値が反映される前に送信ボタンを押してしまう）。
+
+**対策**: `waitFor` を使用して、DOMが期待する状態になるまで待機します。
+
+```typescript
+// 入力イベント
+fireEvent.change(input, { target: { value: "new value" } });
+
+// State更新がDOMに反映されるのを待つ
+await waitFor(() => {
+  assertEquals(input.value, "new value");
+});
+
+// その後で次のアクションを実行
+fireEvent.click(saveButton);
+```
+
+### 6.2 サーバーサイドAPIテスト (Oak Mocking)
+
+`@oak/oak` の `RouterContext`
+をモックしてサーバーサイドAPIをテストする場合の手法です。
+
+**Contextの作成**: `testing.createMockContext`
+を使用しますが、BodyやCookieの扱いに工夫が必要です。
+
+```typescript
+import { testing } from "@oak/oak";
+
+const ctx = testing.createMockContext({
+  path: "/api/target",
+  method: "POST",
+}) as unknown as RouterContext<string>;
+
+// Cookieの設定
+ctx.request.headers.set("Cookie", `session_id=...`);
+
+// Request Body のモック (anyキャストが必要な場合が多い)
+// deno-lint-ignore no-explicit-any
+(ctx.request as any).body = {
+  json: () => Promise.resolve({ key: "value" }),
+};
+```
+
+### 6.3 JSRサブモジュールのインポート設定
+
+テスト環境 (`src/testing/import_map_test.json`) で JSR
+パッケージのサブモジュール（例:
+`@std/encoding/base64`）を使用する場合、明示的なマッピングが必要になることがあります。
+
+```json
+{
+  "imports": {
+    "@std/encoding/base64": "jsr:@std/encoding@^1.0.0/base64",
+    "@std/encoding": "jsr:@std/encoding@^1.0.0"
+  }
+}
+```
+
+### 6.4 テスト間のDOM汚染対策
+
+`render`
+したコンポーネントは、明示的にクリーンアップしないとDOMに残ることがあり、後続のテストに影響を与える可能性があります（例:
+同一IDの要素が複数存在し、セレクタが失敗するなど）。
+
+**対策**: 各テストケースの `finally` ブロック、または `afterEach` で必ず
+`cleanup()` を呼び出してください。
+
+```typescript
+import { cleanup, render } from "@testing-library/react";
+
+Deno.test("My Test", () => {
+  try {
+    render(<Component />);
+    // ...
+  } finally {
+    cleanup(); // DOMをリセット
+  }
+});
+```
