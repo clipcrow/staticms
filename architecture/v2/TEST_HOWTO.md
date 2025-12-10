@@ -275,3 +275,72 @@ Deno.test("My Test", () => {
   }
 });
 ```
+
+## 7. 高度なトラブルシューティングとベストプラクティス (v2.2 追加 - Deno/Testing Library)
+
+### 7.1 グローバルモックの競合回避 (Global Mock Conflicts)
+
+Denoのテストランナーは並列実行される場合があり、個別のテストファイルで
+`globalThis.fetch` を書き換える (`stub` する) と、他のテストと競合（Race
+Condition）し、予期せぬ失敗を引き起こすことがあります。
+
+**推奨される対策**: 個別のファイルで `stub(globalThis, 'fetch')`
+するのではなく、全テストで共通して読み込まれる `setup_dom.ts`
+内でモックロジックを一元管理し、リクエストURLに基づいてレスポンスを分岐させる方法が最も安全です。
+
+```typescript
+// src/testing/setup_dom.ts
+globalThis.fetch = (input: RequestInfo | URL, _init?: RequestInit) => {
+  const urlStr = input.toString();
+
+  // APIごとの分岐
+  if (urlStr.includes("/api/user")) {
+    return Promise.resolve(new Response(JSON.stringify({...}), { status: 200 }));
+  }
+  
+  // 未定義のURLは404
+  return Promise.resolve(new Response("Not Found", { status: 404 }));
+};
+```
+
+※ `fetch` モックは必ず `Promise.resolve` でラップした `Response`
+を返してください。そうしないと型エラーや非同期待ちのタイミングずれが発生します。
+
+### 7.2 ルーティングテストのパス不一致 (Routing Mismatches)
+
+`AppRoutes`
+などのルーティング定義をテストする場合、`<MemoryRouter initialEntries={["..."]}>`
+で指定するパスは、実際のルート定義と**プレフィックスレベルで完全に一致**させる必要があります。
+
+例: `AppRoutes.tsx` が `path="/:owner/:repo"` と定義されている場合:
+
+- ❌ テストURL: `/repo/user/my-repo` （`/repo` は不要）
+- ✅ テストURL: `/user/my-repo`
+
+パスが一致しない場合、意図しないルート（例:
+`ContentRouteComponent`）がマッチしてしまい、「設定が見つからない」といった無関係なエラーが発生してデバッグを困難にします。
+
+### 7.3 フォーム入力の不安定さと回避策 (Form Input Stability)
+
+Deno + HappyDOM 環境では、`fireEvent.change` などのイベント発火が React
+のステート更新に反映されるタイミングが不安定な場合があります。これにより、「入力したはずの値が反映されずバリデーションエラーになる」といったテスト失敗が起きることがあります。
+
+**回避策**:
+「フォームに入力して保存する」という一連のフローをテストしたい場合、入力イベント(`fireEvent`)に固執せず、コンポーネントに初期値
+(`initialData` Propsなど)
+を注入してレンダリングし、**入力済みの状態から保存アクションのみをテストする**
+設計に切り替えるのが有効です。これにより、DOMイベントの非同期性に起因するFlakyなテストを排除できます。
+
+### 7.4 テキスト検索の部分一致 (Text Matching)
+
+Testing Library の `findByText("text")` はデフォルトで **完全一致** かつ
+**正規化されたテキストコンテンツ** を検索します。
+HTML構造内に改行やアイコン、別のタグが含まれている場合（例:
+`<div>Icon <br/> Text</div>`）、見た目は "Text" でも `findByText("Text")`
+は失敗します。
+
+**対策**:
+
+- `{ exact: false }` オプションを使用する:
+  `findByText("Text", { exact: false })`
+- 正規表現を使用する: `findByText(/Text/)`
