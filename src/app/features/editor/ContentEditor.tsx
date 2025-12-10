@@ -15,7 +15,7 @@ import {
   Content as V1Content,
   Field as V1Field,
   FileItem,
-} from "@/app/components/editor/types.ts";
+} from "@/shared/types.ts";
 import { BreadcrumbItem } from "@/app/components/common/Header.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 

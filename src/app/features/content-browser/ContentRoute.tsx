@@ -2,6 +2,11 @@ import { useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ArticleList } from "@/app/features/content-browser/ArticleList.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
+import {
+  ErrorCallout,
+  LoadingSpinner,
+  WarningCallout,
+} from "@/app/components/common/Feedback.tsx";
 
 export function ContentRoute() {
   const { owner, repo, collectionName } = useParams();
@@ -9,14 +14,14 @@ export function ContentRoute() {
   const { config, loading, error } = useContentConfig(owner, repo);
 
   if (loading) {
-    return <div className="ui active centered inline loader"></div>;
+    return <LoadingSpinner />;
   }
 
   if (error) {
     return (
-      <div className="ui negative message">
-        Error loading config: {error.message}
-      </div>
+      <ErrorCallout title="Error loading config">
+        {error.message}
+      </ErrorCallout>
     );
   }
 
@@ -24,9 +29,9 @@ export function ContentRoute() {
 
   if (!def) {
     return (
-      <div className="ui warning message">
+      <WarningCallout>
         Content "{collectionName}" not found in configuration.
-      </div>
+      </WarningCallout>
     );
   }
 

@@ -9,7 +9,7 @@ import { Collection } from "@/app/hooks/useContentConfig.ts";
 import {
   Content as V1Content,
   FileItem,
-} from "@/app/components/editor/types.ts";
+} from "@/shared/types.ts";
 
 export interface EditorLayoutProps {
   breadcrumbs: BreadcrumbItem[];

@@ -3,7 +3,7 @@ import { Header } from "@/app/components/common/Header.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
-import { FileItem } from "@/app/components/editor/types.ts";
+import { FileItem } from "@/shared/types.ts";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
 
 export interface ArticleListViewProps {

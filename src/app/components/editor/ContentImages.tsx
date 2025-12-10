@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useRepoContent } from "@/app/hooks/useRepoContent.ts";
-import { FileItem } from "./types.ts";
+import { FileItem } from "@/shared/types.ts";
 
 interface ContentImagesProps {
   pendingImages: FileItem[];

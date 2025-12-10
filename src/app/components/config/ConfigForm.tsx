@@ -3,7 +3,7 @@ import { Collection } from "@/app/hooks/useContentConfig.ts";
 import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FieldList } from "./ConfigHelpers.tsx";
 // Use Content type only for MarkdownEditor shim
-import { Content } from "@/app/components/editor/types.ts";
+import { Content } from "@/shared/types.ts";
 
 interface ConfigFormProps {
   formData: Collection;

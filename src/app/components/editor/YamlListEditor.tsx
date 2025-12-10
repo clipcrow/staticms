@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEditor.tsx";
-import { Content } from "@/app/components/editor/types.ts";
+import { Content } from "@/shared/types.ts";
 import { Field } from "@/app/hooks/useContentConfig.ts";
 import {
   FrontMatterList,

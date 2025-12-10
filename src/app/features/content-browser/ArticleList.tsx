@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
-import { FileItem } from "@/app/components/editor/types.ts";
+import { FileItem } from "@/shared/types.ts";
 import { ArticleListView } from "@/app/components/content-browser/ArticleListView.tsx";
 
 export function ArticleList() {

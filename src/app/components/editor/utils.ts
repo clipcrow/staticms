@@ -1,5 +1,5 @@
 import yaml from "js-yaml";
-import { Content } from "./types.ts";
+import { Content } from "@/shared/types.ts";
 import { Draft } from "@/shared/types.ts";
 
 export function parseFrontMatter(text: string) {

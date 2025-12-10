@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Content, Field } from "./types.ts";
+import { Content, Field } from "@/shared/types.ts";
 
 interface FrontMatterItemPanelProps {
   fields: Field[];

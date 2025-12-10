@@ -2,6 +2,10 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentList } from "./ContentList.tsx";
 import { ContentConfigEditor } from "@/app/features/config/ContentConfigEditor.tsx";
+import {
+  ErrorCallout,
+  LoadingSpinner,
+} from "@/app/components/common/Feedback.tsx";
 
 export function ContentBrowser() {
   const { owner, repo } = useParams();
@@ -27,12 +31,11 @@ export function ContentBrowser() {
   return (
     <div className="ui container" style={{ marginTop: "2em" }}>
       <div className="ui segment basic">
-        {loading && <div className="ui active centered inline loader"></div>}
+        {loading && <LoadingSpinner />}
         {error && (
-          <div className="ui negative message">
-            <div className="header">Error loading configuration</div>
-            <p>{error.message}</p>
-          </div>
+          <ErrorCallout title="Error loading configuration">
+            {error.message}
+          </ErrorCallout>
         )}
 
         {config && !loading && (

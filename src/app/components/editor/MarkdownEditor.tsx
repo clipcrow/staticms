@@ -8,7 +8,7 @@ const MDEditor = React.lazy(() =>
 );
 import rehypeHighlight from "rehype-highlight";
 
-import { Content } from "./types.ts";
+import { Content } from "@/shared/types.ts";
 import { getDraft } from "./utils.ts";
 
 interface MarkdownEditorProps {

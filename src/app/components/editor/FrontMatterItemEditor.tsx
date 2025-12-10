@@ -1,5 +1,5 @@
 import React from "react";
-import { Content, Field } from "./types.ts";
+import { Content, Field } from "@/shared/types.ts";
 import { FrontMatterItemPanel } from "./FrontMatterItemPanel.tsx";
 import { FrontMatterObject } from "@/shared/types.ts";
 
