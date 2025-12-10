@@ -1,8 +1,8 @@
 import React, { useEffect } from "react";
+import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 import { Collection } from "@/app/hooks/useContentConfig.ts";
 import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FieldList } from "./ConfigHelpers.tsx";
-// Use Content type only for MarkdownEditor shim
 import { Content } from "@/shared/types.ts";
 
 interface ConfigFormProps {
@@ -14,6 +14,7 @@ interface ConfigFormProps {
   onDelete: () => void;
   repoInfo: { owner: string; repo: string };
   loading?: boolean;
+  breadcrumbs: BreadcrumbItem[];
 }
 
 export const ConfigForm: React.FC<ConfigFormProps> = ({
@@ -25,6 +26,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   onDelete,
   repoInfo,
   loading = false,
+  breadcrumbs,
 }) => {
   // Initialize type/binding if missing (e.g. fresh add)
   useEffect(() => {
@@ -61,90 +63,122 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   };
 
   return (
-    <div className="ui container">
-      <form onSubmit={onSave}>
-        {/* Basic Settings */}
-        <div className="ui segment">
-          <h4 className="ui dividing header">Basic Settings</h4>
-          <div className="ui form">
-            {/* Content Name (Label) */}
-            <div className="field">
-              <label>Content Name (Label) - Optional</label>
-              <input
-                type="text"
-                placeholder="e.g. Blog Post"
-                value={formData.label || ""}
-                onChange={(e) => handleChange("label", e.target.value)}
-                disabled={loading}
-              />
-              <small className="helper-text">
-                Display name in UI. If empty, the Path will be used.
-              </small>
-            </div>
+    <>
+      <Header
+        breadcrumbs={breadcrumbs}
+        rightContent={
+          <div style={{ display: "flex", gap: "0.5em" }}>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="ui button"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={(e) => onSave(e as unknown as React.FormEvent)}
+              className={`ui primary button ${loading ? "loading" : ""}`}
+              disabled={loading}
+            >
+              {editingIndex !== null ? "Update" : "Add"}
+            </button>
+          </div>
+        }
+      />
+      <div
+        className="ui container"
+        style={{ marginTop: "2rem", paddingBottom: "100px" }}
+      >
+        <form onSubmit={onSave}>
+          {/* Basic Settings */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h4 className="ui dividing header">Basic Settings</h4>
+            <div className="ui form">
+              {/* Content Name (Label) */}
+              <div className="field">
+                <label>Content Name (Label) - Optional</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Blog Post"
+                  value={formData.label || ""}
+                  onChange={(e) => handleChange("label", e.target.value)}
+                  disabled={loading}
+                />
+                <small className="helper-text">
+                  Display name in UI. If empty, the Path will be used.
+                </small>
+              </div>
 
-            {/* Type Selection */}
-            <div className="field">
-              <label>Content Type</label>
-              <div className="inline fields">
+              <div className="two fields">
+                {/* Type Selection */}
                 <div className="field">
-                  <div className="ui radio checkbox">
-                    <input
-                      type="radio"
-                      name="contentType"
-                      checked={formData.type === "singleton" || !formData.type}
-                      onChange={() => handleChange("type", "singleton")}
-                      disabled={loading}
-                    />
-                    <label>Singleton (File/One-off)</label>
+                  <label>Content Type</label>
+                  <div className="inline fields">
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentType"
+                          checked={formData.type === "singleton" ||
+                            !formData.type}
+                          onChange={() => handleChange("type", "singleton")}
+                          disabled={loading}
+                        />
+                        <label>Singleton (File/One-off)</label>
+                      </div>
+                    </div>
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentType"
+                          checked={formData.type === "collection"}
+                          onChange={() => handleChange("type", "collection")}
+                          disabled={loading}
+                        />
+                        <label>Collection (Folder based)</label>
+                      </div>
+                    </div>
                   </div>
                 </div>
+
+                {/* Binding Selection */}
                 <div className="field">
-                  <div className="ui radio checkbox">
-                    <input
-                      type="radio"
-                      name="contentType"
-                      checked={formData.type === "collection"}
-                      onChange={() => handleChange("type", "collection")}
-                      disabled={loading}
-                    />
-                    <label>Collection (Folder based)</label>
+                  <label>Binding</label>
+                  <div className="inline fields">
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentBinding"
+                          checked={binding === "file"}
+                          onChange={() => handleChange("binding", "file")}
+                          disabled={loading}
+                        />
+                        <label>File</label>
+                      </div>
+                    </div>
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentBinding"
+                          checked={binding === "directory"}
+                          onChange={() => handleChange("binding", "directory")}
+                          disabled={loading}
+                        />
+                        <label>Directory</label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Binding Selection */}
-            <div className="field">
-              <label>Binding</label>
-              <div className="inline fields">
-                <div className="field">
-                  <div className="ui radio checkbox">
-                    <input
-                      type="radio"
-                      name="contentBinding"
-                      checked={binding === "file"}
-                      onChange={() => handleChange("binding", "file")}
-                      disabled={loading}
-                    />
-                    <label>File</label>
-                  </div>
-                </div>
-                <div className="field">
-                  <div className="ui radio checkbox">
-                    <input
-                      type="radio"
-                      name="contentBinding"
-                      checked={binding === "directory"}
-                      onChange={() => handleChange("binding", "directory")}
-                      disabled={loading}
-                    />
-                    <label>Directory</label>
-                  </div>
-                </div>
-              </div>
               <div
                 className="ui info message mini"
-                style={{ marginTop: "5px" }}
+                style={{ marginTop: "-10px", marginBottom: "20px" }}
               >
                 <p style={{ fontSize: "0.9em" }}>
                   {isCollection && binding === "file" &&
@@ -157,119 +191,120 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                     "Singleton + Directory: Edits index.md in the specific folder."}
                 </p>
               </div>
-            </div>
 
-            {/* Path */}
-            <div className="required field">
-              <label>{getPathLabel()}</label>
-              <input
-                type="text"
-                placeholder={binding === "directory"
-                  ? "content/posts"
-                  : "content/about.md"}
-                value={formData.path || ""}
-                onChange={(e) => handleChange("path", e.target.value)}
-                required
+              {/* Path */}
+              <div className="required field">
+                <label>{getPathLabel()}</label>
+                <input
+                  type="text"
+                  placeholder={binding === "directory"
+                    ? "content/posts"
+                    : "content/about.md"}
+                  value={formData.path || ""}
+                  onChange={(e) => handleChange("path", e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Target Branch */}
+              <div className="field">
+                <label>Target Branch (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. features/preview"
+                  value={formData.branch || ""}
+                  onChange={(e) => handleChange("branch", e.target.value)}
+                  disabled={loading}
+                />
+                <small className="helper-text">
+                  If set, this branch is used for content. If it doesn't exist,
+                  it will be created on save.
+                </small>
+              </div>
+            </div>
+          </div>
+
+          {/* Field Schema Editor */}
+          <div style={{ marginBottom: "3rem" }}>
+            <h4 className="ui dividing header">Field Schema</h4>
+            <div className="ui form">
+              <FieldList
+                fields={formData.fields || []}
+                onChange={(fields) => handleChange("fields", fields)}
+                isCollection={isCollection}
                 disabled={loading}
               />
             </div>
+          </div>
 
-            {/* Target Branch */}
-            <div className="field">
-              <label>Target Branch (Optional)</label>
-              <input
-                type="text"
-                placeholder="e.g. features/preview"
-                value={formData.branch || ""}
-                onChange={(e) => handleChange("branch", e.target.value)}
-                disabled={loading}
-              />
+          {/* Archetype (Collection Only) */}
+          {isCollection && (
+            <div style={{ marginBottom: "3rem" }}>
+              <h4 className="ui dividing header">Archetype Template</h4>
+              <div
+                style={{
+                  border: "1px solid #ddd",
+                  borderRadius: "4px",
+                }}
+              >
+                <MarkdownEditor
+                  body={formData.archetype || ""} // Assuming we store archetype in extra key or similar? Spec says "Archetype Body".
+                  // We need to add 'archetype' key to Collection interface as loose prop [key:string]: any allows it.
+                  setBody={(val) => handleChange("archetype", val)}
+                  isPrLocked={loading}
+                  currentContent={shimContent}
+                  height={200}
+                />
+              </div>
               <small className="helper-text">
-                If set, this branch is used for content. If it doesn't exist, it
-                will be created on save.
+                Default markdown body content for new articles.
               </small>
             </div>
-          </div>
-        </div>
-
-        {/* Field Schema Editor */}
-        <div className="ui segment">
-          <h4 className="ui dividing header">Field Schema</h4>
-          <div className="ui form">
-            <FieldList
-              fields={formData.fields || []}
-              onChange={(fields) => handleChange("fields", fields)}
-              isCollection={isCollection}
-              disabled={loading}
-            />
-          </div>
-        </div>
-
-        {/* Archetype (Collection Only) */}
-        {isCollection && (
-          <div className="ui segment">
-            <h4 className="ui dividing header">Archetype Template</h4>
-            <div
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            >
-              <MarkdownEditor
-                body={formData.archetype || ""} // Assuming we store archetype in extra key or similar? Spec says "Archetype Body".
-                // We need to add 'archetype' key to Collection interface as loose prop [key:string]: any allows it.
-                setBody={(val) => handleChange("archetype", val)}
-                isPrLocked={loading}
-                currentContent={shimContent}
-                height={200}
-              />
-            </div>
-            <small className="helper-text">
-              Default markdown body content for new articles.
-            </small>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div
-          className="actions staticms-settings-actions"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "20px",
-          }}
-        >
-          <div>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="ui button"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className={`ui primary button ${loading ? "loading" : ""}`}
-              disabled={loading}
-            >
-              {editingIndex !== null ? "Update" : "Add"}
-            </button>
-          </div>
-
-          {editingIndex !== null && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className={`ui button negative ${loading ? "loading" : ""}`}
-              disabled={loading}
-            >
-              <i className="trash icon"></i>
-              Delete
-            </button>
           )}
-        </div>
-      </form>
-    </div>
+
+          {/* Actions */}
+          <div
+            className="actions staticms-settings-actions"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginTop: "20px",
+              marginBottom: "40px",
+            }}
+          >
+            <div>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="ui button"
+                disabled={loading}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`ui primary button ${loading ? "loading" : ""}`}
+                disabled={loading}
+              >
+                {editingIndex !== null ? "Update" : "Add"}
+              </button>
+            </div>
+
+            {editingIndex !== null && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className={`ui button negative ${loading ? "loading" : ""}`}
+                disabled={loading}
+              >
+                <i className="trash icon"></i>
+                Delete
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+    </>
   );
 };

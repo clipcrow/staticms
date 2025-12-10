@@ -6,10 +6,7 @@ import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";
 import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 import { Collection } from "@/app/hooks/useContentConfig.ts";
-import {
-  Content as V1Content,
-  FileItem,
-} from "@/shared/types.ts";
+import { Content as V1Content, FileItem } from "@/shared/types.ts";
 
 export interface EditorLayoutProps {
   breadcrumbs: BreadcrumbItem[];
@@ -66,7 +63,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onImageInsert,
 }) => {
   return (
-    <div className="ui container content-editor" style={{ marginTop: "2rem" }}>
+    <>
       <Header
         breadcrumbs={breadcrumbs}
         rightContent={
@@ -120,7 +117,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             {!isSynced && (
               <button
                 type="button"
-                className="ui button negative basic compact"
+                className="ui button negative basic"
                 onClick={onReset}
                 disabled={isSaving}
                 title="Discard local draft and reload from server"
@@ -151,57 +148,64 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         }
       />
 
-      <div className="ui stackable grid">
-        <div
-          className={isListMode ? "sixteen wide column" : "twelve wide column"}
-        >
-          {isListMode
-            ? (
-              <YamlListEditor
-                items={draft.frontMatter as FrontMatterList}
-                onChange={onFrontMatterChange}
-                fields={collection.fields || []}
-                currentContent={currentContent}
-                isLocked={isLocked}
-              />
-            )
-            : (
-              <>
-                {/* FrontMatter Editor */}
-                {(!collection.fields || collection.fields.length === 0) && (
-                  <div className="ui warning message">
-                    <div className="header">No Fields Defined</div>
-                    <p>Please define 'fields' in your content configuration.</p>
-                  </div>
-                )}
-
-                <FrontMatterItemEditor
-                  frontMatter={draft.frontMatter as FrontMatterObject}
-                  setFrontMatter={onFrontMatterChange}
+      <div
+        className="ui container content-editor"
+        style={{ marginTop: "2rem" }}
+      >
+        <div className="ui stackable grid">
+          <div
+            className={isListMode
+              ? "sixteen wide column"
+              : "twelve wide column"}
+          >
+            {isListMode
+              ? (
+                <YamlListEditor
+                  items={draft.frontMatter as FrontMatterList}
+                  onChange={onFrontMatterChange}
+                  fields={collection.fields || []}
                   currentContent={currentContent}
-                  isPrLocked={isLocked}
+                  isLocked={isLocked}
                 />
+              )
+              : (
+                <>
+                  {/* FrontMatter Editor */}
+                  {(!collection.fields || collection.fields.length === 0) && (
+                    <div className="ui warning message">
+                      <div className="header">No Fields Defined</div>
+                      <p>
+                        Please define 'fields' in your content configuration.
+                      </p>
+                    </div>
+                  )}
 
-                {/* Markdown Editor */}
-                {!isYamlMode && (
-                  <div className="ui segment">
-                    <MarkdownEditor
-                      body={draft.body}
-                      setBody={onBodyChange}
-                      isPrLocked={isLocked}
-                      currentContent={currentContent}
-                      height={600}
-                      onImageUpload={onImageUpload}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-        </div>
-        {!isListMode && (
-          <div className="four wide column">
-            {/* Future Sidebar (History, Images) */}
-            <div className="ui segment">
+                  <FrontMatterItemEditor
+                    frontMatter={draft.frontMatter as FrontMatterObject}
+                    setFrontMatter={onFrontMatterChange}
+                    currentContent={currentContent}
+                    isPrLocked={isLocked}
+                  />
+
+                  {/* Markdown Editor */}
+                  {!isYamlMode && (
+                    <div style={{ marginTop: "1rem" }}>
+                      <MarkdownEditor
+                        body={draft.body}
+                        setBody={onBodyChange}
+                        isPrLocked={isLocked}
+                        currentContent={currentContent}
+                        height={600}
+                        onImageUpload={onImageUpload}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+          </div>
+          {!isListMode && (
+            <div className="four wide column">
+              {/* Future Sidebar (History, Images) */}
               <ContentImages
                 pendingImages={draft.pendingImages || []}
                 onUpload={(files) => Array.from(files).forEach(onImageUpload)}
@@ -210,9 +214,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 folderPath={folderPath}
               />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

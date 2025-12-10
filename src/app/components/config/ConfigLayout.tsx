@@ -20,40 +20,42 @@ export const ConfigLayout: React.FC<ConfigLayoutProps> = ({
 }) => {
   if (loading) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <>
         <Header breadcrumbs={breadcrumbs} />
-        <div className="ui active centered inline loader"></div>
-      </div>
+        <div className="ui container" style={{ marginTop: "2rem" }}>
+          <div className="ui active centered inline loader"></div>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
-        <div className="ui negative message">
-          <div className="header">Error loading configuration</div>
-          <p>{error.message || "Configuration not found"}</p>
+      <>
+        <Header breadcrumbs={breadcrumbs} />
+        <div className="ui container" style={{ marginTop: "2rem" }}>
+          <div className="ui negative message">
+            <div className="header">Error loading configuration</div>
+            <p>{error.message || "Configuration not found"}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (notFound) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
-        <div className="ui warning message">
-          {notFoundMessage || "Content not found."}
+      <>
+        <Header breadcrumbs={breadcrumbs} />
+        <div className="ui container" style={{ marginTop: "2rem" }}>
+          <div className="ui warning message">
+            {notFoundMessage || "Content not found."}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
-  return (
-    <div className="ui container" style={{ marginTop: "2rem" }}>
-      <Header breadcrumbs={breadcrumbs} />
-      <div className="ui segment">
-        {children}
-      </div>
-    </div>
-  );
+  // Children (ContentConfigEditor) now handles its own Header and Layout
+  return <>{children}</>;
 };

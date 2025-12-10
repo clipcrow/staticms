@@ -18,34 +18,42 @@ export const Header = ({
   rightContent,
   rootLink = true,
 }: HeaderProps) => {
+  const TitleContent = () => (
+    <>
+      <img
+        src="/logo.svg"
+        alt="Staticms"
+        style={{ height: "32px", verticalAlign: "middle" }}
+      />
+      <div className="content">
+        <div className="header-text">Staticms</div>
+        <div className="sub-header-text">
+          Manage headless contents with GitHub
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="staticms-header-container">
       <div className="staticms-header-left">
-        <div className="staticms-header-title">
-          <img
-            src="/logo.svg"
-            alt="Staticms"
-            style={{ height: "40px", verticalAlign: "middle" }}
-          />
-          <div
-            className="content"
-            style={{
-              display: "inline-block",
-              verticalAlign: "middle",
-              marginLeft: "10px",
-            }}
-          >
-            <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
-              Staticms
-            </span>
-            <div className="sub header staticms-header-subtitle">
-              Manage headless contents with GitHub
+        {rootLink
+          ? (
+            // @ts-ignore: React 19 types issue
+            <Link to="/" className="staticms-header-title">
+              <TitleContent />
+            </Link>
+          )
+          : (
+            <div className="staticms-header-title">
+              <TitleContent />
             </div>
-          </div>
-        </div>
+          )}
+
         {breadcrumbs && (
-          <div className="staticms-header-children">
+          <>
             <div className="ui breadcrumb staticms-header-breadcrumb">
+              {/* Root GitHub Icon */}
               {rootLink
                 ? (
                   // @ts-ignore: React 19 types issue
@@ -58,33 +66,35 @@ export const Header = ({
                     <i className="github icon"></i>
                   </div>
                 )}
-              {breadcrumbs.map((item, index) => (
-                <React.Fragment key={index}>
-                  {(rootLink || index > 0) && (
+
+              {breadcrumbs.map((item, index) => {
+                const isLast = index === breadcrumbs.length - 1;
+                return (
+                  <React.Fragment key={index}>
                     <i className="right chevron icon divider"></i>
-                  )}
-                  {item.to
-                    ? (
-                      // @ts-ignore: React 19 types issue
-                      <Link to={item.to} className="section">
-                        {item.label}
-                      </Link>
-                    )
-                    : item.onClick
-                    ? (
-                      <span
-                        className="section"
-                        onClick={item.onClick}
-                        style={{ cursor: "pointer", color: "#4183c4" }}
-                      >
-                        {item.label}
-                      </span>
-                    )
-                    : <div className="active section">{item.label}</div>}
-                </React.Fragment>
-              ))}
+                    {!isLast && item.to
+                      ? (
+                        // @ts-ignore: React 19 types issue
+                        <Link to={item.to} className="section">
+                          {item.label}
+                        </Link>
+                      )
+                      : !isLast && item.onClick
+                      ? (
+                        <span
+                          className="section"
+                          onClick={item.onClick}
+                          style={{ cursor: "pointer", color: "#4183c4" }}
+                        >
+                          {item.label}
+                        </span>
+                      )
+                      : <div className="active section">{item.label}</div>}
+                  </React.Fragment>
+                );
+              })}
             </div>
-          </div>
+          </>
         )}
       </div>
       <div className="staticms-header-right">

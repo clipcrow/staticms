@@ -28,42 +28,49 @@ export function ContentBrowser() {
 
   const isEditing = action === "add" || (action === "edit" && target);
 
-  return (
-    <div className="ui container" style={{ marginTop: "2em" }}>
-      <div className="ui segment basic">
-        {loading && <LoadingSpinner />}
-        {error && (
-          <ErrorCallout title="Error loading configuration">
-            {error.message}
-          </ErrorCallout>
-        )}
-
-        {config && !loading && (
-          <>
-            {isEditing
-              ? (
-                <ContentConfigEditor
-                  owner={owner}
-                  repo={repo}
-                  config={config}
-                  mode={action as "add" | "edit"}
-                  initialData={action === "edit"
-                    ? config.collections.find((c) => c.name === target)
-                    : undefined}
-                  onCancel={handleCancel}
-                  onSave={handleSave}
-                />
-              )
-              : (
-                <ContentList
-                  collections={config.collections}
-                  owner={owner}
-                  repo={repo}
-                />
-              )}
-          </>
-        )}
+  if (loading) {
+    return (
+      <div className="ui container" style={{ marginTop: "2em" }}>
+        <LoadingSpinner />
       </div>
-    </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="ui container" style={{ marginTop: "2em" }}>
+        <ErrorCallout title="Error loading configuration">
+          {error.message}
+        </ErrorCallout>
+      </div>
+    );
+  }
+
+  if (!config) return null;
+
+  return (
+    <>
+      {isEditing
+        ? (
+          <ContentConfigEditor
+            owner={owner}
+            repo={repo}
+            config={config}
+            mode={action as "add" | "edit"}
+            initialData={action === "edit"
+              ? config.collections.find((c) => c.name === target)
+              : undefined}
+            onCancel={handleCancel}
+            onSave={handleSave}
+          />
+        )
+        : (
+          <ContentList
+            collections={config.collections}
+            owner={owner}
+            repo={repo}
+          />
+        )}
+    </>
   );
 }

@@ -3,7 +3,7 @@
 $primary-color: #2185d0; // Semantic UI Blue
 
 body {
-  background-color: #f0f0f0;
+  background-color: #ffffff;
 }
 
 .custom-button {
@@ -47,4 +47,152 @@ body {
     transform: translateX(0);
     opacity: 1;
   }
+}
+
+// Header Styles
+.staticms-header-container {
+  background-color: #f7f8fa;
+  border-bottom: 1px solid #e0e1e2;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  // margin-bottom removed to attach toolbar
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.staticms-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.staticms-header-title {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.87);
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.75rem;
+  }
+
+  .header-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .sub-header-text {
+    font-size: 0.8rem;
+    color: rgba(0, 0, 0, 0.4);
+    margin-top: 0.1rem;
+    font-weight: normal;
+  }
+}
+
+.staticms-header-breadcrumb {
+  margin: 0 !important;
+  font-size: 1rem !important;
+  align-self: flex-end;
+  margin-bottom: 0.2rem !important;
+}
+
+.staticms-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: 768px) {
+    justify-content: flex-end;
+    width: 100%;
+  }
+}
+
+// Full Width Toolbar Styles
+.staticms-toolbar-container {
+  background-color: #ffffff;
+  border-bottom: none;
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+  width: 100%;
+
+  .ui.container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .ui.form {
+    // Reset specific semantic form margins if needed
+    margin: 0;
+
+    .fields {
+      // Restore negative margins to align fields flush with container
+      margin-left: -0.5em !important;
+      margin-right: -0.5em !important;
+      width: calc(100% + 1em) !important;
+    }
+  }
+}
+
+// Ensure content container below toolbar also has no internal padding for alignment
+.staticms-toolbar-container + .ui.container {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* Content List Item Styles */
+.staticms-content-list-item {
+  padding: 0.5em 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.staticms-content-list-clickable {
+  display: flex;
+  align-items: center;
+}
+
+.staticms-content-list-loader {
+  margin-right: 0.5em !important;
+}
+
+.staticms-content-list-icon {
+  margin-right: 0.5em !important;
+}
+
+.staticms-content-list-header {
+  font-size: 1em !important;
+  flex-grow: 1;
+  margin-right: 1em !important;
+}
+
+.staticms-content-list-labels {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Increase markdown editor toolbar button size */
+.w-md-editor-toolbar li > button {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.w-md-editor-toolbar li > button svg {
+  width: 18px !important;
+  height: 18px !important;
 }

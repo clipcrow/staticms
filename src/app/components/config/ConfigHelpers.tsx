@@ -21,27 +21,9 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
   };
 
   return (
-    <div
-      className="ui segment custom-field-editor"
-      style={{
-        display: "flex",
-        gap: "10px",
-        alignItems: "flex-start",
-        padding: "10px",
-      }}
-    >
+    <tr style={{ verticalAlign: "middle" }}>
       {/* Name (Key) */}
-      <div className="field" style={{ flex: 2 }}>
-        <label
-          style={{
-            fontSize: "0.8em",
-            fontWeight: "bold",
-            display: "block",
-            marginBottom: "4px",
-          }}
-        >
-          Name (Key)
-        </label>
+      <td>
         <div className="ui input fluid mini">
           <input
             type="text"
@@ -49,28 +31,23 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
             value={field.name}
             onChange={(e) => handleChange("name", e.target.value)}
             disabled={disabled}
+            style={{ height: "32px" }}
           />
         </div>
-      </div>
+      </td>
 
       {/* Widget */}
-      <div className="field" style={{ flex: 2 }}>
-        <label
-          style={{
-            fontSize: "0.8em",
-            fontWeight: "bold",
-            display: "block",
-            marginBottom: "4px",
-          }}
-        >
-          Widget
-        </label>
+      <td>
         <select
           className="ui dropdown fluid mini"
           value={field.widget}
           onChange={(e) => handleChange("widget", e.target.value)}
           disabled={disabled}
-          style={{ padding: "6px" }}
+          style={{
+            height: "32px",
+            padding: "0 10px",
+            fontSize: ".78571429rem",
+          }}
         >
           <option value="string">String (Short)</option>
           <option value="text">Text (Long)</option>
@@ -82,46 +59,26 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
           <option value="datetime">Datetime</option>
           <option value="select">Select</option>
         </select>
-      </div>
+      </td>
 
       {/* Default Value (Collection Only) */}
-      <div
-        className="field"
-        style={{ flex: 2, visibility: isCollection ? "visible" : "hidden" }}
-      >
-        <label
-          style={{
-            fontSize: "0.8em",
-            fontWeight: "bold",
-            display: "block",
-            marginBottom: "4px",
-          }}
-        >
-          Default
-        </label>
-        <div className="ui input fluid mini">
-          <input
-            type="text"
-            placeholder="Optional"
-            value={String(field.default || "")}
-            onChange={(e) => handleChange("default", e.target.value)}
-            disabled={disabled}
-          />
-        </div>
-      </div>
+      {isCollection && (
+        <td>
+          <div className="ui input fluid mini">
+            <input
+              type="text"
+              placeholder="Optional"
+              value={String(field.default || "")}
+              onChange={(e) => handleChange("default", e.target.value)}
+              disabled={disabled}
+              style={{ height: "32px" }}
+            />
+          </div>
+        </td>
+      )}
 
       {/* Required */}
-      <div className="field" style={{ flex: 1, textAlign: "center" }}>
-        <label
-          style={{
-            fontSize: "0.8em",
-            fontWeight: "bold",
-            display: "block",
-            marginBottom: "4px",
-          }}
-        >
-          Required
-        </label>
+      <td className="center aligned">
         <div className="ui checkbox">
           <input
             type="checkbox"
@@ -131,10 +88,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
           />
           <label></label>
         </div>
-      </div>
+      </td>
 
       {/* Delete Button */}
-      <div className="field" style={{ flex: 0, paddingTop: "1.2em" }}>
+      <td className="center aligned">
         <button
           type="button"
           className="ui icon button mini negative basic"
@@ -144,8 +101,8 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
         >
           <i className="trash icon"></i>
         </button>
-      </div>
-    </div>
+      </td>
+    </tr>
   );
 };
 
@@ -182,18 +139,31 @@ export const FieldList: React.FC<FieldListProps> = ({
 
   return (
     <div>
-      <div className="field-list">
-        {fields.map((field, index) => (
-          <FieldEditor
-            key={index}
-            field={field}
-            onChange={(f) => handleFieldChange(index, f)}
-            onDelete={() => handleDeleteField(index)}
-            isCollection={isCollection}
-            disabled={disabled}
-          />
-        ))}
-      </div>
+      <table className="ui table">
+        <tbody>
+          {fields.map((field, index) => (
+            <FieldEditor
+              key={index}
+              field={field}
+              onChange={(f) => handleFieldChange(index, f)}
+              onDelete={() => handleDeleteField(index)}
+              isCollection={isCollection}
+              disabled={disabled}
+            />
+          ))}
+          {fields.length === 0 && (
+            <tr>
+              <td
+                colSpan={isCollection ? 5 : 4}
+                className="center aligned priority-low"
+              >
+                No fields defined. Click "Add Field" to start.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+
       <button
         type="button"
         className="ui button mini basic primary"

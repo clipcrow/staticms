@@ -147,6 +147,11 @@ export function ContentConfigEditor({
     }
   };
 
+  const breadcrumbs = [
+    { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+    { label: "Configuration" },
+  ];
+
   return (
     <ConfigForm
       formData={formData}
@@ -157,6 +162,7 @@ export function ContentConfigEditor({
       onDelete={handleDelete}
       repoInfo={{ owner, repo }}
       loading={saving}
+      breadcrumbs={breadcrumbs}
     />
   );
 }

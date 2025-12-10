@@ -33,30 +33,32 @@ export const CollectionList: React.FC<CollectionListProps> = ({
 }) => {
   if (!collections || collections.length === 0) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <>
         <Header
           breadcrumbs={[
             { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
           ]}
         />
-        <div className="ui placeholder segment">
-          <div className="ui icon header">
-            <i className="file alternate outline icon"></i>
-            No content definitions found.
-          </div>
-          <div className="inline">
-            <p>Start by adding your first content collection.</p>
-            <button
-              type="button"
-              className="ui primary button"
-              onClick={onAdd}
-            >
-              <i className="plus icon"></i>
-              Add New Content
-            </button>
+        <div className="ui container" style={{ marginTop: "2rem" }}>
+          <div className="ui placeholder segment">
+            <div className="ui icon header">
+              <i className="file alternate outline icon"></i>
+              No content definitions found.
+            </div>
+            <div className="inline">
+              <p>Start by adding your first content collection.</p>
+              <button
+                type="button"
+                className="ui primary button"
+                onClick={onAdd}
+              >
+                <i className="plus icon"></i>
+                Add New Content
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -69,7 +71,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
   );
 
   return (
-    <div className="ui container" style={{ marginTop: "2rem" }}>
+    <>
       <Header
         breadcrumbs={[
           { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
@@ -105,74 +107,143 @@ export const CollectionList: React.FC<CollectionListProps> = ({
           </div>
         }
       />
-
-      {/* Filter Bar */}
-      <div className="ui segment secondary form">
-        <div className="fields inline" style={{ margin: 0 }}>
-          <div className="sixteen wide field">
-            <div className="ui icon input fluid">
-              <input
-                type="text"
-                placeholder="Search collections..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-              <i className="search icon"></i>
+      <div className="staticms-toolbar-container">
+        <div className="ui container">
+          <div className="ui form">
+            <div className="fields inline" style={{ margin: 0 }}>
+              <div className="sixteen wide field">
+                <div className="ui icon input fluid">
+                  <input
+                    type="text"
+                    placeholder="Search collections..."
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                  />
+                  <i className="search icon"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* List Content */}
-      {filteredCollections.length === 0
-        ? <div className="ui message">No collections match your search.</div>
-        : (
-          <>
-            {viewMode === "card" && (
-              <div className="ui three stackable cards">
-                {filteredCollections.map((c) => {
-                  // Support both "singleton" and "singleton-file"/"singleton-dir" types
-                  const isSingleton = c.type === "singleton" ||
-                    c.type?.startsWith("singleton-");
-                  const statusPath = isSingleton
-                    ? `${c.name}/singleton`
-                    : c.name;
-                  const status = getContentStatus(
-                    owner,
-                    repo,
-                    "main",
-                    statusPath,
-                    !isSingleton,
-                  );
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        {/* List Content */}
+        {filteredCollections.length === 0
+          ? <div className="ui message">No collections match your search.</div>
+          : (
+            <>
+              {viewMode === "card" && (
+                <div className="ui three stackable cards">
+                  {filteredCollections.map((c) => {
+                    // Support both "singleton" and "singleton-file"/"singleton-dir" types
+                    const isSingleton = c.type === "singleton" ||
+                      c.type?.startsWith("singleton-");
+                    const statusPath = isSingleton
+                      ? `${c.name}/singleton`
+                      : c.name;
+                    const status = getContentStatus(
+                      owner,
+                      repo,
+                      "main",
+                      statusPath,
+                      !isSingleton,
+                    );
 
-                  return (
-                    <div
-                      className="card link"
-                      key={c.name}
-                      onClick={() => onSelect(c.name)}
-                    >
-                      <div className="content">
-                        <div className="header">
-                          <i
-                            className={`icon ${
-                              isSingleton ? "file outline" : "folder outline"
-                            }`}
-                            style={{ marginRight: "0.5em" }}
-                          >
-                          </i>
-                          {getDisplayName(c)}
+                    return (
+                      <div
+                        className="card link"
+                        key={c.name}
+                        onClick={() => onSelect(c.name)}
+                      >
+                        <div className="content">
+                          <div className="header">
+                            <i
+                              className={`icon ${
+                                isSingleton ? "file outline" : "folder outline"
+                              }`}
+                              style={{ marginRight: "0.5em" }}
+                            >
+                            </i>
+                            {getDisplayName(c)}
+                          </div>
+                          <div className="meta">
+                            {c.name}
+                          </div>
+                          <div className="description">
+                            {isSingleton
+                              ? "Singleton Content"
+                              : "Collection of entries"}
+                          </div>
                         </div>
-                        <div className="meta">
-                          {c.name}
-                        </div>
-                        <div className="description">
-                          {isSingleton
-                            ? "Singleton Content"
-                            : "Collection of entries"}
+                        <div className="extra content">
+                          <span className="right floated">
+                            <button
+                              type="button"
+                              className="ui icon button basic mini"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSettings(c.name);
+                              }}
+                              title="Settings"
+                            >
+                              <i className="cog icon"></i>
+                            </button>
+                          </span>
+                          <span>
+                            {status.hasDraft
+                              ? (
+                                <StatusBadge
+                                  status="draft"
+                                  count={status.draftCount}
+                                />
+                              )
+                              : status.hasPr
+                              ? (
+                                <StatusBadge
+                                  status="pr_open"
+                                  prNumber={status.prNumber}
+                                />
+                              )
+                              : null}
+                          </span>
                         </div>
                       </div>
-                      <div className="extra content">
-                        <span className="right floated">
+                    );
+                  })}
+                </div>
+              )}
+
+              {viewMode === "list" && (
+                <div className="ui relaxed divided list">
+                  {filteredCollections.map((c) => {
+                    // Support both "singleton" and "singleton-file"/"singleton-dir" types
+                    const isSingleton = c.type === "singleton" ||
+                      c.type?.startsWith("singleton-");
+                    const statusPath = isSingleton
+                      ? `${c.name}/singleton`
+                      : c.name;
+                    const status = getContentStatus(
+                      owner,
+                      repo,
+                      "main",
+                      statusPath,
+                      !isSingleton,
+                    );
+
+                    return (
+                      <ContentListItem
+                        key={c.name}
+                        icon={
+                          <i
+                            className={`large icon ${
+                              isSingleton ? "file outline" : "folder outline"
+                            }`}
+                          />
+                        }
+                        primaryText={getDisplayName(c)}
+                        secondaryText={c.name}
+                        actions={
                           <button
                             type="button"
                             className="ui icon button basic mini"
@@ -184,82 +255,17 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                           >
                             <i className="cog icon"></i>
                           </button>
-                        </span>
-                        <span>
-                          {status.hasDraft
-                            ? (
-                              <StatusBadge
-                                status="draft"
-                                count={status.draftCount}
-                              />
-                            )
-                            : status.hasPr
-                            ? (
-                              <StatusBadge
-                                status="pr_open"
-                                prNumber={status.prNumber}
-                              />
-                            )
-                            : null}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {viewMode === "list" && (
-              <div className="ui relaxed divided list">
-                {filteredCollections.map((c) => {
-                  // Support both "singleton" and "singleton-file"/"singleton-dir" types
-                  const isSingleton = c.type === "singleton" ||
-                    c.type?.startsWith("singleton-");
-                  const statusPath = isSingleton
-                    ? `${c.name}/singleton`
-                    : c.name;
-                  const status = getContentStatus(
-                    owner,
-                    repo,
-                    "main",
-                    statusPath,
-                    !isSingleton,
-                  );
-
-                  return (
-                    <ContentListItem
-                      key={c.name}
-                      icon={
-                        <i
-                          className={`large icon ${
-                            isSingleton ? "file outline" : "folder outline"
-                          }`}
-                        />
-                      }
-                      primaryText={getDisplayName(c)}
-                      secondaryText={c.name}
-                      actions={
-                        <button
-                          type="button"
-                          className="ui icon button basic mini"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSettings(c.name);
-                          }}
-                          title="Settings"
-                        >
-                          <i className="cog icon"></i>
-                        </button>
-                      }
-                      onClick={() => onSelect(c.name)}
-                      status={status}
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
-    </div>
+                        }
+                        onClick={() => onSelect(c.name)}
+                        status={status}
+                      />
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+      </div>
+    </>
   );
 };
