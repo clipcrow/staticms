@@ -125,9 +125,9 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       path = path.substring(1);
     }
 
-    const encodedPath = encodeURIComponent(path);
-    const branch = currentContent.branch || "";
-    return `/api/content?owner=${currentContent.owner}&repo=${currentContent.repo}&filePath=${encodedPath}&branch=${branch}&media=true`;
+    // The router expects /api/repo/:owner/:repo/contents/:path
+    // path can contain slashes.
+    return `/api/repo/${currentContent.owner}/${currentContent.repo}/contents/${path}`;
   };
 
   return (

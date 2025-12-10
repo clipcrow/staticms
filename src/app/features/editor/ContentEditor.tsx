@@ -64,6 +64,13 @@ export function ContentEditor(
       filePath = folder && articleName
         ? `${folder}/${articleName}`
         : articleName || "";
+
+      if (collection.binding === "directory") {
+        filePath = `${filePath}/index.md`.replace("//", "/");
+        // Update folder to include article directory for image upload context
+        const parts = filePath.split("/");
+        if (parts.length > 1) folder = parts.slice(0, -1).join("/");
+      }
     }
   }
 
