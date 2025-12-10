@@ -53,15 +53,20 @@ Deno.test({
     );
 
     const { findByTestId, getByText } = render(
-      <MemoryRouter initialEntries={["/repo/user/my-repo"]}>
+      <MemoryRouter initialEntries={["/user/my-repo"]}>
         <AppRoutes
           RepositorySelectorComponent={MockRepositorySelector}
           ContentBrowserComponent={MockContentBrowser}
         />
       </MemoryRouter>,
     );
+
+    // Auth check is async, so we must wait
+    const contentBrowser = await findByTestId("content-browser", {}, {
+      timeout: 3000,
+    });
     assertEquals(
-      await findByTestId("content-browser"),
+      contentBrowser,
       getByText("Content Browser"),
     );
   },
