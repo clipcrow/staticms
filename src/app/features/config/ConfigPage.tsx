@@ -1,7 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentConfigEditor } from "./ContentConfigEditor.tsx";
-import { Header } from "@/app/components/common/Header.tsx";
+import { Header } from "@/app/components/layout/Header.tsx";
 
 export function ConfigPage() {
   const { owner, repo, collectionName } = useParams();

@@ -14,7 +14,7 @@ import {
   Field as V1Field,
   FileItem,
 } from "@/app/components/editor/types.ts";
-import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
+import { BreadcrumbItem, Header } from "@/app/components/layout/Header.tsx";
 import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
 import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";

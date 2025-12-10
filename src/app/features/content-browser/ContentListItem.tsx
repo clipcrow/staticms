@@ -1,5 +1,5 @@
 import React from "react";
-import { ContentStatus } from "../editor/utils.ts";
+import { ContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "./StatusBadge.tsx";
 
 interface ContentListItemProps {

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { Collection } from "@/app/hooks/useContentConfig.ts";
-import { MarkdownEditor } from "../editor/MarkdownEditor.tsx";
+import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FieldList } from "@/app/features/config/ContentConfigHelpers.tsx";
 // Use Content type only for MarkdownEditor shim
-import { Content } from "../editor/types.ts";
+import { Content } from "@/app/components/editor/types.ts";
 
 interface ContentSettingsProps {
   formData: Collection;

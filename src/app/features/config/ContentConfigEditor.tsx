@@ -1,7 +1,7 @@
 import { useState } from "react";
 import yaml from "js-yaml";
 import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
-import { ContentSettings } from "@/app/components/common/ContentSettings.tsx";
+import { ContentSettings } from "./ContentSettings.tsx";
 
 interface ContentConfigEditorProps {
   owner: string;

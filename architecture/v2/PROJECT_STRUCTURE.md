@@ -29,13 +29,14 @@ staticms2/
 ```
 src/app/
 ├── components/            # UIコンポーネント (Presenters)
-│   ├── common/            # 汎用 UI (Button, Input, Modal...) - Semantic UI ラッパー等
-│   ├── editor-ui/         # エディタ画面固有のUIパーツ (Toolbar, PreviewArea...)
-│   └── layout/            # レイアウト (Header, Sidebar, PageContainer...)
+│   ├── common/            # 汎用 UI (NotFound, Toast...)
+│   ├── editor/            # エディタ画面固有のUIパーツ (MarkdownEditor, Preview...)
+│   └── layout/            # レイアウト (Header, Sidebar...)
 ├── features/              # 機能ごとのコンテナ (Containers / Business Logic)
 │   ├── auth/              # 認証フロー制御 (RequireAuth.tsx)
-│   ├── content-browser/   # リポジトリ・ファイル選択機能
-│   └── content-editor/    # 記事編集・ドラフト管理・保存フロー
+│   ├── config/            # 設定管理 (ContentConfigEditor.tsx)
+│   ├── content-browser/   # リポジトリ・コンテンツ一覧・検索機能
+│   └── editor/            # 記事編集・ドラフト管理・保存フロー
 ├── hooks/                 # 汎用カスタムフック (useLocalStorage, useAuth...)
 ├── contexts/              # React Context (AuthContext...)
 ├── routes/                # ルーティング定義 (AppRoutes.tsx)
