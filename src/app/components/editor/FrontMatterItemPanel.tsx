@@ -102,6 +102,91 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
         {currentContent.fields?.map((configField, index) => {
           const field = fieldMap.get(configField.name) ||
             { name: configField.name, value: "" };
+
+          let widget = (
+            <div className="ui input fluid">
+              <input
+                type="text"
+                value={field.value}
+                onChange={(e) => handleUpdateValue(field.name, e.target.value)}
+                readOnly={isPrLocked || disableValues}
+                disabled={isPrLocked || disableValues}
+                placeholder={disableValues
+                  ? "Value will be set in editor"
+                  : valuePlaceholder || ""}
+              />
+            </div>
+          );
+
+          if (configField.widget === "boolean") {
+            widget = (
+              <div className="ui toggle checkbox">
+                <input
+                  type="checkbox"
+                  checked={field.value === "true" || field.value === "on" ||
+                    (field.value as unknown) === true}
+                  onChange={(e) =>
+                    handleUpdateValue(
+                      field.name,
+                      e.target.checked ? "true" : "false",
+                    )}
+                  disabled={isPrLocked || disableValues}
+                />
+                <label>{configField.label || configField.name}</label>
+              </div>
+            );
+          } else if (configField.widget === "text") {
+            widget = (
+              <div className="ui form">
+                <textarea
+                  rows={3}
+                  value={field.value}
+                  onChange={(e) =>
+                    handleUpdateValue(field.name, e.target.value)}
+                  readOnly={isPrLocked || disableValues}
+                  disabled={isPrLocked || disableValues}
+                />
+              </div>
+            );
+          } else if (
+            configField.widget === "select" && configField.options
+          ) {
+            widget = (
+              <select
+                className="ui dropdown fluid"
+                value={field.value}
+                onChange={(e) => handleUpdateValue(field.name, e.target.value)}
+                disabled={isPrLocked || disableValues}
+              >
+                <option value="">Select an option</option>
+                {configField.options.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            );
+          } else if (
+            configField.widget === "date" || configField.widget === "datetime"
+          ) {
+            // Simple date input
+            widget = (
+              <div className="ui input fluid left icon">
+                <i className="calendar icon"></i>
+                <input
+                  type={configField.widget === "datetime"
+                    ? "datetime-local"
+                    : "date"}
+                  value={field.value}
+                  onChange={(e) =>
+                    handleUpdateValue(field.name, e.target.value)}
+                  readOnly={isPrLocked || disableValues}
+                  disabled={isPrLocked || disableValues}
+                />
+              </div>
+            );
+          }
+
           return (
             <div
               key={`configured-${itemIndex}-${index}`}
@@ -112,22 +197,13 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
               }}
             >
               <div className="four wide column">
-                <strong>{configField.name}</strong>
+                <strong>{configField.label || configField.name}</strong>
+                {configField.required && (
+                  <span style={{ color: "red" }}>*</span>
+                )}
               </div>
               <div className="twelve wide column">
-                <div className="ui input fluid">
-                  <input
-                    type="text"
-                    value={field.value}
-                    onChange={(e) =>
-                      handleUpdateValue(field.name, e.target.value)}
-                    readOnly={isPrLocked || disableValues}
-                    disabled={isPrLocked || disableValues}
-                    placeholder={disableValues
-                      ? "Value will be set in editor"
-                      : valuePlaceholder || ""}
-                  />
-                </div>
+                {widget}
               </div>
             </div>
           );

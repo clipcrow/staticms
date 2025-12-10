@@ -425,6 +425,10 @@ export function ContentEditor(
     name: f.name,
     value: "",
     defaultValue: "",
+    widget: f.widget,
+    label: f.label,
+    options: f.options,
+    required: f.required,
   })) || [];
 
   const currentContent: V1Content = {

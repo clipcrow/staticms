@@ -38,9 +38,13 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 - コンテンツ設定 (Config)
   で定義されたフィールドに基づき、フォームを動的に生成します。
 - **Design**: カード形式、またはアコーディオン形式でメタデータを整理して表示。
-- **Widgets**:
-  - `string`: テキスト入力
+  - **Widgets**:
+  - `string`: テキスト入力 (Default)
+  - `text`: 複数行テキストエリア
   - `boolean`: トグルスイッチ
+  - `select`: ドロップダウン選択
+  - `date`: 日付選択 (YYYY-MM-DD)
+  - `datetime`: 日時選択
   - `image`: 画像選択（モーダル連携）
 
 #### Body Editor (Markdown Only)
