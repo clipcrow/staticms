@@ -1,68 +1,47 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentConfigEditor } from "./ContentConfigEditor.tsx";
-import { Header } from "@/app/components/common/Header.tsx";
+import { ConfigLayout } from "@/app/components/config/ConfigLayout.tsx";
+import { BreadcrumbItem } from "@/app/components/common/Header.tsx";
 
 export function ConfigPage() {
   const { owner, repo, collectionName } = useParams();
   const navigate = useNavigate();
   const { config, loading, error } = useContentConfig(owner, repo);
 
-  if (loading) {
-    return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
-        <Header
-          breadcrumbs={[{ label: `${owner}/${repo}`, to: `/${owner}/${repo}` }]}
-        />
-        <div className="ui active centered inline loader"></div>
-      </div>
-    );
-  }
-
-  if (error || !config) {
-    return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
-        <div className="ui negative message">
-          <div className="header">Error loading configuration</div>
-          <p>{error?.message || "Configuration not found"}</p>
-        </div>
-      </div>
-    );
-  }
-
   const isNew = collectionName === "new";
-  const initialData = !isNew
+  const initialData = (!isNew && config)
     ? config.collections.find((c) => c.name === collectionName)
     : undefined;
 
-  if (!isNew && !initialData) {
-    return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
-        <div className="ui warning message">
-          Collection "{collectionName}" not found.
-        </div>
-      </div>
-    );
-  }
+  const notFound = !isNew && !initialData && !loading && !error;
 
   const handleFinish = () => {
     // Navigate back to the content list
     navigate(`/${owner}/${repo}`);
   };
 
+  const breadcrumbs: BreadcrumbItem[] = [
+    { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+  ];
+
+  if (!loading && !error) {
+    breadcrumbs.push({
+      label: isNew
+        ? "New Content Type"
+        : `Config: ${initialData?.label || collectionName}`,
+    });
+  }
+
   return (
-    <div className="ui container" style={{ marginTop: "2rem" }}>
-      <Header
-        breadcrumbs={[
-          { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
-          {
-            label: isNew
-              ? "New Content Type"
-              : `Config: ${initialData?.label || collectionName}`,
-          },
-        ]}
-      />
-      <div className="ui segment">
+    <ConfigLayout
+      breadcrumbs={breadcrumbs}
+      loading={loading}
+      error={error}
+      notFound={notFound}
+      notFoundMessage={`Collection "${collectionName}" not found.`}
+    >
+      {config && (
         <ContentConfigEditor
           owner={owner!}
           repo={repo!}
@@ -72,7 +51,7 @@ export function ConfigPage() {
           onCancel={handleFinish}
           onSave={handleFinish}
         />
-      </div>
-    </div>
+      )}
+    </ConfigLayout>
   );
 }
