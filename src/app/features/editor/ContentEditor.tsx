@@ -16,7 +16,7 @@ import {
   Field as V1Field,
   FileItem,
 } from "@/app/components/editor/types.ts";
-import { BreadcrumbItem } from "@/app/components/layout/Header.tsx";
+import { BreadcrumbItem } from "@/app/components/common/Header.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 
 export interface ContentEditorProps {

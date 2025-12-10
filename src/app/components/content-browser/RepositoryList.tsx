@@ -1,7 +1,7 @@
 import React from "react";
-import { Header } from "@/app/components/layout/Header.tsx";
+import { Header } from "@/app/components/common/Header.tsx";
 import { getRepoStatus } from "@/app/components/editor/utils.ts";
-import { StatusBadge } from "@/app/features/content-browser/StatusBadge.tsx";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import type { Repository } from "@/app/hooks/useRepositories.ts";
 
 export interface RepositoryListProps {

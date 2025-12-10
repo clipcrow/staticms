@@ -1,5 +1,5 @@
 import React from "react";
-import { BreadcrumbItem, Header } from "@/app/components/layout/Header.tsx";
+import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEditor.tsx";
 import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";

@@ -1,6 +1,6 @@
 import React from "react";
 import { ContentStatus } from "@/app/components/editor/utils.ts";
-import { StatusBadge } from "./StatusBadge.tsx";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 
 interface ContentListItemProps {
   icon?: React.ReactNode;

@@ -1,8 +1,8 @@
 import React from "react";
-import { Header } from "@/app/components/layout/Header.tsx";
-import { ContentListItem } from "@/app/features/content-browser/ContentListItem.tsx";
+import { Header } from "@/app/components/common/Header.tsx";
+import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
-import { StatusBadge } from "@/app/features/content-browser/StatusBadge.tsx";
+import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import { FileItem } from "@/app/components/editor/types.ts";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
 
