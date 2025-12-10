@@ -74,7 +74,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "ContentRoute: renders SingletonEditor for singleton type",
+  name: "ContentRoute: renders ContentEditor for singleton type",
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
@@ -119,7 +119,7 @@ Deno.test({
         </ToastProvider>,
       );
 
-      // Should render SingletonEditor -> ContentEditor -> MockMDEditor
+      // Should render ContentEditor -> ContentEditor -> MockMDEditor
       await findByTestId("mock-md-editor");
 
       // Should NOT render ArticleList filter

@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ArticleList } from "@/app/features/content-browser/ArticleList.tsx";
-import { SingletonEditor } from "@/app/features/editor/SingletonEditor.tsx";
+import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
 
 export function ContentRoute() {
   const { owner, repo, collectionName } = useParams();
@@ -31,7 +31,8 @@ export function ContentRoute() {
   }
 
   if (def.type === "singleton") {
-    return <SingletonEditor />;
+    // Singleton directly renders the editor
+    return <ContentEditor mode="edit" />;
   } else {
     // Default to Collection (Article List)
     return <ArticleList />;
