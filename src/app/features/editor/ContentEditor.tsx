@@ -67,6 +67,8 @@ export function ContentEditor(
     }
   }
 
+  const isYamlMode = filePath.endsWith(".yml") || filePath.endsWith(".yaml");
+
   const user = localStorage.getItem("staticms_user") || "anonymous";
   const effectiveArticleName = articleName ||
     (collection?.type === "singleton" ? "singleton" : "__new__");
@@ -251,12 +253,18 @@ export function ContentEditor(
         savePath = filePath;
       }
 
-      const frontMatterString = Object.keys(draft.frontMatter || {}).length > 0
-        ? yaml.dump(draft.frontMatter)
-        : "";
-      const fileContent = frontMatterString
-        ? `---\n${frontMatterString}---\n\n${draft.body}`
-        : draft.body;
+      let fileContent = "";
+      if (isYamlMode) {
+        fileContent = yaml.dump(draft.frontMatter);
+      } else {
+        const frontMatterString =
+          Object.keys(draft.frontMatter || {}).length > 0
+            ? yaml.dump(draft.frontMatter)
+            : "";
+        fileContent = frontMatterString
+          ? `---\n${frontMatterString}---\n\n${draft.body}`
+          : draft.body;
+      }
 
       // Prepare Batch Updates
       const updates = [];
@@ -527,34 +535,36 @@ export function ContentEditor(
           />
 
           {/* Markdown Editor */}
-          <div className="ui segment">
-            <MarkdownEditor
-              body={draft.body}
-              setBody={(body) => {
-                const nextBody = body || "";
-                if (nextBody === draft.body) {
-                  return;
-                }
+          {!isYamlMode && (
+            <div className="ui segment">
+              <MarkdownEditor
+                body={draft.body}
+                setBody={(body) => {
+                  const nextBody = body || "";
+                  if (nextBody === draft.body) {
+                    return;
+                  }
 
-                const prevFM = draft.frontMatter;
-                const isClean = originalDraft
-                  ? (nextBody === originalDraft.body &&
-                    JSON.stringify(prevFM) ===
-                      JSON.stringify(originalDraft.frontMatter))
-                  : false;
+                  const prevFM = draft.frontMatter;
+                  const isClean = originalDraft
+                    ? (nextBody === originalDraft.body &&
+                      JSON.stringify(prevFM) ===
+                        JSON.stringify(originalDraft.frontMatter))
+                    : false;
 
-                setDraft(
-                  (prev) => ({ ...prev, body: nextBody }),
-                  undefined,
-                  isClean,
-                );
-              }}
-              isPrLocked={isLocked}
-              currentContent={currentContent}
-              height={600}
-              onImageUpload={handleImageUpload}
-            />
-          </div>
+                  setDraft(
+                    (prev) => ({ ...prev, body: nextBody }),
+                    undefined,
+                    isClean,
+                  );
+                }}
+                isPrLocked={isLocked}
+                currentContent={currentContent}
+                height={600}
+                onImageUpload={handleImageUpload}
+              />
+            </div>
+          )}
         </div>
         <div className="four wide column">
           {/* Future Sidebar (History, Images) */}
