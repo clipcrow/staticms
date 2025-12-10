@@ -17,6 +17,8 @@ import {
 import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
+import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";
+import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 
 export interface ContentEditorProps {
   mode?: "new" | "edit";
@@ -257,10 +259,10 @@ export function ContentEditor(
       if (isYamlMode) {
         fileContent = yaml.dump(draft.frontMatter);
       } else {
-        const frontMatterString =
-          Object.keys(draft.frontMatter || {}).length > 0
-            ? yaml.dump(draft.frontMatter)
-            : "";
+        const fmObject = draft.frontMatter as FrontMatterObject;
+        const frontMatterString = Object.keys(fmObject || {}).length > 0
+          ? yaml.dump(fmObject)
+          : "";
         fileContent = frontMatterString
           ? `---\n${frontMatterString}---\n\n${draft.body}`
           : draft.body;
@@ -403,6 +405,9 @@ export function ContentEditor(
     });
   }
 
+  // Check if root is array
+  const isListMode = isYamlMode && Array.isArray(draft.frontMatter);
+
   // Lock Logic: Locked if PR exists AND (no local draft OR not author).
   // Current user must match PR author to unlock with draft.
   // Note: draft.pr does not strictly store 'author', but we assume logic simplified or author check needs API.
@@ -506,91 +511,119 @@ export function ContentEditor(
       />
 
       <div className="ui stackable grid">
-        <div className="twelve wide column">
-          {/* FrontMatter Editor */}
-          {(!collection.fields || collection.fields.length === 0) && (
-            <div className="ui warning message">
-              <div className="header">No Fields Defined</div>
-              <p>Please define 'fields' in your content configuration.</p>
-            </div>
-          )}
-
-          <FrontMatterItemEditor
-            frontMatter={draft.frontMatter as Record<string, unknown>}
-            setFrontMatter={(fm) => {
-              const prevBody = draft.body;
-              const isClean = originalDraft
-                ? (prevBody === originalDraft.body &&
-                  JSON.stringify(fm) ===
-                    JSON.stringify(originalDraft.frontMatter))
-                : false;
-              setDraft(
-                (prev) => ({ ...prev, frontMatter: fm }),
-                undefined,
-                isClean,
-              );
-            }}
-            currentContent={currentContent}
-            isPrLocked={isLocked}
-          />
-
-          {/* Markdown Editor */}
-          {!isYamlMode && (
-            <div className="ui segment">
-              <MarkdownEditor
-                body={draft.body}
-                setBody={(body) => {
-                  const nextBody = body || "";
-                  if (nextBody === draft.body) {
-                    return;
-                  }
-
-                  const prevFM = draft.frontMatter;
+        <div
+          className={isListMode ? "sixteen wide column" : "twelve wide column"}
+        >
+          {isListMode
+            ? (
+              <YamlListEditor
+                items={draft.frontMatter as FrontMatterList}
+                onChange={(newItems: FrontMatterList) => {
                   const isClean = originalDraft
-                    ? (nextBody === originalDraft.body &&
-                      JSON.stringify(prevFM) ===
-                        JSON.stringify(originalDraft.frontMatter))
+                    ? (JSON.stringify(newItems) ===
+                      JSON.stringify(originalDraft.frontMatter))
                     : false;
-
                   setDraft(
-                    (prev) => ({ ...prev, body: nextBody }),
+                    (prev) => ({ ...prev, frontMatter: newItems }),
                     undefined,
                     isClean,
                   );
                 }}
-                isPrLocked={isLocked}
+                fields={collection.fields || []}
                 currentContent={currentContent}
-                height={600}
-                onImageUpload={handleImageUpload}
+                isLocked={isLocked}
+              />
+            )
+            : (
+              <>
+                {/* FrontMatter Editor */}
+                {(!collection.fields || collection.fields.length === 0) && (
+                  <div className="ui warning message">
+                    <div className="header">No Fields Defined</div>
+                    <p>Please define 'fields' in your content configuration.</p>
+                  </div>
+                )}
+
+                <FrontMatterItemEditor
+                  frontMatter={draft.frontMatter as FrontMatterObject}
+                  setFrontMatter={(fm) => {
+                    const prevBody = draft.body;
+                    const isClean = originalDraft
+                      ? (prevBody === originalDraft.body &&
+                        JSON.stringify(fm) ===
+                          JSON.stringify(originalDraft.frontMatter))
+                      : false;
+                    setDraft(
+                      (prev) => ({ ...prev, frontMatter: fm }),
+                      undefined,
+                      isClean,
+                    );
+                  }}
+                  currentContent={currentContent}
+                  isPrLocked={isLocked}
+                />
+
+                {/* Markdown Editor */}
+                {!isYamlMode && (
+                  <div className="ui segment">
+                    <MarkdownEditor
+                      body={draft.body}
+                      setBody={(body) => {
+                        const nextBody = body || "";
+                        if (nextBody === draft.body) {
+                          return;
+                        }
+
+                        const prevFM = draft.frontMatter;
+                        const isClean = originalDraft
+                          ? (nextBody === originalDraft.body &&
+                            JSON.stringify(prevFM) ===
+                              JSON.stringify(originalDraft.frontMatter))
+                          : false;
+
+                        setDraft(
+                          (prev) => ({ ...prev, body: nextBody }),
+                          undefined,
+                          isClean,
+                        );
+                      }}
+                      isPrLocked={isLocked}
+                      currentContent={currentContent}
+                      height={600}
+                      onImageUpload={handleImageUpload}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+        </div>
+        {!isListMode && (
+          <div className="four wide column">
+            {/* Future Sidebar (History, Images) */}
+            <div className="ui segment">
+              <ContentImages
+                pendingImages={draft.pendingImages || []}
+                onUpload={(files) =>
+                  Array.from(files).forEach(handleImageUpload)}
+                onRemovePending={(name) =>
+                  setDraft((prev) => ({
+                    ...prev,
+                    pendingImages: prev.pendingImages?.filter((i) =>
+                      i.name !== name
+                    ),
+                  }))}
+                onInsert={(name) => {
+                  // Hacky insert: use clipboard or just append?
+                  // Best would be to expose an insert method ref from MarkdownEditor,
+                  // but for now let's just use clipboard or toast
+                  navigator.clipboard.writeText(`![${name}](${name})`);
+                  showToast(`Copied ![${name}](${name}) to clipboard`, "info");
+                }}
+                folderPath={folder || ""}
               />
             </div>
-          )}
-        </div>
-        <div className="four wide column">
-          {/* Future Sidebar (History, Images) */}
-          <div className="ui segment">
-            <ContentImages
-              pendingImages={draft.pendingImages || []}
-              onUpload={(files) =>
-                Array.from(files).forEach(handleImageUpload)}
-              onRemovePending={(name) =>
-                setDraft((prev) => ({
-                  ...prev,
-                  pendingImages: prev.pendingImages?.filter((i) =>
-                    i.name !== name
-                  ),
-                }))}
-              onInsert={(name) => {
-                // Hacky insert: use clipboard or just append?
-                // Best would be to expose an insert method ref from MarkdownEditor,
-                // but for now let's just use clipboard or toast
-                navigator.clipboard.writeText(`![${name}](${name})`);
-                showToast(`Copied ![${name}](${name}) to clipboard`, "info");
-              }}
-              folderPath={folder || ""}
-            />
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

@@ -1,10 +1,11 @@
 import React from "react";
 import { Content, Field } from "./types.ts";
 import { FrontMatterItemPanel } from "./FrontMatterItemPanel.tsx";
+import { FrontMatterObject } from "@/shared/types.ts";
 
 interface FrontMatterEditorProps {
-  frontMatter: Record<string, unknown>;
-  setFrontMatter: (fm: Record<string, unknown>) => void;
+  frontMatter: FrontMatterObject;
+  setFrontMatter: (fm: FrontMatterObject) => void;
   currentContent: Content;
   isPrLocked: boolean;
 }
@@ -29,7 +30,7 @@ export const FrontMatterItemEditor: React.FC<FrontMatterEditorProps> = ({
         ...acc,
         [field.name]: field.value,
       }),
-      {} as Record<string, unknown>,
+      {} as FrontMatterObject,
     );
     setFrontMatter(newFrontMatter);
   };

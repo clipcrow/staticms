@@ -111,9 +111,26 @@ LocalStorage に保存されるドラフトデータの構造です。`src/app/h
 で定義されています。
 
 ```typescript
+export type FrontMatterPrimitive =
+  | string
+  | number
+  | boolean
+  | null
+  | Date
+  | undefined;
+
+export type FrontMatterValue =
+  | FrontMatterPrimitive
+  | FrontMatterValue[]
+  | { [key: string]: FrontMatterValue };
+
+export type FrontMatterObject = { [key: string]: FrontMatterValue };
+export type FrontMatterList = FrontMatterObject[];
+export type FrontMatterContent = FrontMatterObject | FrontMatterList;
+
 export interface Draft {
   // コンテンツ本体
-  frontMatter: Record<string, unknown>; // YAML FrontMatter
+  frontMatter: FrontMatterContent; // 具体的な型を使用
   body: string; // Markdown Body
 
   // 画像アップロード用（未コミット画像）

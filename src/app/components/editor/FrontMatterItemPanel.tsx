@@ -33,7 +33,6 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
   valuePlaceholder,
 }) => {
   const [newFieldName, setNewFieldName] = useState("");
-
   const configuredFieldNames = currentContent.fields?.map((f) => f.name) || [];
   const unconfiguredFields = fields.filter((f) =>
     !configuredFieldNames.includes(f.name)

@@ -94,20 +94,45 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 
 - **Key**: `staticms_draft_${username}|${owner}|${repo}|${branch}|${filePath}`
 - **Structure**:
-  ```typescript
-  interface ContentState {
-    frontMatter: Record<string, any>;
-    body: string;
-    pendingImages: PendingImage[];
-    pr?: { // 統合されたPR情報
-      number: number;
-      url: string;
-      state: "open" | "closed" | "merged";
-    };
-    isDirty?: boolean; // ローカル変更があるかどうか
-    updatedAt: number;
-  }
-  ```
+  - **Key**: `staticms_draft_${username}|${owner}|${repo}|${branch}|${filePath}`
+  - **Structure**:
+    ```typescript
+    // Basic types allowable in FrontMatter
+    export type FrontMatterPrimitive =
+      | string
+      | number
+      | boolean
+      | null
+      | Date
+      | undefined;
+
+    // Recursive definition for FrontMatter values
+    export type FrontMatterValue =
+      | FrontMatterPrimitive
+      | FrontMatterValue[]
+      | { [key: string]: FrontMatterValue };
+
+    // Standard Map structure for FrontMatter
+    export type FrontMatterObject = { [key: string]: FrontMatterValue };
+
+    // Array root structure for YAML List
+    export type FrontMatterList = FrontMatterObject[];
+
+    export type FrontMatterContent = FrontMatterObject | FrontMatterList;
+
+    interface ContentState {
+      frontMatter: FrontMatterContent; // 具体的な型を使用
+      body: string;
+      pendingImages: PendingImage[];
+      pr?: { // 統合されたPR情報
+        number: number;
+        url: string;
+        state: "open" | "closed" | "merged";
+      };
+      isDirty?: boolean; // ローカル変更があるかどうか
+      updatedAt: number;
+    }
+    ```
 
 ### 2. 初期化プロセス (Initialization)
 
@@ -197,8 +222,96 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 - **Spacing**: セクション間には十分なマージン (`2rem`) を設ける。
 - **Colors**:
   - アクションボタン: Semantic UI Primary Blue
+- **Spacing**: セクション間には十分なマージン (`2rem`) を設ける。
+- **Colors**:
+  - アクションボタン: Semantic UI Primary Blue
   - 警告/ドラフト: Orange / Yellow
   - 削除/危険: Red
 - **Feedback**:
-  - 保存中 (`Saving...`) はボタンを Loading 状態にする。
   - 成功・失敗は必ず Toast 通知でフィードバックする。
+
+## YAML Editor モード仕様
+
+Staticms は Markdown ファイル (`.md`)
+だけでなく、設定ファイルやデータファイルとして使用される YAML ファイル (`.yml`,
+`.yaml`)
+の編集もサポートします。ファイルのルート構造（オブジェクトか配列か）によって、2つのサブモードに自動的に切り替わります。
+
+### 1. YAML Object Editor (Standard)
+
+- **適用条件**:
+  - ファイル拡張子が `.yml` または `.yaml`。
+  - ルートが単一のオブジェクト (`Object`)、つまり配列ではない場合。
+- **UI 構成**:
+  - **FrontMatter Editor (Only)**: `config.fields`
+    に基づくフォームのみを全画面（Main Column）に表示します。
+  - **Body Editor (Hidden)**: Markdown 本文エディタは非表示となります。
+- **保存形式**:
+  - `---` セパレータを含まない、純粋な YAML ファイルとして保存します
+    (`yaml.dump(data)`)。
+
+### 2. YAML List Editor (Root Array)
+
+通常の記事編集（Markdown + FrontMatter）や上記 Object Editor
+とは異なり、データファイルのルート要素が「配列（Array）」である場合のエディタ仕様です。
+
+#### 概要
+
+- **適用条件**:
+  - ファイル拡張子が `.yml` または `.yaml` (または `.json`) である。
+  - ファイルをパースした結果、ルートオブジェクトが配列 (`Array<any>`) である。
+- **目的**:
+  ニュースフィード、バナー設定、リンクリストなど、順序を持つ構造化データの管理。
+
+#### UI 構成 (Stack Layout)
+
+通常の「FrontMatter +
+Body」構成ではなく、「リストアイテムの積み上げ（Stack）」によるUIを提供します。
+
+##### メインエリア表示
+
+1. **Top Action Area**:
+   - **Add Item (Top)** ボタン: 配列の先頭に新規要素を追加します。
+
+2. **List Items Area (Sortable List)**:
+   - 配列の各要素を「カード」または「アコーディオン」形式で縦にレンダリングします。
+   - **Drag Handle**:
+     各アイテムの左側に配置。ドラッグ＆ドロップで順序を入れ替えます。
+   - **Card/Accordion Header**:
+     - アイテムの「サマリー」を表示（`config.summary`
+       フィールドなどが指定されている場合、または最初の文字列フィールド）。
+   - **Item Editor**:
+     - `config.fields`
+       で定義されたウィジェットを使用して、要素内のフィールドを編集します。
+     - 初期状態は「開いた」状態、または設定により「閉じた」状態で表示し、クリックで展開します。
+   - **Remove Button**:
+     - アイテム削除ボタン。誤操作防止のため、確認ダイアログまたはUndoトーストを推奨します。
+
+3. **Bottom Action Area**:
+   - **Add Item (Bottom)** ボタン: 配列の末尾に新規要素を追加します。
+
+#### 操作ロジック
+
+- **追加 (Add)**:
+  - 新規アイテムは、`config.fields`
+    で定義されたフィールド構成に基づき、デフォルト値で初期化されます。
+  - 追加直後は、該当アイテムにフォーカス、またはスクロール位置を調整します。
+- **並び替え (Reorder)**:
+  - ドラッグ＆ドロップ操作完了時（Drop時）に、内部Stateの配列順序を即座に更新します。
+  - `isDirty` フラグを True に設定します。
+- **削除 (Remove)**:
+  - 指定されたインデックスの要素を配列から削除し、Stateを更新します。
+
+#### 保存プロセス (Save)
+
+- **Serialize**:
+  - フロントマター形式ではなく、**純粋な配列のYAML** としてダンプします。
+  - `yaml.dump(arrayData)`
+- **Validation**:
+  - 配列内の各要素に対してバリデーションを実行します。エラーがある場合、該当アイテムを開いてエラーを表示します。
+
+#### Config との整合性
+
+- `config.collections` において、`type: "singleton"` かつ `path`
+  がYAMLファイルを指している場合でも、その内容が配列であれば自動的に本モードが適用されます。
+- `fields` 定義は、**配列内の1要素あたりのスキーマ** として解釈されます。
