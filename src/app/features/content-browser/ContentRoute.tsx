@@ -35,7 +35,7 @@ export function ContentRoute() {
     );
   }
 
-  if (def.type === "singleton") {
+  if (def.type === "singleton" || def.type?.startsWith("singleton-")) {
     // Singleton directly renders the editor
     return <ContentEditor mode="edit" />;
   } else {

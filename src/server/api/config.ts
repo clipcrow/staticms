@@ -23,21 +23,9 @@ export const getRepoConfig = async (
     return;
   }
 
-  // 3. Last resort: Return default template
-  const defaultConfig = `# Staticms Configuration
-# This file was automatically generated/suggested by Staticms.
-# Define your content collections here.
-
-collections:
-  - name: posts
-    label: Posts
-    folder: content/posts
-    create: true
-    fields:
-      - name: "title"
-        widget: "string"
-`;
-  ctx.response.body = defaultConfig;
+  // 3. Failover / Initial: Return empty collections
+  const emptyConfig = "collections: []\n";
+  ctx.response.body = emptyConfig;
   ctx.response.type = "text/yaml";
 };
 

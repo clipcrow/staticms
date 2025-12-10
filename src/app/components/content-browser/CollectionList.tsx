@@ -131,7 +131,9 @@ export const CollectionList: React.FC<CollectionListProps> = ({
             {viewMode === "card" && (
               <div className="ui three stackable cards">
                 {filteredCollections.map((c) => {
-                  const isSingleton = c.type === "singleton";
+                  // Support both "singleton" and "singleton-file"/"singleton-dir" types
+                  const isSingleton = c.type === "singleton" ||
+                    c.type?.startsWith("singleton-");
                   const statusPath = isSingleton
                     ? `${c.name}/singleton`
                     : c.name;
@@ -153,9 +155,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                         <div className="header">
                           <i
                             className={`icon ${
-                              c.type === "singleton"
-                                ? "file outline"
-                                : "folder outline"
+                              isSingleton ? "file outline" : "folder outline"
                             }`}
                             style={{ marginRight: "0.5em" }}
                           >
@@ -166,7 +166,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                           {c.name}
                         </div>
                         <div className="description">
-                          {c.type === "singleton"
+                          {isSingleton
                             ? "Singleton Content"
                             : "Collection of entries"}
                         </div>
@@ -212,7 +212,9 @@ export const CollectionList: React.FC<CollectionListProps> = ({
             {viewMode === "list" && (
               <div className="ui relaxed divided list">
                 {filteredCollections.map((c) => {
-                  const isSingleton = c.type === "singleton";
+                  // Support both "singleton" and "singleton-file"/"singleton-dir" types
+                  const isSingleton = c.type === "singleton" ||
+                    c.type?.startsWith("singleton-");
                   const statusPath = isSingleton
                     ? `${c.name}/singleton`
                     : c.name;
@@ -230,9 +232,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                       icon={
                         <i
                           className={`large icon ${
-                            c.type === "singleton"
-                              ? "file outline"
-                              : "folder outline"
+                            isSingleton ? "file outline" : "folder outline"
                           }`}
                         />
                       }

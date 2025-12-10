@@ -59,7 +59,7 @@ Deno.test({
     await teardownAuth();
 
     assertEquals(ctx.response.status, 200); // 200 OK (default config doesn't set status explicitly, defaults to 200)
-    assertStringIncludes(ctx.response.body as string, "Staticms Configuration");
+    assertStringIncludes(ctx.response.body as string, "collections: []");
     assertEquals(ctx.response.type, "text/yaml");
   },
 });

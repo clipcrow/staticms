@@ -8,6 +8,8 @@ import { ConfigPage } from "@/app/features/config/ConfigPage.tsx";
 import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
 import { NotFound } from "@/app/components/common/NotFound.tsx";
 
+import { ConfigDebugger } from "@/app/features/debug/ConfigDebugger.tsx";
+
 // Dependency Injection Interface
 export interface AppRoutesProps {
   RepositorySelectorComponent?: React.ElementType;
@@ -15,6 +17,7 @@ export interface AppRoutesProps {
   ContentRouteComponent?: React.ElementType;
   ContentEditorComponent?: React.ElementType;
   ConfigPageComponent?: React.ElementType;
+  ConfigDebuggerComponent?: React.ElementType;
 }
 
 export function AppRoutes({
@@ -23,6 +26,7 @@ export function AppRoutes({
   ContentRouteComponent = ContentRoute,
   ContentEditorComponent = ContentEditor,
   ConfigPageComponent = ConfigPage,
+  ConfigDebuggerComponent = ConfigDebugger,
 }: AppRoutesProps) {
   return (
     <Routes>
@@ -41,6 +45,15 @@ export function AppRoutes({
         element={
           <RequireAuth>
             <ConfigPageComponent />
+          </RequireAuth>
+        }
+      />
+
+      <Route
+        path="/:owner/:repo/debug"
+        element={
+          <RequireAuth>
+            <ConfigDebuggerComponent />
           </RequireAuth>
         }
       />

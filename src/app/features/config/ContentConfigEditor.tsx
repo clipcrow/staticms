@@ -63,7 +63,7 @@ export function ContentConfigEditor({
         ...formData,
         name: generatedName,
         label: formData.label?.trim() || undefined, // Optional
-        path: formData.path?.trim() || "",
+        path: formData.path?.trim().replace(/^\//, "") || "",
         branch: formData.branch?.trim() || undefined,
         fields: formData.fields?.map((f: Field) => ({
           ...f,

@@ -78,3 +78,21 @@ E2Eテストの知見については `architecture/v2/E2E.md` を参照してく
 
 カバレッジ率の数値目標は設定しませんが、**ロジックを含む全てのコードパス**
 がユニットテストで保護されていることを目指します。
+
+## 6. Debugging Tools
+
+### Browser Config Debugger
+
+- **URL**: `/:owner/:repo/debug`
+- **Purpose**:
+  フロントエンドで読み込まれた現在の設定(config)や、関連するLocalStorageデータ(Drafts,
+  Session)を確認する。
+- **Usage**: 直接URLにアクセスしてください。認証が必要です。
+
+### Server KV Dump
+
+- **URL**: `/_debug/kv`
+- **Purpose**: Deno
+  KVに保存されている全てのキーをサーバーコンソールに出力する。データの永続化確認や消失調査に有用です。
+- **Requirement**: サーバーが `ENABLE_DEBUG=true`
+  で起動されている必要があります。

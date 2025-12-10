@@ -22,7 +22,9 @@ export function useRepoContent(owner?: string, repo?: string, path?: string) {
     fetch(`/api/repo/${owner}/${repo}/contents/${path}`)
       .then(async (res) => {
         if (!res.ok) {
-          throw new Error(`Failed to fetch content: ${res.statusText}`);
+          throw new Error(
+            `Failed to fetch content at '${path}': ${res.statusText}`,
+          );
         }
         return await res.json() as GitHubFile[];
       })

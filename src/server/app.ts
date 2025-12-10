@@ -11,6 +11,7 @@ import { webhookHandler } from "@/server/api/webhooks.ts";
 import { addClient } from "@/server/sse.ts";
 import { authRouter } from "@/server/auth.ts";
 import { batchCommitHandler } from "@/server/api/commits.ts";
+import { dumpKvKeys } from "@/server/api/debug.ts";
 
 export const app = new Application();
 const router = new Router();
@@ -61,6 +62,12 @@ router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
 // router.post("/api/repo/:owner/:repo/pr", createPrHandler); // Deprecated
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
+
+if (Deno.env.get("ENABLE_DEBUG") === "true") {
+  console.log("Debug mode enabled: /_debug/kv is active");
+  router.get("/_debug/kv", dumpKvKeys);
+}
+
 router.post("/api/webhook", webhookHandler);
 
 // SSE
