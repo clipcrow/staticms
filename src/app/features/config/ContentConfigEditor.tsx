@@ -1,7 +1,7 @@
 import { useState } from "react";
 import yaml from "js-yaml";
 import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
-import { ContentSettings } from "./ContentSettings.tsx";
+import { ConfigForm } from "@/app/components/config/ConfigForm.tsx";
 
 interface ContentConfigEditorProps {
   owner: string;
@@ -148,7 +148,7 @@ export function ContentConfigEditor({
   };
 
   return (
-    <ContentSettings
+    <ConfigForm
       formData={formData}
       setFormData={setFormData}
       editingIndex={mode === "edit" ? 1 : null}

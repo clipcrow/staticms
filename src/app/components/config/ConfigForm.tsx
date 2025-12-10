@@ -5,7 +5,7 @@ import { FieldList } from "@/app/features/config/ContentConfigHelpers.tsx";
 // Use Content type only for MarkdownEditor shim
 import { Content } from "@/app/components/editor/types.ts";
 
-interface ContentSettingsProps {
+interface ConfigFormProps {
   formData: Collection;
   setFormData: React.Dispatch<React.SetStateAction<Collection>>;
   editingIndex: number | null;
@@ -16,7 +16,7 @@ interface ContentSettingsProps {
   loading?: boolean;
 }
 
-export const ContentSettings: React.FC<ContentSettingsProps> = ({
+export const ConfigForm: React.FC<ConfigFormProps> = ({
   formData,
   setFormData,
   editingIndex,

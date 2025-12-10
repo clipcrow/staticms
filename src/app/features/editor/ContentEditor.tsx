@@ -5,19 +5,18 @@ import { useDraft } from "@/app/hooks/useDraft.ts";
 import { useAuth } from "@/app/hooks/useAuth.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
 import yaml from "js-yaml";
+import { useContentSync } from "@/app/hooks/useContentSync.ts";
 
-// V1 Components
-import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
-import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEditor.tsx";
+// Presenter
+import { EditorLayout } from "@/app/components/editor/EditorLayout.tsx";
+
+// Types
 import {
   Content as V1Content,
   Field as V1Field,
   FileItem,
 } from "@/app/components/editor/types.ts";
-import { BreadcrumbItem, Header } from "@/app/components/layout/Header.tsx";
-import { ContentImages } from "@/app/components/editor/ContentImages.tsx";
-import { useContentSync } from "@/app/hooks/useContentSync.ts";
-import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";
+import { BreadcrumbItem } from "@/app/components/layout/Header.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 
 export interface ContentEditorProps {
@@ -43,7 +42,6 @@ export function ContentEditor(
   const [saving, setSaving] = useState(false);
   const [isMerged, setIsMerged] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
-  // Removed local fetching/originalDraft/reloadTrigger state
 
   const collection = config?.collections.find((c: Collection) =>
     c.name === collectionName
@@ -207,10 +205,8 @@ export function ContentEditor(
 
     // Reconstruct currentContent for savePrStatus utility
     // It matches the one in render but needs to be accessible here
-    // Reconstruct currentContent for savePrStatus utility
     const currentArticleName = articleName || "__new__";
 
-    // Slight duplication of currentContent construction logic, but safer than refactoring scope now
     const currentContent: V1Content = {
       owner: owner || "",
       repo: repo || "",
@@ -357,6 +353,62 @@ export function ContentEditor(
     }
   };
 
+  const handleFrontMatterChange = (fm: FrontMatterObject | FrontMatterList) => {
+    if (Array.isArray(fm)) {
+      // List Mode
+      const isClean = originalDraft
+        ? (JSON.stringify(fm) === JSON.stringify(originalDraft.frontMatter))
+        : false;
+      setDraft(
+        (prev) => ({ ...prev, frontMatter: fm }),
+        undefined,
+        isClean,
+      );
+    } else {
+      // Object Mode
+      const prevBody = draft.body;
+      const isClean = originalDraft
+        ? (prevBody === originalDraft.body &&
+          JSON.stringify(fm) === JSON.stringify(originalDraft.frontMatter))
+        : false;
+      setDraft(
+        (prev) => ({ ...prev, frontMatter: fm }),
+        undefined,
+        isClean,
+      );
+    }
+  };
+
+  const handleBodyChange = (body: string) => {
+    const nextBody = body || "";
+    if (nextBody === draft.body) return;
+
+    const prevFM = draft.frontMatter;
+    const isClean = originalDraft
+      ? (nextBody === originalDraft.body &&
+        JSON.stringify(prevFM) ===
+          JSON.stringify(originalDraft.frontMatter))
+      : false;
+
+    setDraft(
+      (prev) => ({ ...prev, body: nextBody }),
+      undefined,
+      isClean,
+    );
+  };
+
+  const handlePendingImageRemove = (name: string) => {
+    setDraft((prev) => ({
+      ...prev,
+      pendingImages: prev.pendingImages?.filter((i) => i.name !== name),
+    }));
+  };
+
+  const handleImageInsert = (name: string) => {
+    navigator.clipboard.writeText(`![${name}](${name})`);
+    showToast(`Copied ![${name}](${name}) to clipboard`, "info");
+  };
+
   if (!collection || !config) {
     return <div className="ui active centered inline loader"></div>;
   }
@@ -408,223 +460,36 @@ export function ContentEditor(
   // Check if root is array
   const isListMode = isYamlMode && Array.isArray(draft.frontMatter);
 
-  // Lock Logic: Locked if PR exists AND (no local draft OR not author).
-  // Current user must match PR author to unlock with draft.
-  // Note: draft.pr does not strictly store 'author', but we assume logic simplified or author check needs API.
-  // For now, if PR is stored in Draft, we assume we might be the author if we have local changes?
-  // Actually, specs say "Lock unless local draft exists".
-  // If we have local draft (isSynced=false), we can edit.
-  // If we have PR and Clean (isSynced=true), it is Locked?
-  // Let's assume if we have PR info stored, we check lock.
-
-  // Simplified Lock: If PR exists, and we are Synced (Clean), we are Locked.
-  // If we are Dirty (Unsynced), we can Edit (Draft overrides PR).
-  // The original 'author' check was better. But removing prInfo state lost 'author' field.
-  // We can add 'author' to draft.pr (Draft type).
-  // For now, strictly follow Spec: "Open PR -> Locked." "Draft exists -> Unlocked".
+  // Lock Logic
   const isLocked = !!draft.pr && isSynced;
 
   return (
-    <div className="ui container content-editor" style={{ marginTop: "2rem" }}>
-      <Header
-        breadcrumbs={breadcrumbs}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em", alignItems: "center" }}>
-            {draft.pr && (
-              <a
-                href={draft.pr.url}
-                target="_blank"
-                rel="noreferrer"
-                className="ui horizontal label teal"
-                title="View Pull Request on GitHub"
-              >
-                <i className="eye icon"></i>
-                In Review (#{draft.pr.number})
-              </a>
-            )}
-
-            {!isSynced && (
-              <div
-                className="ui horizontal label orange"
-                title={fromStorage
-                  ? "Restored from local backup"
-                  : "Unsaved local changes"}
-              >
-                <i className="pencil alternate icon"></i>
-                {fromStorage ? "Draft Restored" : "Draft"}
-              </div>
-            )}
-
-            {isMerged && !draft.pr && isSynced && (
-              <div
-                className="ui horizontal label purple"
-                title="Pull Request was merged successfully"
-              >
-                <i className="check circle icon"></i>
-                Approved
-              </div>
-            )}
-
-            {isClosed && !draft.pr && isSynced && (
-              <div
-                className="ui horizontal label red"
-                title="Pull Request was closed without merge"
-              >
-                <i className="times circle icon"></i>
-                Declined
-              </div>
-            )}
-
-            {/* Reset Button: Only show if we have local changes */}
-            {!isSynced && (
-              <button
-                type="button"
-                className="ui button negative basic compact"
-                onClick={handleReset}
-                disabled={saving}
-                title="Discard local draft and reload from server"
-              >
-                Reset
-              </button>
-            )}
-
-            <button
-              type="button"
-              className={`ui primary button ${saving ? "loading" : ""}`}
-              onClick={handleSave}
-              disabled={saving || isLocked || isSynced}
-              title={isLocked
-                ? "Editing is locked because a PR is open"
-                : isSynced
-                ? "No changes to save"
-                : "Save changes like a text editor"}
-            >
-              <i className={draft.pr ? "sync icon" : "plus icon"}></i>
-              {isLocked
-                ? "Locked (PR Open)"
-                : draft.pr
-                ? "Update PR"
-                : "Create PR"}
-            </button>
-          </div>
-        }
-      />
-
-      <div className="ui stackable grid">
-        <div
-          className={isListMode ? "sixteen wide column" : "twelve wide column"}
-        >
-          {isListMode
-            ? (
-              <YamlListEditor
-                items={draft.frontMatter as FrontMatterList}
-                onChange={(newItems: FrontMatterList) => {
-                  const isClean = originalDraft
-                    ? (JSON.stringify(newItems) ===
-                      JSON.stringify(originalDraft.frontMatter))
-                    : false;
-                  setDraft(
-                    (prev) => ({ ...prev, frontMatter: newItems }),
-                    undefined,
-                    isClean,
-                  );
-                }}
-                fields={collection.fields || []}
-                currentContent={currentContent}
-                isLocked={isLocked}
-              />
-            )
-            : (
-              <>
-                {/* FrontMatter Editor */}
-                {(!collection.fields || collection.fields.length === 0) && (
-                  <div className="ui warning message">
-                    <div className="header">No Fields Defined</div>
-                    <p>Please define 'fields' in your content configuration.</p>
-                  </div>
-                )}
-
-                <FrontMatterItemEditor
-                  frontMatter={draft.frontMatter as FrontMatterObject}
-                  setFrontMatter={(fm) => {
-                    const prevBody = draft.body;
-                    const isClean = originalDraft
-                      ? (prevBody === originalDraft.body &&
-                        JSON.stringify(fm) ===
-                          JSON.stringify(originalDraft.frontMatter))
-                      : false;
-                    setDraft(
-                      (prev) => ({ ...prev, frontMatter: fm }),
-                      undefined,
-                      isClean,
-                    );
-                  }}
-                  currentContent={currentContent}
-                  isPrLocked={isLocked}
-                />
-
-                {/* Markdown Editor */}
-                {!isYamlMode && (
-                  <div className="ui segment">
-                    <MarkdownEditor
-                      body={draft.body}
-                      setBody={(body) => {
-                        const nextBody = body || "";
-                        if (nextBody === draft.body) {
-                          return;
-                        }
-
-                        const prevFM = draft.frontMatter;
-                        const isClean = originalDraft
-                          ? (nextBody === originalDraft.body &&
-                            JSON.stringify(prevFM) ===
-                              JSON.stringify(originalDraft.frontMatter))
-                          : false;
-
-                        setDraft(
-                          (prev) => ({ ...prev, body: nextBody }),
-                          undefined,
-                          isClean,
-                        );
-                      }}
-                      isPrLocked={isLocked}
-                      currentContent={currentContent}
-                      height={600}
-                      onImageUpload={handleImageUpload}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-        </div>
-        {!isListMode && (
-          <div className="four wide column">
-            {/* Future Sidebar (History, Images) */}
-            <div className="ui segment">
-              <ContentImages
-                pendingImages={draft.pendingImages || []}
-                onUpload={(files) =>
-                  Array.from(files).forEach(handleImageUpload)}
-                onRemovePending={(name) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    pendingImages: prev.pendingImages?.filter((i) =>
-                      i.name !== name
-                    ),
-                  }))}
-                onInsert={(name) => {
-                  // Hacky insert: use clipboard or just append?
-                  // Best would be to expose an insert method ref from MarkdownEditor,
-                  // but for now let's just use clipboard or toast
-                  navigator.clipboard.writeText(`![${name}](${name})`);
-                  showToast(`Copied ![${name}](${name}) to clipboard`, "info");
-                }}
-                folderPath={folder || ""}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <EditorLayout
+      breadcrumbs={breadcrumbs}
+      isLocked={isLocked}
+      isSynced={isSynced}
+      isSaving={saving}
+      isMerged={isMerged}
+      isClosed={isClosed}
+      fromStorage={!!fromStorage}
+      prInfo={draft.pr as { url: string; number: number; state: string } | null}
+      draft={{
+        frontMatter: draft.frontMatter as FrontMatterObject | FrontMatterList,
+        body: draft.body,
+        pendingImages: draft.pendingImages,
+      }}
+      collection={collection}
+      currentContent={currentContent}
+      isYamlMode={isYamlMode}
+      isListMode={isListMode || false}
+      folderPath={folder || ""}
+      onSave={handleSave}
+      onReset={handleReset}
+      onFrontMatterChange={handleFrontMatterChange}
+      onBodyChange={handleBodyChange}
+      onImageUpload={handleImageUpload}
+      onPendingImageRemove={handlePendingImageRemove}
+      onImageInsert={handleImageInsert}
+    />
   );
 }
