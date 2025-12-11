@@ -110,8 +110,8 @@ export const CollectionList: React.FC<CollectionListProps> = ({
       <div className="staticms-toolbar-container">
         <div className="ui container">
           <div className="ui form">
-            <div className="fields inline">
-              <div className="sixteen wide field">
+            <div className="fields" style={{ display: "flex" }}>
+              <div className="field" style={{ flex: 1 }}>
                 <div className="ui icon input fluid">
                   <input
                     type="text"

@@ -152,7 +152,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               {/* Create New */}
               <div
                 className="field"
-                style={{ width: "350px", flexShrink: 0, marginLeft: "1em" }}
+                style={{ flex: 1, marginLeft: "1em" }}
               >
                 <div className="ui action input fluid">
                   <input
