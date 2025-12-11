@@ -16,13 +16,7 @@ v2」を作ることにした。
 
 新しいドキュメント体系は `architecture/v2/` 以下に集約されています。
 
-- **[Project Definition](./v2/PROJECT.md)**: 製品ビジョンとコアコンセプト。
-- **[User Stories](./v2/USER_STORIES.md)**: 要件定義とE2Eテストシナリオ。
-- **[UI Design](./v2/UI_DESIGN.md)**: 画面遷移図とUI仕様。
-- **[Test Plan](./v2/TEST_PLAN.md)**: Astral/HappyDOMを用いたテスト戦略。
-- **[Project Structure](./v2/PROJECT_STRUCTURE.md)**:
-  ディレクトリ構成とモジュール設計。
-- **[Build Strategy](./v2/BUILD_STRATEGY.md)**: ビルドパイプライン。
+v1のドキュメント体系は `architecture/v1/` 以下に集約されています。
 
 ### Phase 2: Staticms2 アーキテクチャ設計 (完了)
 
@@ -31,40 +25,32 @@ v2」を作ることにした。
 - **技術選定**:
   - **Bundler**: `esbuild` (Deno bundle廃止に伴う変更)。
   - **CSS**: **Semantic-UI**。
-  - **E2E Test**: **Astral**。
   - **Unit Test**: `deno test` + `testing-library` + `HappyDOM`。
 
 - **ディレクトリ構造**: `src/` 以下を Clean Architecture と Feature-based Folder
   Structure を組み合わせた構成に刷新。
 
-### Phase 3: 基盤構築とE2Eテスト作成
+### Phase 3: 基盤構築 (完了)
 
 1. **プロジェクト初期化**: 新しいディレクトリ構造で Deno プロジェクトを作成。
-2. **ビルド環境整備**: `deno.json` に新 `bundle` コマンドや `dev` タスクを定義。
+2. **ビルド環境整備**: `deno.json` に各種タスクを定義。
 3. **テスト基盤セットアップ**:
    - `src/testing` のユーティリティ（`setup_dom.ts`,
      `mock_local_storage.ts`等）を配置。
-   - **Astral** のセットアップと、簡単なブラウザ操作テストの動作確認。
-4. **E2Eテストケース実装**: `USER_STORIES.md`
-   に基づいたメインシナリオのE2Eテストを **失敗するテスト（Red）**
-   として実装する。
-   - 例: ログイン -> リポジトリ選択 -> エディタ表示 -> 保存。
 
 ### Phase 4: TDDによる実装サイクル
 
-各機能を以下のサイクルで実装し、Phase 3
-で作成したE2Eテストをパス（Green）させることを目指す。
+各機能を以下のサイクルで実装し、完成を目指す。
 
-1. **機能単位の設計**: `SERVER_API.md` や `FRONTEND_SPEC.md`
-   から実装対象を切り出す。
+1. **機能単位の設計**: 指示や仕様書から実装対象を切り出す。
 2. **ユニットテスト作成**:
    - `/src/testing/README.md`
      の指針に従い、コンポーネントテストやフックテストを作成する。
    - DIパターンを活用し、深い階層でもテストしやすい構造にする。
-3. **実装**: テストを通すための最小限の実装を行う。
-4. **リファクタリング**: コードを整理する。
+3. **実装**: テストを通し続けながら、指示や仕様書の説明する機能を実装する。
+4. **リファクタリング**: コードを整理する。リントエラーを確実につぶす。
 
-**実装順序（案）**:
+**実装順序**:
 
 1. **Server Core**: 認証、KV接続、GitHub APIプロキシ。
 2. **Client Core**: React Router 設定、Auth Hook。
@@ -75,6 +61,6 @@ v2」を作ることにした。
 
 ### Phase 5: 総仕上げ
 
-- E2Eテスト (Astral) の完全パス確認。
 - パフォーマンスチューニング。
 - ドキュメント整備（README, 利用ガイド）。
+- Phase.4とPhase.5のサイクルを繰り返す。

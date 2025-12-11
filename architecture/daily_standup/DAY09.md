@@ -72,8 +72,7 @@ Staticms v2 プロジェクトの **Phase 5: Release Preparation & QA**
 
 1. **Work Context の理解**: UIの大幅なリファインメント（Phase
    4/5）が完了し、アプリケーションはGitHubライクなモダンな外観になりました。
-   本日は、**最終的な品質保証（QA）**、**リリースビルドの確認**、そして
-   **ドキュメントの最終整備** を行います。
+   本日は、**さらなるUIの機能と外観の調整** を行います。
    **作業を開始する前に、必ず以下の資料確認プロセスを実行してください。これを怠ると、既存のデザインや仕様を破壊するリスクがあります。**
 
 2. **重要ファイルの読み込み**:
@@ -81,24 +80,29 @@ Staticms v2 プロジェクトの **Phase 5: Release Preparation & QA**
    - `architecture/daily_standup/DAY09.md` (前日の成果: UI変更の詳細)
    - `src/app/styles/main.scss` (現在のグローバルスタイル定義:
      GitHub風スタイルの実装)
-   - `src/app/components/config/ConfigForm.tsx`
-     (最新のフラット化された設定画面UI)
 
 3. **アーキテクチャドキュメントの網羅的ロード**:
-   以下のドキュメントを**全て個別に**読み込み、プロジェクトの全容を把握してください。フォルダ指定ではなく、個別に読み込むことが必須です。
-   - `architecture/v2/PROJECT_STRUCTURE.md`
-   - `architecture/v2/TECH_STACK.md`
+   以下のドキュメントを**全て個別に**読み込み、プロジェクトの全容を把握してください。
+   フォルダを俯瞰してファイル名を眺めるだけでなく、個別に読み込むことが必須です。
+   - `architecture/v2/PROJECT.md`
    - `architecture/v2/USER_STORIES.md`
+   - `architecture/v2/PROJECT_STRUCTURE.md`
+   - `architecture/v2/BUILD_STRATEGY.md`
+   - `architecture/v2/DATA_MODEL.md`
+   - `architecture/v2/COMPONENT_DESIGN.md`
+   - `architecture/v2/UI_DESIGN.md`
+   - `architecture/v2/GITHUB_INTEGRATION.md`
    - `architecture/v2/REALTIME_ARCHITECTURE.md`
+   - `architecture/v2/TEST_PLAN.md`
    - `architecture/v2/TEST_HOWTO.md`
-   - `architecture/v2/specs/EDITOR_SPEC.md`
-   - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
-   - `architecture/v2/specs/REPOSITORY_SPEC.md`
-   - `architecture/v2/specs/CONFIG_SPEC.md`
    - `architecture/v2/specs/HEADER_SPEC.md`
    - `architecture/v2/specs/STATUS_LABELS_SPEC.md`
+   - `architecture/v2/specs/REPOSITORY_SPEC.md`
+   - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
+   - `architecture/v2/specs/CONFIG_SPEC.md`
+   - `architecture/v2/specs/EDITOR_SPEC.md`
+   - `architecture/v2/specs/NOT_FOUND_SPEC.md`
    - `architecture/v2/DAILY_REPORT_FORMAT.md`
-   - `architecture/v2/TEST_PLAN.md`
 
 4. **重要: コミュニケーションとコミットのルール (厳守)**:
    - **言語**: 全てのコミュニケーションを**日本語**で行ってください。
