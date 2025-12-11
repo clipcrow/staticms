@@ -23,7 +23,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
   return (
     <tr style={{ verticalAlign: "middle" }}>
       {/* Name (Key) */}
-      <td>
+      <td style={{ width: "25%", minWidth: "150px" }}>
         <div className="ui input fluid mini">
           <input
             type="text"
@@ -37,7 +37,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       </td>
 
       {/* Widget */}
-      <td>
+      <td style={{ width: "160px" }}>
         <select
           className="ui dropdown fluid mini"
           value={field.widget}
@@ -62,23 +62,29 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       </td>
 
       {/* Default Value (Collection Only) */}
-      {isCollection && (
-        <td>
-          <div className="ui input fluid mini">
-            <input
-              type="text"
-              placeholder="Optional"
-              value={String(field.default || "")}
-              onChange={(e) => handleChange("default", e.target.value)}
-              disabled={disabled}
-              style={{ height: "32px" }}
-            />
-          </div>
-        </td>
-      )}
+      {/* Default Value (Collection Only) or Spacer */}
+      {isCollection
+        ? (
+          <td>
+            <div className="ui input fluid mini">
+              <input
+                type="text"
+                placeholder="Optional"
+                value={String(field.default || "")}
+                onChange={(e) => handleChange("default", e.target.value)}
+                disabled={disabled}
+                style={{ height: "32px" }}
+              />
+            </div>
+          </td>
+        )
+        : <td></td>}
 
       {/* Required */}
-      <td className="center aligned">
+      <td
+        className="center aligned"
+        style={{ width: "1%", whiteSpace: "nowrap" }}
+      >
         <div className="ui checkbox">
           <input
             type="checkbox"
@@ -91,7 +97,10 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       </td>
 
       {/* Delete Button */}
-      <td className="center aligned">
+      <td
+        className="center aligned"
+        style={{ width: "1%", whiteSpace: "nowrap" }}
+      >
         <button
           type="button"
           className="ui icon button mini basic"
@@ -155,7 +164,7 @@ export const FieldList: React.FC<FieldListProps> = ({
           {fields.length === 0 && (
             <tr>
               <td
-                colSpan={isCollection ? 5 : 4}
+                colSpan={5}
                 className="center aligned priority-low"
               >
                 No fields defined. Click "Add Field" to start.

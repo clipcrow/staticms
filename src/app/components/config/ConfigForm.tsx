@@ -113,64 +113,66 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                 </small>
               </div>
 
-              {/* Type Selection */}
-              <div className="field">
-                <label>Content Type</label>
-                <div className="inline fields">
-                  <div className="field">
-                    <div className="ui radio checkbox">
-                      <input
-                        type="radio"
-                        name="contentType"
-                        checked={formData.type === "singleton" ||
-                          !formData.type}
-                        onChange={() => handleChange("type", "singleton")}
-                        disabled={loading}
-                      />
-                      <label>Singleton (File/One-off)</label>
+              <div className="two fields">
+                {/* Type Selection */}
+                <div className="field">
+                  <label>Content Type</label>
+                  <div className="inline fields">
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentType"
+                          checked={formData.type === "singleton" ||
+                            !formData.type}
+                          onChange={() => handleChange("type", "singleton")}
+                          disabled={loading}
+                        />
+                        <label>Singleton (File/One-off)</label>
+                      </div>
                     </div>
-                  </div>
-                  <div className="field">
-                    <div className="ui radio checkbox">
-                      <input
-                        type="radio"
-                        name="contentType"
-                        checked={formData.type === "collection"}
-                        onChange={() => handleChange("type", "collection")}
-                        disabled={loading}
-                      />
-                      <label>Collection (Folder based)</label>
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentType"
+                          checked={formData.type === "collection"}
+                          onChange={() => handleChange("type", "collection")}
+                          disabled={loading}
+                        />
+                        <label>Collection (Folder based)</label>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Binding Selection */}
-              <div className="field">
-                <label>Binding</label>
-                <div className="inline fields">
-                  <div className="field">
-                    <div className="ui radio checkbox">
-                      <input
-                        type="radio"
-                        name="contentBinding"
-                        checked={binding === "file"}
-                        onChange={() => handleChange("binding", "file")}
-                        disabled={loading}
-                      />
-                      <label>File</label>
+                {/* Binding Selection */}
+                <div className="field">
+                  <label>Binding</label>
+                  <div className="inline fields">
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentBinding"
+                          checked={binding === "file"}
+                          onChange={() => handleChange("binding", "file")}
+                          disabled={loading}
+                        />
+                        <label>File</label>
+                      </div>
                     </div>
-                  </div>
-                  <div className="field">
-                    <div className="ui radio checkbox">
-                      <input
-                        type="radio"
-                        name="contentBinding"
-                        checked={binding === "directory"}
-                        onChange={() => handleChange("binding", "directory")}
-                        disabled={loading}
-                      />
-                      <label>Directory</label>
+                    <div className="field">
+                      <div className="ui radio checkbox">
+                        <input
+                          type="radio"
+                          name="contentBinding"
+                          checked={binding === "directory"}
+                          onChange={() => handleChange("binding", "directory")}
+                          disabled={loading}
+                        />
+                        <label>Directory</label>
+                      </div>
                     </div>
                   </div>
                 </div>
