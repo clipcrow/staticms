@@ -467,3 +467,17 @@ a {
     opacity: 1;
   }
 }
+
+// -----------------------------------------------------------------------------
+// Markdown Editor Overrides (Restored from v1)
+// -----------------------------------------------------------------------------
+.w-md-editor-toolbar li > button {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 16px !important; // Keep font size for text based buttons if any
+}
+
+.w-md-editor-toolbar li > button svg {
+  width: 18px !important;
+  height: 18px !important;
+}
