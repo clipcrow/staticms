@@ -69,8 +69,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
       <div className="staticms-toolbar-container">
         <div className="ui container">
           <div className="ui form">
-            <div className="fields inline">
-              <div className="twelve wide field">
+            <div className="fields" style={{ display: "flex" }}>
+              <div className="field" style={{ flex: 1 }}>
                 <div className="ui icon input fluid">
                   <input
                     type="text"
@@ -82,8 +82,13 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                 </div>
               </div>
               <div
-                className="four wide field"
-                style={{ display: "flex", justifyContent: "flex-end" }}
+                className="field"
+                style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  flexShrink: 0,
+                  marginLeft: "1em",
+                }}
               >
                 <div className="ui icon buttons">
                   <button
