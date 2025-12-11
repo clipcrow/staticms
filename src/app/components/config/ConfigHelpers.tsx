@@ -92,23 +92,16 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
 
       {/* Delete Button */}
       <td className="center aligned">
-        <i
-          className={`trash alternate outline icon ${
-            disabled ? "disabled" : ""
-          }`}
+        <button
+          type="button"
+          className="ui icon button mini basic"
           onClick={disabled ? undefined : onDelete}
+          disabled={disabled}
           title="Remove field"
-          style={{
-            cursor: disabled ? "default" : "pointer",
-            opacity: disabled ? 0.5 : 1,
-            color: disabled ? undefined : "#db2828", // Explicit red color
-            background: "none",
-            border: "none",
-            boxShadow: "none",
-            margin: 0,
-          }}
+          style={{ margin: 0, boxShadow: "none" }}
         >
-        </i>
+          <i className="trash icon red"></i>
+        </button>
       </td>
     </tr>
   );

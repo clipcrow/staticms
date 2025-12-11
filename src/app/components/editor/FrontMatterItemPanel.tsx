@@ -259,19 +259,16 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                       : valuePlaceholder || ""}
                   />
                 </div>
-                <i
-                  className="trash alternate outline icon"
-                  style={{
-                    cursor: isPrLocked ? "default" : "pointer",
-                    color: isPrLocked ? undefined : "#db2828",
-                    margin: "0 0 0 0.5em",
-                    fontSize: "1.2em",
-                    opacity: isPrLocked ? 0.5 : 1,
-                  }}
+                <button
+                  type="button"
+                  className="ui icon button mini basic"
                   onClick={() => !isPrLocked && handleDeleteField(field.name)}
+                  disabled={isPrLocked}
                   title="Delete Field"
+                  style={{ marginLeft: "0.5em", boxShadow: "none" }}
                 >
-                </i>
+                  <i className="trash icon red"></i>
+                </button>
               </div>
             </div>
           </div>
