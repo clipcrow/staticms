@@ -64,29 +64,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
   return (
     <>
-      <Header
-        breadcrumbs={breadcrumbs}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em" }}>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="ui button"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={(e) => onSave(e as unknown as React.FormEvent)}
-              className={`ui primary button ${loading ? "loading" : ""}`}
-              disabled={loading}
-            >
-              {editingIndex !== null ? "Update" : "Add"}
-            </button>
-          </div>
-        }
-      />
+      <Header breadcrumbs={breadcrumbs} />
       <div
         className="ui container"
         style={{ marginTop: "2rem", paddingBottom: "100px" }}
