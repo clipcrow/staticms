@@ -36,7 +36,7 @@ export const Header = ({
 
   return (
     <div className="staticms-header-container">
-      <div className="staticms-header-left">
+      <div className="staticms-header-start">
         {rootLink
           ? (
             // @ts-ignore: React 19 types issue
@@ -97,7 +97,7 @@ export const Header = ({
           </>
         )}
       </div>
-      <div className="staticms-header-right">
+      <div className="staticms-header-end">
         {rightContent}
       </div>
     </div>

@@ -8,13 +8,9 @@ export interface RepositoryListProps {
   repos: Repository[];
   loading: boolean;
   error: string | null;
-
-  // UI State
   viewMode: "card" | "list";
   searchQuery: string;
   filterType: "all" | "public" | "private" | "fork";
-
-  // Actions
   onViewModeChange: (mode: "card" | "list") => void;
   onSearchChange: (query: string) => void;
   onFilterTypeChange: (type: "all" | "public" | "private" | "fork") => void;
@@ -33,19 +29,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   onFilterTypeChange,
   onSelect,
 }) => {
-  const filteredRepos = repos.filter((repo) => {
-    const matchesSearch = repo.full_name.toLowerCase().includes(
-      searchQuery.toLowerCase(),
-    );
-    const matchesFilter = filterType === "all" ||
-      (filterType === "public" && !repo.private) ||
-      (filterType === "private" && repo.private) ||
-      (filterType === "fork" && repo.fork);
-    return matchesSearch && matchesFilter;
-  });
-
   return (
-    <>
+    <div>
       <Header
         breadcrumbs={[{ label: "Repositories" }]}
         rootLink={false}
@@ -70,7 +55,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
               </button>
             </div>
             <a
-              href="https://github.com/apps/staticms" // TODO: config
+              href="https://github.com/apps/staticms"
               target="_blank"
               rel="noreferrer"
               className="ui button secondary"
@@ -159,32 +144,52 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
 
         {error && <div className="ui message error">{error}</div>}
 
-        {!loading && !error && filteredRepos.length === 0 && (
-          <div className="ui placeholder segment">
-            <div className="ui icon header">
-              <i className="github icon"></i>
-              No repositories found
+        {!loading && !error && repos.length > 0 &&
+          repos.filter((repo) => {
+              const matchesSearch = repo.full_name.toLowerCase().includes(
+                searchQuery.toLowerCase(),
+              );
+              const matchesFilter = filterType === "all" ||
+                (filterType === "public" && !repo.private) ||
+                (filterType === "private" && repo.private) ||
+                (filterType === "fork" && repo.fork);
+              return matchesSearch && matchesFilter;
+            }).length === 0 &&
+          (
+            <div className="ui placeholder segment">
+              <div className="ui icon header">
+                <i className="github icon"></i>
+                No repositories found
+              </div>
+              {searchQuery
+                ? <div className="inline">Your search returned no results.</div>
+                : (
+                  <div className="inline">
+                    <a
+                      href="https://github.com/apps/staticms"
+                      target="_blank"
+                      className="ui primary button"
+                    >
+                      Connect your first repository
+                    </a>
+                  </div>
+                )}
             </div>
-            {searchQuery
-              ? <div className="inline">Your search returned no results.</div>
-              : (
-                <div className="inline">
-                  <a
-                    href="https://github.com/apps/staticms"
-                    target="_blank"
-                    className="ui primary button"
-                  >
-                    Connect your first repository
-                  </a>
-                </div>
-              )}
-          </div>
-        )}
+          )}
 
         {/* Card View */}
         {!loading && !error && viewMode === "card" && (
           <div className="ui three stackable cards">
-            {filteredRepos.map((repo) => {
+            {repos.filter((repo) => {
+              const matchesSearch = repo.full_name.toLowerCase().includes(
+                searchQuery.toLowerCase(),
+              );
+              const matchesFilter = filterType === "all" ||
+                (filterType === "public" && !repo.private) ||
+                (filterType === "private" && repo.private) ||
+                (filterType === "fork" && repo.fork);
+              return matchesSearch && matchesFilter;
+            }).map((repo) => {
               const status = getRepoStatus(repo.owner.login, repo.name);
               return (
                 <div
@@ -192,28 +197,33 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                   key={repo.id}
                   onClick={() => onSelect(repo.full_name)}
                 >
-                  <div className="content">
+                  <div className="content header-segment">
                     <i
                       className={`right floated icon ${
                         repo.private ? "lock" : "globe"
                       }`}
+                      style={{ marginTop: "-0.2em", marginRight: 0 }}
                     >
                     </i>
                     <div className="header" style={{ wordBreak: "break-all" }}>
-                      {repo.owner.login} / <br />
-                      {repo.name}
+                      {repo.owner.login} / {repo.name}
                     </div>
-                    <div className="meta">
+                  </div>
+                  <div className="content">
+                    <div className="description">
+                      {repo.description?.substring(0, 100)}
+                      {(repo.description?.length || 0) > 100 ? "..." : ""}
+                    </div>
+                    <div
+                      className="meta"
+                      style={{ marginTop: "1em", fontSize: "0.9em" }}
+                    >
                       {repo.updated_at && (
                         <span className="date">
                           Updated{" "}
                           {new Date(repo.updated_at).toLocaleDateString()}
                         </span>
                       )}
-                    </div>
-                    <div className="description">
-                      {repo.description?.substring(0, 100)}
-                      {(repo.description?.length || 0) > 100 ? "..." : ""}
                     </div>
                   </div>
                   <div className="extra content">
@@ -249,7 +259,16 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
               </tr>
             </thead>
             <tbody>
-              {filteredRepos.map((repo) => {
+              {repos.filter((repo) => {
+                const matchesSearch = repo.full_name.toLowerCase().includes(
+                  searchQuery.toLowerCase(),
+                );
+                const matchesFilter = filterType === "all" ||
+                  (filterType === "public" && !repo.private) ||
+                  (filterType === "private" && repo.private) ||
+                  (filterType === "fork" && repo.fork);
+                return matchesSearch && matchesFilter;
+              }).map((repo) => {
                 const status = getRepoStatus(repo.owner.login, repo.name);
                 return (
                   <tr
@@ -306,6 +325,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
           </table>
         )}
       </div>
-    </>
+    </div>
   );
 };

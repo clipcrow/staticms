@@ -132,14 +132,18 @@ export function YamlListEditor({
                 }}
               >
                 <div className="ui label">Item #{index + 1}</div>
-                <button
-                  type="button"
-                  className="ui button tiny basic icon negative"
-                  onClick={() => handleRemoveItem(index)}
-                  disabled={isLocked}
+                <i
+                  className="trash alternate outline icon"
+                  style={{
+                    cursor: isLocked ? "default" : "pointer",
+                    color: isLocked ? undefined : "#db2828",
+                    opacity: isLocked ? 0.5 : 1,
+                    margin: 0,
+                  }}
+                  onClick={() => !isLocked && handleRemoveItem(index)}
+                  title="Remove Item"
                 >
-                  <i className="trash icon"></i>
-                </button>
+                </i>
               </div>
 
               {/* Reuse FrontMatterItemEditor logic by tricking it into treating this item as frontMatter */}

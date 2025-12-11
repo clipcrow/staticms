@@ -156,21 +156,36 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                         key={c.name}
                         onClick={() => onSelect(c.name)}
                       >
-                        <div className="content">
-                          <div className="header">
-                            <i
-                              className={`icon ${
-                                isSingleton ? "file outline" : "folder outline"
-                              }`}
-                              style={{ marginRight: "0.5em" }}
-                            >
-                            </i>
+                        <div className="content header-segment">
+                          <i
+                            className={`right floated icon ${
+                              isSingleton ? "file outline" : "folder outline"
+                            }`}
+                            style={{
+                              marginTop: "-0.2em",
+                              marginRight: 0,
+                              opacity: 0.5,
+                            }}
+                          >
+                          </i>
+                          <div
+                            className="header"
+                            style={{ wordBreak: "break-all" }}
+                          >
                             {getDisplayName(c)}
                           </div>
-                          <div className="meta">
+                        </div>
+                        <div className="content">
+                          <div
+                            className="meta"
+                            style={{ fontSize: "0.85em" }}
+                          >
                             {c.name}
                           </div>
-                          <div className="description">
+                          <div
+                            className="description"
+                            style={{ marginTop: "0.5em" }}
+                          >
                             {isSingleton
                               ? "Singleton Content"
                               : "Collection of entries"}

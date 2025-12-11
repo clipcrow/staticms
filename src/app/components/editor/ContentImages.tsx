@@ -51,79 +51,147 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   };
 
   return (
-    <div>
-      {/* Nearby Images Section */}
-      <h4 className="ui header">Images Nearby</h4>
-      <div className="ui list selection">
-        {loading && <div className="ui active centered inline loader"></div>}
-        {error && <div className="ui error message">{error.message}</div>}
-        {!loading && images.length === 0 && (
-          <div className="ui mini message">No images found.</div>
-        )}
-        {images.map((file) => (
-          <div
-            key={file.path}
-            className="item"
-            onClick={() => onInsert(file.name)}
-            style={{ cursor: "pointer" }}
-          >
-            <i className="image icon"></i>
-            <div className="content">
-              <div className="header">{file.name}</div>
-            </div>
-          </div>
-        ))}
+    <div className="ui card fluid" style={{ boxShadow: "none" }}>
+      <div className="content header-segment">
+        <div className="header">Images</div>
       </div>
 
-      {/* Pending Images Section */}
-      {pendingImages.map((file) => (
-        <div
-          key={file.name}
-          className="item"
-          onClick={() => onInsert(file.name)}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="right floated content">
-            <div
-              className="ui button tiny basic icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemovePending(file.name);
-              }}
-            >
-              <i className="trash icon"></i>
-            </div>
+      <div className="content" style={{ padding: 0 }}>
+        {/* Nearby Images Section */}
+        {(loading || error || images.length > 0) && (
+          <div className="ui list selection" style={{ margin: 0 }}>
+            {loading && (
+              <div className="item">
+                <div className="ui active centered inline loader mini"></div>
+              </div>
+            )}
+            {error && (
+              <div className="item">
+                <div className="ui error message mini">{error.message}</div>
+              </div>
+            )}
+            {images.map((file) => (
+              <div
+                key={file.path}
+                className="item"
+                onClick={() => onInsert(file.name)}
+                style={{
+                  cursor: "pointer",
+                  padding: "0.75em 1em",
+                  borderBottom: "1px solid var(--color-border-muted)",
+                }}
+              >
+                <i className="image icon"></i>
+                <div className="content">
+                  <div className="header" style={{ fontSize: "0.9em" }}>
+                    {file.name}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-          <i className="image icon orange"></i>
-          <div className="content">
-            <div className="header">{file.name}</div>
+        )}
+
+        {/* Pending Images Section */}
+        {pendingImages.length > 0 && (
+          <div
+            className="ui list selection"
+            style={{
+              margin: 0,
+              borderTop: images.length > 0
+                ? "1px solid var(--color-border-default)"
+                : "none",
+            }}
+          >
+            {pendingImages.map((file) => (
+              <div
+                key={file.name}
+                className="item"
+                onClick={() => onInsert(file.name)}
+                style={{
+                  cursor: "pointer",
+                  padding: "0.75em 1em",
+                  borderBottom: "1px solid var(--color-border-muted)",
+                  backgroundColor: "#fff8c5",
+                }}
+              >
+                <div className="right floated content">
+                  <i
+                    className="trash icon link"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemovePending(file.name);
+                    }}
+                  >
+                  </i>
+                </div>
+                <i className="image icon orange"></i>
+                <div className="content">
+                  <div className="header" style={{ fontSize: "0.9em" }}>
+                    {file.name} (Pending)
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      ))}
+        )}
+
+        {!loading && images.length === 0 && pendingImages.length === 0 && (
+          <div
+            style={{
+              padding: "2em 1em",
+              textAlign: "center",
+              color: "var(--color-fg-muted)",
+            }}
+          >
+            No images found.
+          </div>
+        )}
+      </div>
 
       {/* Upload Section */}
       <div
-        className="ui placeholder segment"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-        style={{ minHeight: "100px", marginTop: "1em" }}
+        className="extra content"
+        style={{ borderTop: "1px solid var(--color-border-default)" }}
       >
-        <div className="ui icon header" style={{ fontSize: "0.9rem" }}>
-          <i className="upload icon" style={{ fontSize: "1.5rem" }}></i>
-          Drop images here
-        </div>
-        <div className="ui primary tiny button">
-          <label htmlFor="file-upload" style={{ cursor: "pointer" }}>
-            Add Image
-          </label>
-          <input
-            id="file-upload"
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileSelect}
-            style={{ display: "none" }}
-          />
+        <div
+          className="ui placeholder segment"
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
+          style={{
+            minHeight: "80px",
+            margin: 0,
+            boxShadow: "none",
+            border: "1px dashed var(--color-border-default)",
+          }}
+        >
+          <div
+            className="ui icon header"
+            style={{ fontSize: "0.85rem", margin: 0 }}
+          >
+            <i
+              className="upload icon"
+              style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}
+            >
+            </i>
+            Drop images here
+          </div>
+          <div style={{ marginTop: "0.5rem" }}>
+            <label
+              htmlFor="file-upload"
+              className="ui tiny button basic primary"
+            >
+              Select File
+            </label>
+            <input
+              id="file-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              style={{ display: "none" }}
+            />
+          </div>
         </div>
       </div>
     </div>
