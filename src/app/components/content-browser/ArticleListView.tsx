@@ -133,7 +133,10 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
       <div className="staticms-toolbar-container">
         <div className="ui container">
           <div className="ui form">
-            <div className="fields" style={{ margin: 0, display: "flex" }}>
+            <div
+              className="fields"
+              style={{ display: "flex" }}
+            >
               {/* Search */}
               <div className="field" style={{ flex: 1 }}>
                 <div className="ui icon input fluid">
