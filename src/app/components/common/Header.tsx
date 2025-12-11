@@ -11,12 +11,14 @@ interface HeaderProps {
   breadcrumbs?: BreadcrumbItem[];
   rightContent?: React.ReactNode;
   rootLink?: boolean;
+  hideRootDivider?: boolean;
 }
 
 export const Header = ({
   breadcrumbs,
   rightContent,
   rootLink = true,
+  hideRootDivider = false,
 }: HeaderProps) => {
   const TitleContent = () => (
     <>
@@ -69,9 +71,13 @@ export const Header = ({
 
               {breadcrumbs.map((item, index) => {
                 const isLast = index === breadcrumbs.length - 1;
+                const showDivider = !(index === 0 && hideRootDivider);
+
                 return (
                   <React.Fragment key={index}>
-                    <i className="right chevron icon divider"></i>
+                    {showDivider && (
+                      <i className="right chevron icon divider"></i>
+                    )}
                     {!isLast && item.to
                       ? (
                         // @ts-ignore: React 19 types issue
@@ -82,9 +88,9 @@ export const Header = ({
                       : !isLast && item.onClick
                       ? (
                         <span
-                          className="section"
+                          className="section clickable"
                           onClick={item.onClick}
-                          style={{ cursor: "pointer", color: "#4183c4" }}
+                          style={{ cursor: "pointer" }}
                         >
                           {item.label}
                         </span>

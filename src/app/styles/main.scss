@@ -283,19 +283,27 @@ a {
     color: var(--color-fg-subtle) !important;
   }
 
-  a.section {
-    color: var(--header-text) !important;
-    font-weight: 600 !important;
+  // Navigation Links & Clickable Items
+  a.section, .section.clickable {
+    color: var(--color-accent-fg) !important; // Make navigable items blue
+    font-weight: 400 !important;
 
     &:hover {
-      color: var(--color-accent-fg) !important; // Blue on hover
       text-decoration: underline;
+      cursor: pointer;
     }
   }
 
-  .active.section {
-    color: var(--color-fg-default) !important;
+  // Non-clickable sections (like current page or non-link root)
+  .section {
     font-weight: 400 !important;
+    color: var(--color-fg-muted) !important;
+  }
+
+  .active.section {
+    color: var(--color-fg-default) !important; // Current page is dark
+    font-weight: 400 !important;
+    text-decoration: none !important;
   }
 }
 
