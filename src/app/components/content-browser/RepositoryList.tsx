@@ -34,7 +34,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
       <Header
         breadcrumbs={[{ label: "Repositories" }]}
         rootLink={false}
-        hideRootDivider
         rightContent={
           <div style={{ display: "flex", gap: "0.5em" }}>
             <div className="ui icon buttons">

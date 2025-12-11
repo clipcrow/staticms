@@ -11,14 +11,12 @@ interface HeaderProps {
   breadcrumbs?: BreadcrumbItem[];
   rightContent?: React.ReactNode;
   rootLink?: boolean;
-  hideRootDivider?: boolean;
 }
 
 export const Header = ({
   breadcrumbs,
   rightContent,
   rootLink = true,
-  hideRootDivider = false,
 }: HeaderProps) => {
   const TitleContent = () => (
     <>
@@ -71,7 +69,9 @@ export const Header = ({
 
               {breadcrumbs.map((item, index) => {
                 const isLast = index === breadcrumbs.length - 1;
-                const showDivider = !(index === 0 && hideRootDivider);
+                // If rootLink is effectively disabled (false), we treat the first breadcrumb as a caption,
+                // so we skip the divider between the root icon and the first item.
+                const showDivider = !(index === 0 && !rootLink);
 
                 return (
                   <React.Fragment key={index}>
