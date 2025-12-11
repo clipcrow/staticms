@@ -36,7 +36,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
         rootLink={false}
         rightContent={
           <div style={{ display: "flex", gap: "0.5em" }}>
-            <div className="ui icon buttons basic">
+            <div className="ui icon buttons">
               <button
                 type="button"
                 className={`ui button ${viewMode === "card" ? "active" : ""}`}
@@ -85,7 +85,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                 className="four wide field"
                 style={{ display: "flex", justifyContent: "flex-end" }}
               >
-                <div className="ui icon buttons basic">
+                <div className="ui icon buttons">
                   <button
                     type="button"
                     className={`ui button ${

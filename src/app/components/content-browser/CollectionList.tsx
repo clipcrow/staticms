@@ -78,7 +78,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
         ]}
         rightContent={
           <div style={{ display: "flex", gap: "0.5em" }}>
-            <div className="ui icon buttons basic">
+            <div className="ui icon buttons">
               <button
                 type="button"
                 className={`ui button ${viewMode === "card" ? "active" : ""}`}
