@@ -111,3 +111,14 @@ graph TD
     - New: `[GitHub Icon] / :owner :repo / Add Content`
   - **Form**: Type, Name, Path, Fields Definition.
   - **Actions**: Save, Delete (Edit only).
+
+## 5. 技術的な制約とベストプラクティス
+
+### Markdown Editor (react-md-editor) の統合
+
+- **`MarkdownEditor` を Semantic UI の `.ui.form .field` でラップしないこと**:
+  - `react-md-editor` は内部で複雑な Flexbox レイアウトを使用しています。これを
+    `.field`
+    でラップすると、レイアウトの衝突（特に高さ計算やテキストエリアのリサイズの問題）が発生します。
+  - ラベル付けには独立したコンテナ `div` や `Header`
+    コンポーネントを使用し、エディタコンポーネントをブロック/Input挙動を強制するスタイルコンテキストの外に配置してください。
