@@ -16,6 +16,10 @@ export function RepositorySelector() {
     navigate(`/${repoFullName}`);
   };
 
+  const handleSettings = (repoFullName: string) => {
+    navigate(`/${repoFullName}/settings`);
+  };
+
   return (
     <RepositoryList
       repos={repos}
@@ -28,6 +32,7 @@ export function RepositorySelector() {
       onSearchChange={setSearchQuery}
       onFilterTypeChange={setFilterType}
       onSelect={handleSelect}
+      onSettings={handleSettings}
     />
   );
 }

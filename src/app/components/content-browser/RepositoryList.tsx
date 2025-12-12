@@ -15,6 +15,7 @@ export interface RepositoryListProps {
   onSearchChange: (query: string) => void;
   onFilterTypeChange: (type: "all" | "public" | "private" | "fork") => void;
   onSelect: (repoFullName: string) => void;
+  onSettings: (repoFullName: string) => void;
 }
 
 export const RepositoryList: React.FC<RepositoryListProps> = ({
@@ -28,6 +29,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   onSearchChange,
   onFilterTypeChange,
   onSelect,
+  onSettings,
 }) => {
   return (
     <div>
@@ -202,20 +204,68 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                   key={repo.id}
                   onClick={() => onSelect(repo.full_name)}
                 >
-                  <div className="content header-segment">
-                    <i
-                      className={`right floated icon ${
-                        repo.private ? "lock" : "globe"
-                      }`}
-                      style={{ marginTop: "-0.2em", marginRight: 0 }}
-                    >
-                    </i>
-                    <div className="header" style={{ wordBreak: "break-all" }}>
-                      {repo.owner.login} / {repo.name}
-                    </div>
-                  </div>
                   <div className="content">
-                    <div className="description">
+                    {/* Top Row: Visibility Icon + Repo Name (Left) & Star (Right) */}
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "0.5em",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5em",
+                        }}
+                      >
+                        <i
+                          className={`icon ${repo.private ? "lock" : "globe"}`}
+                          style={{
+                            opacity: 0.5,
+                            margin: 0,
+                            lineHeight: 1,
+                            height: "auto",
+                          }}
+                        >
+                        </i>
+                        <span
+                          style={{
+                            wordBreak: "break-all",
+                            fontWeight: "bold",
+                            fontSize: "1.1em",
+                            lineHeight: 1,
+                            color: "rgba(0,0,0,.85)",
+                          }}
+                        >
+                          {repo.owner.login} / {repo.name}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          color: "#666",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.25em",
+                          flexShrink: 0,
+                          marginLeft: "0.5em",
+                        }}
+                      >
+                        <i
+                          className="star icon"
+                          style={{ margin: 0, lineHeight: 1, height: "auto" }}
+                        >
+                        </i>
+                        <span style={{ lineHeight: 1 }}>
+                          {repo.stargazers_count || 0}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="description" style={{ marginTop: "0.5em" }}>
                       {repo.description?.substring(0, 100)}
                       {(repo.description?.length || 0) > 100 ? "..." : ""}
                     </div>
@@ -233,16 +283,32 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                   </div>
                   <div className="extra content">
                     <span className="right floated">
+                      <button
+                        type="button"
+                        className="ui icon button mini basic"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSettings(repo.full_name);
+                        }}
+                        title="Repository Settings"
+                        style={{ margin: 0 }}
+                      >
+                        <i className="cog icon"></i>
+                      </button>
+                    </span>
+                    <span
+                      style={{
+                        display: "flex",
+                        gap: "0.5em",
+                        flexWrap: "wrap",
+                      }}
+                    >
                       {status.hasDraft && (
                         <StatusBadge status="draft" count={status.draftCount} />
                       )}
                       {status.hasPr && (
                         <StatusBadge status="pr_open" count={status.prCount} />
                       )}
-                    </span>
-                    <span>
-                      <i className="star icon"></i>
-                      {repo.stargazers_count || 0}
                     </span>
                   </div>
                 </div>
@@ -316,6 +382,18 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                       )}
                     </td>
                     <td>
+                      <button
+                        type="button"
+                        className="ui icon button basic small"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSettings(repo.full_name);
+                        }}
+                        title="Settings"
+                        style={{ marginRight: "0.5em" }}
+                      >
+                        <i className="cog icon"></i>
+                      </button>
                       <button
                         type="button"
                         className="ui button basic small primary"

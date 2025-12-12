@@ -1,108 +1,115 @@
-# 設定編集画面 (Content Config / Settings) 仕様書
+# 設定編集画面仕様 (Config Editors Specification)
 
-## 概要
+本ドキュメントでは、Staticms v2
+における「リポジトリ設定」および「コンテンツ設定」の仕様を定義します。
 
-本画面は、コンテンツ設定（Config）内の `collections`
-定義を追加・編集するための画面です。 GUI
-を通じて、コンテンツの種類（コレクション/シングルトン）、パス、および使用するフィールド定義（Schema）を管理します。
 設定情報は Staticms サーバーのデータベース (Deno KV)
-に保存され、リポジトリ内のファイルには影響しません。
+に保存され、リポジトリ内のコードやコンテンツファイルには直接影響しません。
 
-## UI 構成
+---
 
-### 1. 基本設定フォーム (Basic Settings)
+## 1. リポジトリ設定 (Repository Settings)
 
-- **Content Name**: UI 上での表示名 (`label`)。オプション。
-  - 値がある場合: カード/リスト行とヘッダのパンくずリストに表示されます。
+リポジトリ全体に適用される共通設定を管理する画面です。
+
+- **URL**: `/:owner/:repo/settings`
+- **アクセス元**: リポジトリ一覧 (`/`)
+  の各カード・行にある設定ボタン、またはアプリ内ナビゲーション。
+
+### UI 構成
+
+#### 設定フォーム
+
+- **Target Branch** (Required):
+  - コンテンツの読み書きに使用するデフォルトのブランチ名。
+  - デフォルト: リポジトリのデフォルトブランチ（例: `main`）。
+  - 説明:
+    このブランチ設定は、特別な指定がない限り配下の全てのコンテンツ設定に適用されます。
+
+#### アクション
+
+- **Cancel**: 変更を破棄してリポジトリ一覧に戻る。
+- **Update**: 設定を保存してリポジトリ一覧に戻る。
+
+---
+
+## 2. コンテンツ設定 (Content Config)
+
+個別のコンテンツユニット（コレクションまたはシングルトン）の定義を追加・編集する画面です。
+
+- **URL**: `/:owner/:repo/config/:collectionName`
+
+### UI 構成
+
+#### 1. ヘッダー情報 (Header)
+
+- **Content Name (Label)**:
+  - UI 上での表示名。
+  - 値がある場合: アプリ内のナビゲーションやリストのヘッダに表示されます。
   - 値がない場合: **Path** の値が表示に使用されます。
-- **Identifier**: システム内部で使用するスラッグ (`name`)。
-  - **Note**: ユーザーによる直接編集は行いません。Path と Target Branch
-    の値を組み合わせ、リポジトリ内で一意になるよう自動生成されます。
-- **Content Binding**:
-  - **Type**: `Collection` または `Singleton`。
-  - **Binding**: `File` または `Directory`。
-  - **Path**:
-    - 設定値の入力フィールドラベルは、**Binding**
-      の選択に応じて動的に変化します。
-    - Binding = `File` の場合: **"Content File Path"**
-    - Binding = `Directory` の場合: **"Content Folder Path"**
-- **Target Branch**: コンテンツを管理するブランチ名（オプション）。
-  - 設定された場合: 指定されたブランチ (`branch`)
-    上のコンテンツを参照・更新します。
-    - **Note**:
-      指定されたブランチが存在しない場合、設定保存時に自動的にブランチを作成します（デフォルトブランチから分岐）。
-  - 設定されない場合: リポジトリのデフォルトブランチ (`main` 等) を使用します。
+- **Identifier** (Internal):
+  - システム内部で使用する一意なID (`name`)。
+  - **Note**: ユーザーによる直接編集は行いません。**Path**
+    の値をベースに、英数字以外を `-`
+    に置換して小文字化することで自動生成されます。
 
-  ### 組み合わせの挙動定義:
+#### 2. コンテンツ定義
 
-  1. **Collection + File**:
-     - パスで指定されたフォルダ内の「複数の Markdown ファイル」を管理します。
-     - 例: Path=`posts` -> `posts/a.md`, `posts/b.md`
-  2. **Collection + Directory**:
-     - パスで指定されたフォルダ内の「複数のサブフォルダ」を管理し、各フォルダ内の
-       `index.md` を対象とします。
-     - 例: Path=`posts` -> `posts/bucket-a/index.md`, `posts/bucket-b/index.md`
-  3. **Singleton + File**:
-     - パスで指定された「単一のファイル」を編集します。
-     - **Note**: この組み合わせのみ、YAML
-       ファイル等のデータファイルも取り扱い可能です。
-     - 例: Path=`config.yml` -> `config.yml` (Data), Path=`about.md` ->
-       `about.md` (Markdown)
-  4. **Singleton + Directory**:
-     - パスで指定されたフォルダ内の `index.md` を編集対象とします。
-     - 例: Path=`about` -> `about/index.md`
+- **Type** (Required):
+  - `Singleton (File/One-off)`: 単一のファイルを管理。
+  - `Collection (Folder based)`: フォルダ内の複数ファイルを管理。
+- **Binding** (Required):
+  - `File`: ファイルそのものをコンテンツとする。
+  - `Directory`: ディレクトリ（フォルダ）単位でコンテンツとし、その中の
+    `index.md` を実体とする。
+- **Path**:
+  - コンテンツの格納場所（リポジトリルートからの相対パス）。
+  - Binding が `File` の場合: "Content File Path"
+  - Binding が `Directory` の場合: "Content Folder Path"
 
-### 2. フィールド定義エディタ (Field Schema Editor)
+#### 組み合わせの挙動定義:
 
-コンテンツが持つべきメタデータ（FrontMatter）の構造を定義します。 **Note**:
-Markdown の本文 (Body) は自動的に扱われるため、ここで定義する必要はありません。
+| Type       | Binding   | 対象                               | 例 (Path=`posts`)                      |
+| :--------- | :-------- | :--------------------------------- | :------------------------------------- |
+| Collection | File      | 指定フォルダ内のMarkdownファイル群 | `posts/a.md`, `posts/b.md`             |
+| Collection | Directory | 指定フォルダ内のサブフォルダ群     | `posts/a/index.md`, `posts/b/index.md` |
+| Singleton  | File      | 指定された単一ファイル             | `posts/about.md`                       |
+| Singleton  | Directory | 指定フォルダ内の `index.md`        | `posts/about/index.md`                 |
 
-- **Field List**:
-  システムは、定義済みのフィールド一覧を表示します。ドラッグ＆ドロップでの並び替えに対応。
-- **Field Editor (Modal / Inline)**:
-  - **Name**: FrontMatter のキー名（項目名）。
-  - **Widget**: 値の型（入力タイプ）。
-    - v2.5 サポート: `string` (短文), `text` (長文), `boolean` (スイッチ),
-      `image` (画像選択)。
-  - **Default**: 初期値（オプション）。
-    - **Note**: コンテンツタイプが `Collection`
-      の場合のみ設定可能です。新規記事作成時のデフォルト値として利用されます。
-  - **Required**: 必須項目かどうか。
+#### 3. フィールドスキーマ (Field Schema)
 
-### 3. テンプレート設定 (Archetype) - Collection Only
+コンテンツ（FrontMatter）のデータ構造を定義します。
 
-- **Archetype Body**: 新規作成時に初期挿入される Markdown 本文のテンプレート。
+- 新規追加時は空の状態から開始されます。
+- **Field Editor**:
+  - **Name**: キー名。
+  - **Widget**: 入力タイプ (`string`, `text`, `boolean`, `image` 等)。
+  - **Default**: 初期値（Collectionのみ有効）。
+  - **Required**: 必須フラグ。
 
-### 4. アクション
+#### 4. アーキタイプテンプレート (Archetype Template)
 
-- **Save**: 設定を保存する (Primary)。
-  - 即座にサーバー (Deno KV) に反映されます。Pull Request は作成されません。
-- **Delete**: このコレクション定義を削除する。
+- **対象**: Content Type が `Collection` の場合のみ表示。
+- **機能**: 新規コンテンツ作成時に、本文 (Body) に初期挿入される Markdown
+  テキストを設定できます。
 
-## データフロー
+#### 5. アクション
 
-1. **Load**:
-   - `GET /api/repo/:owner/:repo/config`
-   - Deno KV からリポジトリの設定を読み込み、フォーム初期値に反映。
+- **Cancel**: コンテンツ一覧に戻る。
+- **Add / Update**: 設定を保存する。
+- **Delete**: (編集時のみ) 設定を削除する。
+
+---
+
+## データフローと保存プロセス
+
+1. **Load**: `GET /api/repo/:owner/:repo/config`
+   - Deno KV からリポジトリ全体の設定を取得。
 2. **Validation**:
-   - `name` の重複チェック。
-   - パス形式の整合性チェック。
-3. **Sanitization**:
-   - 以下のフィールドは保存時に前後の空白がトリムされます。
-     - Content Name
-     - Path
-     - Branch
-     - Field Names (FrontMatter Keys)
-4. **Transformation**:
-   - UI 上のステートから保存用の JSON オブジェクトへ変換。
-   - **Identifier Generation**:
-     - 以下のルールで `name` を自動生成します。
-     - 基本フォーマット: `[branch]-[path]` (Branch が未設定の場合は `[path]`
-       のみ)
-     - サニタイズ: 英数字以外の文字は `-` に置換し、小文字化します。
-5. **Branch Creation**:
-   - (Target Branch が設定された場合のみ)
-   - 指定されたブランチの存在確認を行い、存在しない場合はデフォルトブランチから新たに作成します。
-6. **Save**:
-   - `POST /api/repo/:owner/:repo/config`
-   - サーバー側で Deno KV を更新。
+   - 必須項目のチェック。
+   - `path` 等の形式チェック。
+3. **Save**: `POST /api/repo/:owner/:repo/config`
+   - **Repository Settings**: Config
+     オブジェクトのルートプロパティ（`branch`）を更新。
+   - **Content Config**: `collections`
+     配列内の該当アイテムを追加・更新・削除して保存。

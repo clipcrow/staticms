@@ -18,19 +18,23 @@ const MOCK_CONFIG: Config = {
   ],
 };
 
+import { MemoryRouter } from "react-router-dom";
+
 Deno.test({
   name: "ContentConfigEditor: Renders form with initial data",
   fn: () => {
     const { getByDisplayValue } = render(
-      <ContentConfigEditor
-        owner="testuser"
-        repo="testrepo"
-        config={MOCK_CONFIG}
-        initialData={MOCK_CONFIG.collections[0]}
-        mode="edit"
-        onCancel={() => {}}
-        onSave={() => {}}
-      />,
+      <MemoryRouter>
+        <ContentConfigEditor
+          owner="testuser"
+          repo="testrepo"
+          config={MOCK_CONFIG}
+          initialData={MOCK_CONFIG.collections[0]}
+          mode="edit"
+          onCancel={() => {}}
+          onSave={() => {}}
+        />
+      </MemoryRouter>,
     );
 
     assertExists(getByDisplayValue("Existing Collection"));
@@ -56,24 +60,26 @@ Deno.test({
       const onCancelSpy = stub({ onCancel: () => {} }, "onCancel");
 
       const { getByText } = render(
-        <ContentConfigEditor
-          owner="testuser"
-          repo="testrepo"
-          config={MOCK_CONFIG}
-          mode="add"
-          onCancel={onCancelSpy}
-          onSave={onSaveSpy}
-          // Inject valid initial data to bypass testing-library event issues in Deno
-          initialData={{
-            name: "", // Will be generated
-            label: "New Col",
-            path: "content/new.md",
-            type: "singleton",
-            binding: "file",
-            fields: [],
-            archetype: "",
-          }}
-        />,
+        <MemoryRouter>
+          <ContentConfigEditor
+            owner="testuser"
+            repo="testrepo"
+            config={MOCK_CONFIG}
+            mode="add"
+            onCancel={onCancelSpy}
+            onSave={onSaveSpy}
+            // Inject valid initial data to bypass testing-library event issues in Deno
+            initialData={{
+              name: "", // Will be generated
+              label: "New Col",
+              path: "content/new.md",
+              type: "singleton",
+              binding: "file",
+              fields: [],
+              archetype: "",
+            }}
+          />
+        </MemoryRouter>,
       );
 
       // Save button (Button text is "Add" when editingIndex/mode is null/"add")
@@ -92,6 +98,7 @@ Deno.test({
       // Body should contain the new collection in YAML
       assertEquals(body.includes("name: content-new-md"), true); // Generated ID
       assertEquals(body.includes("label: New Col"), true);
+      assertEquals(body.includes("branch:"), false); // Branch should not be in content config
     } finally {
       fetchStub.restore();
       alertStub.restore();

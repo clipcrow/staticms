@@ -32,6 +32,7 @@ export interface Collection {
 }
 
 export interface Config {
+  branch?: string; // Repository-level target branch
   collections: Collection[];
   // deno-lint-ignore no-explicit-any
   [key: string]: any;

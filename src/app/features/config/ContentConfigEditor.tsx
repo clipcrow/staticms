@@ -48,9 +48,7 @@ export function ContentConfigEditor({
 
     try {
       // 0. Generate Identifier
-      const rawId = formData.branch
-        ? `${formData.branch}-${formData.path}`
-        : formData.path;
+      const rawId = formData.path;
       const generatedName = (rawId || "").toLowerCase().replace(
         /[^a-z0-9]+/g,
         "-",
@@ -62,7 +60,7 @@ export function ContentConfigEditor({
         name: generatedName,
         label: formData.label?.trim() || undefined, // Optional
         path: formData.path?.trim().replace(/^\//, "") || "",
-        branch: formData.branch?.trim() || undefined,
+        // branch: formData.branch?.trim() || undefined, // Removed
         fields: formData.fields?.map((f: Field) => ({
           ...f,
           name: f.name.trim(),
@@ -71,8 +69,6 @@ export function ContentConfigEditor({
 
       // If label is empty, remove it or leave undefined? Spec says: "If absent, Path is used".
       if (!sanitizedCollection.label) delete sanitizedCollection.label;
-      // If branch is empty, remove
-      if (!sanitizedCollection.branch) delete sanitizedCollection.branch;
 
       // 2. Validation (Basic)
       if (!sanitizedCollection.name) throw new Error("Identifier is required");

@@ -11,6 +11,7 @@ Deno.test({
   fn: async (t) => {
     await t.step("Loads and parses YAML config", async () => {
       const yamlConfig = `
+branch: main
 collections:
   - name: posts
     label: Posts
@@ -28,6 +29,7 @@ collections:
         await waitFor(() => assert(!result.current.loading));
 
         assert(result.current.config);
+        assertEquals(result.current.config?.branch, "main");
         assertEquals(result.current.config?.collections[0].name, "posts");
       } finally {
         fetchStub.restore();

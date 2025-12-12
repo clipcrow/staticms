@@ -183,22 +183,6 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                   disabled={loading}
                 />
               </div>
-
-              {/* Target Branch */}
-              <div className="field">
-                <label>Target Branch</label>
-                <input
-                  type="text"
-                  placeholder="e.g. features/preview"
-                  value={formData.branch || ""}
-                  onChange={(e) => handleChange("branch", e.target.value)}
-                  disabled={loading}
-                />
-                <small className="helper-text">
-                  If set, this branch is used for content. If it doesn't exist,
-                  it will be created on save.
-                </small>
-              </div>
             </div>
           </div>
 
