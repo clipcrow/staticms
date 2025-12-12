@@ -28,9 +28,7 @@ export function ContentConfigEditor({
     type: "singleton",
     binding: "file",
     path: "",
-    fields: [
-      { name: "title", widget: "string", required: true },
-    ],
+    fields: [],
     // archetype is stored as loose prop in Collection interface
     archetype: "",
   };

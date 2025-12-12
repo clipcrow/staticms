@@ -71,14 +71,11 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       >
         <form onSubmit={onSave}>
           {/* Basic Settings */}
-          {/* Basic Settings */}
           <div style={{ marginBottom: "2rem" }}>
-            <h4 className="ui header">Basic Settings</h4>
-
             <div className="ui form" style={{ marginTop: "1rem" }}>
               {/* Content Name (Label) */}
               <div className="field">
-                <label>Content Name (Label) - Optional</label>
+                <label>Content Name (Label)</label>
                 <input
                   type="text"
                   placeholder="e.g. Blog Post"
@@ -93,7 +90,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
               <div className="two fields">
                 {/* Type Selection */}
-                <div className="field">
+                <div className="required field">
                   <label>Content Type</label>
                   <div className="inline fields">
                     <div className="field">
@@ -125,7 +122,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                 </div>
 
                 {/* Binding Selection */}
-                <div className="field">
+                <div className="required field">
                   <label>Binding</label>
                   <div className="inline fields">
                     <div className="field">
@@ -189,7 +186,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
               {/* Target Branch */}
               <div className="field">
-                <label>Target Branch (Optional)</label>
+                <label>Target Branch</label>
                 <input
                   type="text"
                   placeholder="e.g. features/preview"
@@ -207,9 +204,9 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
           {/* Field Schema Editor */}
           {/* Field Schema Editor */}
-          <div style={{ marginBottom: "2rem" }}>
-            <h4 className="ui header">Field Schema</h4>
-            <div className="ui form" style={{ marginTop: "1rem" }}>
+          <div className="ui form" style={{ marginBottom: "2rem" }}>
+            <div className="field">
+              <label>Field Schema</label>
               <FieldList
                 fields={formData.fields || []}
                 onChange={(fields) => handleChange("fields", fields)}
@@ -221,19 +218,23 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
           {/* Archetype (Collection Only) */}
           {isCollection && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h4 className="ui header">Archetype Template</h4>
-              <div style={{ marginTop: "1rem" }}>
-                <MarkdownEditor
-                  body={formData.archetype || ""}
-                  setBody={(val) => handleChange("archetype", val)}
-                  isPrLocked={loading}
-                  currentContent={shimContent}
-                  height={400}
-                />
-              </div>
-              <div style={{ padding: "0.5rem 0" }}>
-                <small className="helper-text">
+            <div className="ui form" style={{ marginBottom: "2rem" }}>
+              <div className="field">
+                <label>Archetype Template</label>
+                <div style={{ marginTop: "0.5rem" }}>
+                  <MarkdownEditor
+                    body={formData.archetype || ""}
+                    setBody={(val) =>
+                      handleChange("archetype", val)}
+                    isPrLocked={loading}
+                    currentContent={shimContent}
+                    height={400}
+                  />
+                </div>
+                <small
+                  className="helper-text"
+                  style={{ display: "block", marginTop: "0.5rem" }}
+                >
                   Default markdown body content for new articles.
                 </small>
               </div>
