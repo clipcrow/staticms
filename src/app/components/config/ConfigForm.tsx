@@ -202,26 +202,28 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
           {/* Archetype (Collection Only) */}
           {isCollection && (
-            <div className="ui form" style={{ marginBottom: "2rem" }}>
-              <div className="field">
-                <label>Archetype Template</label>
-                <div style={{ marginTop: "0.5rem" }}>
-                  <MarkdownEditor
-                    body={formData.archetype || ""}
-                    setBody={(val) =>
-                      handleChange("archetype", val)}
-                    isPrLocked={loading}
-                    currentContent={shimContent}
-                    height={400}
-                  />
-                </div>
-                <small
-                  className="helper-text"
-                  style={{ display: "block", marginTop: "0.5rem" }}
-                >
-                  Default markdown body content for new articles.
-                </small>
+            <div style={{ marginBottom: "2rem" }}>
+              <h4
+                className="ui dividing header"
+                style={{ fontSize: "0.93rem", fontWeight: 700 }}
+              >
+                Archetype Template
+              </h4>
+              <div style={{ marginTop: "1rem" }}>
+                <MarkdownEditor
+                  body={formData.archetype || ""}
+                  setBody={(val) => handleChange("archetype", val)}
+                  isPrLocked={loading}
+                  currentContent={shimContent}
+                  height={400}
+                />
               </div>
+              <small
+                className="helper-text"
+                style={{ display: "block", marginTop: "0.5rem" }}
+              >
+                Default markdown body content for new articles.
+              </small>
             </div>
           )}
 
