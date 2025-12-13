@@ -107,7 +107,12 @@ Deno.test({
       });
 
       // Verify fetch call payload
-      const call = fetchStub.calls[0];
+      // Find config update call
+      const call = fetchStub.calls.find((c) =>
+        c.args[0].toString().endsWith("/config")
+      );
+      if (!call) throw new Error("Config update call not found");
+
       assertEquals(call.args[0], "/api/repo/testuser/testrepo/config");
       const body = await new Response(call.args[1]?.body as BodyInit).text();
 
