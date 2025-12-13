@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { useDraft } from "@/app/hooks/useDraft.ts";
 import { useAuth } from "@/app/hooks/useAuth.ts";
@@ -30,6 +30,7 @@ export function ContentEditor(
     ContentEditorProps,
 ) {
   const params = useParams();
+  const navigate = useNavigate();
   const location = useLocation();
   const owner = params.owner;
   const repo = params.repo;
@@ -416,6 +417,46 @@ export function ContentEditor(
     showToast(`Copied ![${name}](${name}) to clipboard`, "info");
   };
 
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this content? This cannot be undone.",
+      )
+    ) return;
+
+    // deno-lint-ignore no-explicit-any
+    const sha = (originalDraft as any)?.sha;
+
+    setSaving(true);
+    try {
+      const res = await fetch(
+        `/api/repo/${owner}/${repo}/contents/${filePath}`,
+        {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: `Delete ${effectiveArticleName}`,
+            sha: sha,
+            branch: "main", // TODO: Configurable
+          }),
+        },
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Delete failed");
+      }
+
+      showToast("Deleted successfully", "success");
+      navigate(`/${owner}/${repo}/${collectionName}`);
+    } catch (e) {
+      console.error(e);
+      showToast((e as Error).message, "error");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (!collection || !config) {
     return <div className="ui active centered inline loader"></div>;
   }
@@ -501,6 +542,9 @@ export function ContentEditor(
       onImageUpload={handleImageUpload}
       onPendingImageRemove={handlePendingImageRemove}
       onImageInsert={handleImageInsert}
+      onDelete={(collection?.type !== "singleton" && mode !== "new")
+        ? handleDelete
+        : undefined}
     />
   );
 }

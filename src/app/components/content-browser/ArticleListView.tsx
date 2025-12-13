@@ -54,7 +54,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   onNewArticleNameChange,
   onCreate,
   onSelect,
-  onDeleteRequest,
+  onDeleteRequest: _onDeleteRequest,
   onDeleteConfirm,
   onDeleteCancel,
   onPageChange,
@@ -228,19 +228,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                         </div>
                         <div className="extra content">
                           <span className="right floated">
-                            <button
-                              type="button"
-                              className="ui icon button mini basic"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteRequest(file);
-                              }}
-                              title="Delete Article"
-                            >
-                              <i className="trash icon red"></i>
-                            </button>
-                          </span>
-                          <span>
                             {status.hasDraft
                               ? (
                                 <StatusBadge
@@ -281,19 +268,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                         primaryText={file.name}
                         secondaryText={file.path}
                         status={status}
-                        actions={
-                          <button
-                            type="button"
-                            className="ui icon button mini basic"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteRequest(file);
-                            }}
-                            title="Delete Article"
-                          >
-                            <i className="trash icon red"></i>
-                          </button>
-                        }
                         onClick={() => onSelect(file.path || "")}
                       />
                     );

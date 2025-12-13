@@ -37,6 +37,7 @@ export interface EditorLayoutProps {
   onImageUpload: (file: File) => Promise<string | null>;
   onPendingImageRemove: (name: string) => void;
   onImageInsert: (name: string) => void;
+  onDelete?: () => void;
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -61,11 +62,60 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onImageUpload,
   onPendingImageRemove,
   onImageInsert,
+  onDelete,
 }) => {
   return (
     <>
       <Header
         breadcrumbs={breadcrumbs}
+        rightContent={
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {prInfo && (
+              <a
+                href={prInfo.url}
+                target="_blank"
+                rel="noreferrer"
+                className="ui horizontal label teal medium"
+                title="View Pull Request on GitHub"
+              >
+                <i className="eye icon"></i>
+                In Review (#{prInfo.number})
+              </a>
+            )}
+
+            {!isSynced && (
+              <div
+                className="ui horizontal label orange medium"
+                title={fromStorage
+                  ? "Restored from local backup"
+                  : "Unsaved local changes"}
+              >
+                <i className="pencil alternate icon"></i>
+                {fromStorage ? "Draft Restored" : "Draft"}
+              </div>
+            )}
+
+            {isMerged && !prInfo && isSynced && (
+              <div
+                className="ui horizontal label purple medium"
+                title="Pull Request was merged successfully"
+              >
+                <i className="check circle icon"></i>
+                Approved
+              </div>
+            )}
+
+            {isClosed && !prInfo && isSynced && (
+              <div
+                className="ui horizontal label red medium"
+                title="Pull Request was closed without merge"
+              >
+                <i className="times circle icon"></i>
+                Declined
+              </div>
+            )}
+          </div>
+        }
       />
 
       <div
@@ -148,6 +198,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           padding: "1rem 2rem",
           zIndex: 100,
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
           gap: "1rem",
           boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
@@ -184,54 +235,21 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           </button>
         </div>
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }}></div>
-
-        {/* Status Indicators (Right) */}
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          {prInfo && (
-            <a
-              href={prInfo.url}
-              target="_blank"
-              rel="noreferrer"
-              className="ui horizontal label teal medium"
-              title="View Pull Request on GitHub"
+        {/* Delete Action (Right) */}
+        <div>
+          {onDelete && (
+            <button
+              type="button"
+              className={`ui button negative server-delete ${
+                isSaving ? "loading" : ""
+              }`}
+              onClick={onDelete}
+              disabled={isSaving || isLocked}
+              title="Delete this article permanently"
             >
-              <i className="eye icon"></i>
-              In Review (#{prInfo.number})
-            </a>
-          )}
-
-          {!isSynced && (
-            <div
-              className="ui horizontal label orange medium"
-              title={fromStorage
-                ? "Restored from local backup"
-                : "Unsaved local changes"}
-            >
-              <i className="pencil alternate icon"></i>
-              {fromStorage ? "Draft Restored" : "Draft"}
-            </div>
-          )}
-
-          {isMerged && !prInfo && isSynced && (
-            <div
-              className="ui horizontal label purple medium"
-              title="Pull Request was merged successfully"
-            >
-              <i className="check circle icon"></i>
-              Approved
-            </div>
-          )}
-
-          {isClosed && !prInfo && isSynced && (
-            <div
-              className="ui horizontal label red medium"
-              title="Pull Request was closed without merge"
-            >
-              <i className="times circle icon"></i>
-              Declined
-            </div>
+              <i className="trash icon"></i>
+              Delete
+            </button>
           )}
         </div>
       </div>
