@@ -76,8 +76,22 @@ export const CollectionList: React.FC<CollectionListProps> = ({
         breadcrumbs={[
           { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
         ]}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em" }}>
+      />
+
+      <div
+        className="ui container"
+        style={{ marginTop: "1rem", marginBottom: "1rem" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          {/* 1. View Toggle */}
+          <div style={{ flexShrink: 0 }}>
             <div className="ui icon buttons">
               <button
                 type="button"
@@ -96,33 +110,30 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                 <i className="list icon"></i>
               </button>
             </div>
+          </div>
+
+          {/* 2. Search Input */}
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <div className="ui icon input fluid">
+              <input
+                type="text"
+                placeholder="Search collections..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+              <i className="search icon"></i>
+            </div>
+          </div>
+
+          {/* 3. Add Content Button */}
+          <div style={{ flexShrink: 0 }}>
             <button
               type="button"
-              className="ui primary button"
+              className="ui primary button icon"
               onClick={onAdd}
             >
-              <i className="plus icon"></i>
-              Add New Content
+              <i className="plus icon"></i> Add New Content
             </button>
-          </div>
-        }
-      />
-      <div className="staticms-toolbar-container">
-        <div className="ui container">
-          <div className="ui form">
-            <div className="fields" style={{ display: "flex" }}>
-              <div className="field" style={{ flex: 1 }}>
-                <div className="ui icon input fluid">
-                  <input
-                    type="text"
-                    placeholder="Search collections..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                  />
-                  <i className="search icon"></i>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

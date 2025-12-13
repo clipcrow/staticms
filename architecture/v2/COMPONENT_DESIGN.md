@@ -239,3 +239,42 @@ Markdownエディタのプレビューエリアの微調整など）は、CSSフ
 (`.ContentEditor_previewArea` 等) を付けた通常の CSS
 クラス定義を推奨します。あるいは、標準的な `ui ...`
 クラスとの競合を避ける記述を心がけます。
+
+### Best Practices: CSS Override & Utility Classes
+
+Semantic UI
+のデフォルトテーマと競合する場合や、特定のアクションで強いスタイル適用が必要な場合（例:
+黒背景のボタン）、インラインスタイル (`style={{...}}`) や JS による DOM
+操作は避け、`src/app/styles/main.scss`
+に専用のユーティリティクラスを定義して対応します。 特に `!important`
+はインラインスタイルで使用せず、SCSS
+のクラス定義内でのみ使用し、コンポーネント側のマークアップはクリーンに保つことを原則とします。
+
+**Good:**
+
+```scss
+// src/app/styles/main.scss
+// Specific utility class
+.ui.button.action-black {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: rgba(27, 31, 36, 0.15) !important;
+
+  &:hover {
+    background-color: #333333 !important;
+  }
+}
+```
+
+```tsx
+// React Component
+<button className="ui button action-black">Connect</button>;
+```
+
+**Bad (Avoid):**
+
+```tsx
+// Avoid inline styles with explicit colors or invalid css syntax in React
+<button style={{ backgroundColor: "black" }}>Connect</button>
+<button ref={el => el.style.setProperty("background-color", "black", "important")}>Connect</button>
+```

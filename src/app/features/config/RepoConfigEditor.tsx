@@ -60,7 +60,6 @@ export function RepoConfigEditor({
 
   return (
     <div className="repo-config-editor">
-      <h2>Repository Settings</h2>
       {error && <div className="error-message">{error}</div>}
       <RepoConfigForm
         config={config}

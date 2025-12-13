@@ -122,3 +122,31 @@ graph TD
     でラップすると、レイアウトの衝突（特に高さ計算やテキストエリアのリサイズの問題）が発生します。
   - ラベル付けには独立したコンテナ `div` や `Header`
     コンポーネントを使用し、エディタコンポーネントをブロック/Input挙動を強制するスタイルコンテキストの外に配置してください。
+
+### Layout Pattern: Toolbar (Toolbox)
+
+リスト画面などでのフィルターやアクションボタンを配置するツールボックス（Toolbar）行の実装パターンです。
+
+- **Placement**: ヘッダーコンポーネントの直下 (`marginTop: 1rem`) に配置します。
+- **Padding**:
+  リストコンテンツ（CardやTable）と左右の余白を揃えるため、Toolbar自体には
+  `ui container` のようなパディングを持たせず、内包する `ui container`
+  によってレイアウトを制御します。
+- **Flexbox**: 内部要素は Flexbox (`display: flex`) を使用し、`gap`
+  で間隔を調整します。`ui form .fields` 等の Semantic UI
+  グリッドシステムは、不要なネガティブマージンやパディングを生む可能性があるため、ここでは使用を避けてください。
+
+```tsx
+// Example Structure
+<>
+  <Header ... />
+  <div className="ui container" style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+       {/* Actions / Filters */}
+    </div>
+  </div>
+  <div className="ui container">
+     {/* Main Content (List) */}
+  </div>
+</>
+```

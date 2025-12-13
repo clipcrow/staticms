@@ -107,8 +107,21 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               collectionName || "",
           },
         ]}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em" }}>
+      />
+      <div
+        className="ui container"
+        style={{ marginTop: "1rem", marginBottom: "1rem" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          {/* 1. View Mode Switcher */}
+          <div style={{ flexShrink: 0 }}>
             <div className="ui icon buttons basic">
               <button
                 type="button"
@@ -128,52 +141,40 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               </button>
             </div>
           </div>
-        }
-      />
-      <div className="staticms-toolbar-container">
-        <div className="ui container">
-          <div className="ui form">
-            <div
-              className="fields"
-              style={{ display: "flex" }}
-            >
-              {/* Search */}
-              <div className="field" style={{ flex: 1 }}>
-                <div className="ui icon input fluid">
-                  <input
-                    type="text"
-                    placeholder="Filter articles..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                  />
-                  <i className="search icon"></i>
-                </div>
-              </div>
-              {/* Create New */}
-              <div
-                className="field"
-                style={{ flex: 1, marginLeft: "1em" }}
+
+          {/* 2. Search */}
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <div className="ui icon input fluid">
+              <input
+                type="text"
+                placeholder="Filter articles..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+              <i className="search icon"></i>
+            </div>
+          </div>
+
+          {/* 3. Create New (Combined Input & Button) */}
+          <div style={{ flex: 1, minWidth: "300px" }}>
+            <div className="ui action input fluid">
+              <input
+                type="text"
+                placeholder="New article name (e.g. my-post)"
+                value={newArticleName}
+                onChange={(e) => onNewArticleNameChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") onCreate();
+                }}
+              />
+              <button
+                type="button"
+                className="ui primary button"
+                onClick={onCreate}
               >
-                <div className="ui action input fluid">
-                  <input
-                    type="text"
-                    placeholder="New article name (e.g. my-post)"
-                    value={newArticleName}
-                    onChange={(e) => onNewArticleNameChange(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") onCreate();
-                    }}
-                  />
-                  <button
-                    type="button"
-                    className="ui primary button"
-                    onClick={onCreate}
-                  >
-                    <i className="plus icon"></i>
-                    Create
-                  </button>
-                </div>
-              </div>
+                <i className="plus icon"></i>
+                Create
+              </button>
             </div>
           </div>
         </div>

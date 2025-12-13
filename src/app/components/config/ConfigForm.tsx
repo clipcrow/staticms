@@ -69,7 +69,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
         className="ui container"
         style={{ marginTop: "2rem", paddingBottom: "100px" }}
       >
-        <form onSubmit={onSave}>
+        <form id="content-config-form" onSubmit={onSave}>
           {/* Basic Settings */}
           <div style={{ marginBottom: "2rem" }}>
             <div className="ui form" style={{ marginTop: "1rem" }}>
@@ -226,48 +226,61 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
               </small>
             </div>
           )}
-
-          {/* Actions */}
-          <div
-            className="actions staticms-settings-actions"
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginTop: "20px",
-              marginBottom: "40px",
-            }}
-          >
-            <div>
-              <button
-                type="button"
-                onClick={onCancel}
-                className="ui button"
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={`ui primary button ${loading ? "loading" : ""}`}
-                disabled={loading}
-              >
-                {editingIndex !== null ? "Update" : "Add"}
-              </button>
-            </div>
-
-            {editingIndex !== null && (
-              <button
-                type="button"
-                onClick={onDelete}
-                className={`ui button negative ${loading ? "loading" : ""}`}
-                disabled={loading}
-              >
-                <i className="trash icon"></i>
-                Delete
-              </button>
-            )}
-          </div>
         </form>
+      </div>
+
+      {/* Fixed Footer Actions */}
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          backgroundColor: "var(--color-canvas-default, #fff)",
+          borderTop: "1px solid var(--color-border-muted, #d0d7de)",
+          padding: "1rem 2rem",
+          zIndex: 100,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: "1rem",
+          boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
+        }}
+      >
+        {/* Left Actions (Cancel, Save) */}
+        <div style={{ display: "flex", gap: "1rem" }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="ui button"
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            form="content-config-form"
+            className={`ui primary button ${loading ? "loading" : ""}`}
+            disabled={loading}
+          >
+            {editingIndex !== null ? "Update" : "Add"}
+          </button>
+        </div>
+
+        {/* Right Actions (Delete) */}
+        <div>
+          {editingIndex !== null && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className={`ui button negative ${loading ? "loading" : ""}`}
+              disabled={loading}
+            >
+              <i className="trash icon"></i>
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </>
   );

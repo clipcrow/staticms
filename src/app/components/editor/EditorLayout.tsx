@@ -66,91 +66,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     <>
       <Header
         breadcrumbs={breadcrumbs}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em", alignItems: "center" }}>
-            {prInfo && (
-              <a
-                href={prInfo.url}
-                target="_blank"
-                rel="noreferrer"
-                className="ui horizontal label teal"
-                title="View Pull Request on GitHub"
-              >
-                <i className="eye icon"></i>
-                In Review (#{prInfo.number})
-              </a>
-            )}
-
-            {!isSynced && (
-              <div
-                className="ui horizontal label orange"
-                title={fromStorage
-                  ? "Restored from local backup"
-                  : "Unsaved local changes"}
-              >
-                <i className="pencil alternate icon"></i>
-                {fromStorage ? "Draft Restored" : "Draft"}
-              </div>
-            )}
-
-            {isMerged && !prInfo && isSynced && (
-              <div
-                className="ui horizontal label purple"
-                title="Pull Request was merged successfully"
-              >
-                <i className="check circle icon"></i>
-                Approved
-              </div>
-            )}
-
-            {isClosed && !prInfo && isSynced && (
-              <div
-                className="ui horizontal label red"
-                title="Pull Request was closed without merge"
-              >
-                <i className="times circle icon"></i>
-                Declined
-              </div>
-            )}
-
-            {/* Reset Button: Only show if we have local changes */}
-            {!isSynced && (
-              <button
-                type="button"
-                className="ui button negative basic"
-                onClick={onReset}
-                disabled={isSaving}
-                title="Discard local draft and reload from server"
-              >
-                Reset
-              </button>
-            )}
-
-            <button
-              type="button"
-              className={`ui primary button ${isSaving ? "loading" : ""}`}
-              onClick={onSave}
-              disabled={isSaving || isLocked || isSynced}
-              title={isLocked
-                ? "Editing is locked because a PR is open"
-                : isSynced
-                ? "No changes to save"
-                : "Save changes like a text editor"}
-            >
-              <i className={prInfo ? "sync icon" : "plus icon"}></i>
-              {isLocked
-                ? "Locked (PR Open)"
-                : prInfo
-                ? "Update PR"
-                : "Create PR"}
-            </button>
-          </div>
-        }
       />
 
       <div
         className="ui container content-editor"
-        style={{ marginTop: "2rem" }}
+        style={{ marginTop: "2rem", paddingBottom: "80px" }}
       >
         <div className="ui stackable grid">
           <div
@@ -213,6 +133,104 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onInsert={onImageInsert}
                 folderPath={folderPath}
               />
+            </div>
+          )}
+        </div>
+      </div>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          width: "100%",
+          backgroundColor: "var(--color-canvas-default, #fff)", // Use variable if available
+          borderTop: "1px solid var(--color-border-muted, #d0d7de)",
+          padding: "1rem 2rem",
+          zIndex: 100,
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
+        }}
+        className="staticms-editor-footer"
+      >
+        {/* Actions (Left) */}
+        <div style={{ display: "flex", gap: "1rem" }}>
+          {!isSynced && (
+            <button
+              type="button"
+              className="ui button negative basic"
+              onClick={onReset}
+              disabled={isSaving}
+              title="Discard local draft and reload from server"
+            >
+              Reset
+            </button>
+          )}
+
+          <button
+            type="button"
+            className={`ui primary button ${isSaving ? "loading" : ""}`}
+            onClick={onSave}
+            disabled={isSaving || isLocked || isSynced}
+            title={isLocked
+              ? "Editing is locked because a PR is open"
+              : isSynced
+              ? "No changes to save"
+              : "Save changes like a text editor"}
+          >
+            <i className={prInfo ? "sync icon" : "plus icon"}></i>
+            {isLocked ? "Locked (PR Open)" : prInfo ? "Update PR" : "Create PR"}
+          </button>
+        </div>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }}></div>
+
+        {/* Status Indicators (Right) */}
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          {prInfo && (
+            <a
+              href={prInfo.url}
+              target="_blank"
+              rel="noreferrer"
+              className="ui horizontal label teal medium"
+              title="View Pull Request on GitHub"
+            >
+              <i className="eye icon"></i>
+              In Review (#{prInfo.number})
+            </a>
+          )}
+
+          {!isSynced && (
+            <div
+              className="ui horizontal label orange medium"
+              title={fromStorage
+                ? "Restored from local backup"
+                : "Unsaved local changes"}
+            >
+              <i className="pencil alternate icon"></i>
+              {fromStorage ? "Draft Restored" : "Draft"}
+            </div>
+          )}
+
+          {isMerged && !prInfo && isSynced && (
+            <div
+              className="ui horizontal label purple medium"
+              title="Pull Request was merged successfully"
+            >
+              <i className="check circle icon"></i>
+              Approved
+            </div>
+          )}
+
+          {isClosed && !prInfo && isSynced && (
+            <div
+              className="ui horizontal label red medium"
+              title="Pull Request was closed without merge"
+            >
+              <i className="times circle icon"></i>
+              Declined
             </div>
           )}
         </div>
