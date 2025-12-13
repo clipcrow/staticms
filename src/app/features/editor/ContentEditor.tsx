@@ -17,6 +17,7 @@ import {
   FileItem,
 } from "@/shared/types.ts";
 import { BreadcrumbItem } from "@/app/components/common/Header.tsx";
+import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 
 export interface ContentEditorProps {
@@ -485,7 +486,7 @@ export function ContentEditor(
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      label: `${owner}/${repo}`,
+      label: <RepoBreadcrumbLabel owner={owner!} repo={repo!} />,
       to: `/${owner}/${repo}`,
     },
   ];

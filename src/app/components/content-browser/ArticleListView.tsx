@@ -1,5 +1,6 @@
 import React from "react";
 import { Header } from "@/app/components/common/Header.tsx";
+import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
@@ -64,7 +65,10 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
       <div className="ui container" style={{ marginTop: "2rem" }}>
         <Header
           breadcrumbs={[
-            { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+            {
+              label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+              to: `/${owner}/${repo}`,
+            },
             { label: collectionName || "" },
           ]}
         />
@@ -101,7 +105,10 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
     <>
       <Header
         breadcrumbs={[
-          { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+          {
+            label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+            to: `/${owner}/${repo}`,
+          },
           {
             label: collectionDef.label || collectionDef.path ||
               collectionName || "",

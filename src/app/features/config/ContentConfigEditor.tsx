@@ -2,6 +2,7 @@ import { useState } from "react";
 import yaml from "js-yaml";
 import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
 import { ConfigForm } from "@/app/components/config/ConfigForm.tsx";
+import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 
 interface ContentConfigEditorProps {
   owner: string;
@@ -142,7 +143,10 @@ export function ContentConfigEditor({
   };
 
   const breadcrumbs = [
-    { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+    {
+      label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+      to: `/${owner}/${repo}`,
+    },
     { label: "Configuration" },
   ];
 

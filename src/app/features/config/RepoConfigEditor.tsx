@@ -2,6 +2,7 @@ import { useState } from "react";
 import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { RepoConfigForm } from "@/app/components/config/RepoConfigForm.tsx";
+import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 
 interface RepoConfigEditorProps {
   owner: string;
@@ -30,6 +31,38 @@ export function RepoConfigEditor({
     setError(null);
 
     try {
+      // 0. Check Branch Existence if updated
+      const branchName = config.branch?.trim();
+      if (branchName && branchName !== initialConfig.branch) {
+        const checkRes = await fetch(
+          `/api/repo/${owner}/${repo}/branches/${branchName}`,
+        );
+        if (checkRes.status === 404) {
+          if (
+            confirm(
+              `Branch '${branchName}' does not exist. Do you want to create it?`,
+            )
+          ) {
+            const createRes = await fetch(
+              `/api/repo/${owner}/${repo}/branches`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ branchName }),
+              },
+            );
+
+            if (!createRes.ok) {
+              const err = await createRes.json();
+              throw new Error(err.error || "Failed to create branch");
+            }
+          } else {
+            setSaving(false);
+            return;
+          }
+        }
+      }
+
       // Clean up config before saving
       const newConfig: Config = { ...config };
       if (!newConfig.branch) delete newConfig.branch;
@@ -69,7 +102,10 @@ export function RepoConfigEditor({
         breadcrumbs={[
           { label: "Home", to: "/" },
           { label: "Repositories", to: "/repositories" },
-          { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
+          {
+            label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+            to: `/${owner}/${repo}`,
+          },
           { label: "Settings", to: `/${owner}/${repo}/settings` },
         ]}
         loading={saving}

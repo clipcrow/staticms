@@ -13,6 +13,8 @@ export interface Repository {
   updated_at?: string;
   stargazers_count?: number;
   fork?: boolean;
+  configured_branch?: string;
+  default_branch?: string;
 }
 
 export function useRepositories() {
@@ -58,4 +60,47 @@ export function useRepositories() {
   }, [fetchRepos]);
 
   return { repos, loading, error, refresh: fetchRepos };
+}
+
+export function useRepository(owner?: string, repo?: string) {
+  const [repository, setRepository] = useState<Repository | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!owner || !repo) {
+      setLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    setLoading(true);
+
+    fetch(`/api/repo/${owner}/${repo}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch repository");
+        return res.json();
+      })
+      .then((data) => {
+        if (mounted) {
+          setRepository(data);
+          setError(null);
+        }
+      })
+      .catch((e) => {
+        if (mounted) {
+          console.error(e);
+          setError((e as Error).message);
+        }
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [owner, repo]);
+
+  return { repository, loading, error };
 }

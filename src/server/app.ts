@@ -1,6 +1,6 @@
 import { Application, Router } from "@oak/oak";
 
-import { listRepositories } from "@/server/api/repositories.ts";
+import { getRepository, listRepositories } from "@/server/api/repositories.ts";
 import { deleteContent, getContent } from "@/server/api/content.ts";
 import { getRepoConfig, saveRepoConfig } from "@/server/api/config.ts";
 import {
@@ -11,6 +11,7 @@ import { webhookHandler } from "@/server/api/webhooks.ts";
 import { addClient } from "@/server/sse.ts";
 import { authRouter } from "@/server/auth.ts";
 import { batchCommitHandler } from "@/server/api/commits.ts";
+import { createBranch, getBranch } from "@/server/api/branches.ts";
 import { dumpKvKeys } from "@/server/api/debug.ts";
 
 export const app = new Application();
@@ -54,6 +55,7 @@ app.use(authRouter.allowedMethods());
 
 router.get("/api/repositories", listRepositories);
 router.get("/api/user/repos", listRepositories); // v1 compatibility
+router.get("/api/repo/:owner/:repo", getRepository);
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
@@ -62,6 +64,8 @@ router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
 // router.post("/api/repo/:owner/:repo/pr", createPrHandler); // Deprecated
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
+router.get("/api/repo/:owner/:repo/branches/:branch", getBranch);
+router.post("/api/repo/:owner/:repo/branches", createBranch);
 
 if (Deno.env.get("ENABLE_DEBUG") === "true") {
   console.log("Debug mode enabled: /_debug/kv is active");

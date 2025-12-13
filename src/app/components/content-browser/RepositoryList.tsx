@@ -267,6 +267,16 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                     </div>
 
                     <div className="description" style={{ marginTop: "0.5em" }}>
+                      {repo.configured_branch &&
+                        repo.configured_branch !== repo.default_branch &&
+                        (
+                          <div style={{ marginBottom: "0.5em" }}>
+                            <div className="ui label tiny basic">
+                              <i className="code branch icon"></i>
+                              {repo.configured_branch}
+                            </div>
+                          </div>
+                        )}
                       {repo.description?.substring(0, 100)}
                       {(repo.description?.length || 0) > 100 ? "..." : ""}
                     </div>
@@ -353,7 +363,23 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                         <i className="github icon rounded mini image"></i>
                         <div className="content">
                           {repo.full_name}
-                          <div className="sub header">{repo.description}</div>
+                          <div className="sub header">
+                            {repo.configured_branch &&
+                              repo.configured_branch !== repo.default_branch &&
+                              (
+                                <span
+                                  className="ui label tiny basic"
+                                  style={{
+                                    marginRight: "0.5em",
+                                    fontWeight: "normal",
+                                  }}
+                                >
+                                  <i className="code branch icon"></i>
+                                  {repo.configured_branch}
+                                </span>
+                              )}
+                            {repo.description}
+                          </div>
                         </div>
                       </h4>
                     </td>
