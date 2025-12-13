@@ -36,8 +36,21 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
       <Header
         breadcrumbs={[{ label: "Repositories" }]}
         rootLink={false}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5em" }}>
+      />
+      <div
+        className="ui container"
+        style={{ marginTop: "1rem", marginBottom: "1rem" }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* 1. View Toggle */}
+          <div style={{ flexShrink: 0 }}>
             <div className="ui icon buttons">
               <button
                 type="button"
@@ -56,86 +69,74 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                 <i className="list icon"></i>
               </button>
             </div>
+          </div>
+
+          {/* 2. Search Input (Variable Width) */}
+          <div style={{ flex: 1, minWidth: "200px" }}>
+            <div className="ui icon input fluid">
+              <input
+                type="text"
+                placeholder="Search repositories..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+              />
+              <i className="search icon"></i>
+            </div>
+          </div>
+
+          {/* 3. Filter Buttons */}
+          <div style={{ flexShrink: 0 }}>
+            <div className="ui icon buttons">
+              <button
+                type="button"
+                className={`ui button ${filterType === "all" ? "active" : ""}`}
+                onClick={() => onFilterTypeChange("all")}
+                title="All Types"
+              >
+                <i className="list icon"></i>
+              </button>
+              <button
+                type="button"
+                className={`ui button ${
+                  filterType === "private" ? "active" : ""
+                }`}
+                onClick={() => onFilterTypeChange("private")}
+                title="Private"
+              >
+                <i className="lock icon"></i>
+              </button>
+              <button
+                type="button"
+                className={`ui button ${
+                  filterType === "public" ? "active" : ""
+                }`}
+                onClick={() => onFilterTypeChange("public")}
+                title="Public"
+              >
+                <i className="globe icon"></i>
+              </button>
+              <button
+                type="button"
+                className={`ui button ${filterType === "fork" ? "active" : ""}`}
+                onClick={() => onFilterTypeChange("fork")}
+                title="Forks"
+              >
+                <i className="code branch icon"></i>
+              </button>
+            </div>
+          </div>
+
+          {/* 4. Connect Repository Button */}
+          <div style={{ flexShrink: 0 }}>
             <a
               href="https://github.com/apps/staticms"
               target="_blank"
               rel="noreferrer"
-              className="ui button secondary"
+              className="ui button icon action-black"
+              title="Connect Repository"
             >
-              <i className="plus icon"></i>
-              Connect Repository
+              <i className="plus icon"></i> Connect Repository
             </a>
-          </div>
-        }
-      />
-      <div className="staticms-toolbar-container">
-        <div className="ui container">
-          <div className="ui form">
-            <div className="fields" style={{ display: "flex" }}>
-              <div className="field" style={{ flex: 1 }}>
-                <div className="ui icon input fluid">
-                  <input
-                    type="text"
-                    placeholder="Search repositories..."
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                  />
-                  <i className="search icon"></i>
-                </div>
-              </div>
-              <div
-                className="field"
-                style={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  flexShrink: 0,
-                  marginLeft: "1em",
-                }}
-              >
-                <div className="ui icon buttons">
-                  <button
-                    type="button"
-                    className={`ui button ${
-                      filterType === "all" ? "active" : ""
-                    }`}
-                    onClick={() => onFilterTypeChange("all")}
-                    title="All Types"
-                  >
-                    <i className="list icon"></i>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ui button ${
-                      filterType === "private" ? "active" : ""
-                    }`}
-                    onClick={() => onFilterTypeChange("private")}
-                    title="Private"
-                  >
-                    <i className="lock icon"></i>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ui button ${
-                      filterType === "public" ? "active" : ""
-                    }`}
-                    onClick={() => onFilterTypeChange("public")}
-                    title="Public"
-                  >
-                    <i className="globe icon"></i>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ui button ${
-                      filterType === "fork" ? "active" : ""
-                    }`}
-                    onClick={() => onFilterTypeChange("fork")}
-                    title="Forks"
-                  >
-                    <i className="code branch icon"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>

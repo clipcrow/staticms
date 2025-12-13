@@ -153,6 +153,17 @@ a {
   }
 }
 
+// Forced Black Button for specialized actions (Best Practice approach)
+.ui.button.action-black {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  background-image: none !important;
+
+  &:hover {
+    background-color: #333333 !important;
+  }
+}
+
 // Fix for grouped buttons (Semantic UI style) conflicting with global overrides
 .ui.buttons {
   .button {
