@@ -116,11 +116,12 @@ interface ModalProps {
 }
 ```
 
-````
+`````
 ### 3.5 Auth Guard (RequireAuth)
 
 認証状態を監視し、未認証ユーザーをリダイレクトするラッパーコンポーネント。
 
+```tsx
 ```tsx
 // src/app/features/auth/RequireAuth.tsx
 export function RequireAuth({ children }: { children: ReactNode }) {
@@ -128,7 +129,14 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   // ... redirect logic
   return <>{children}</>;
 }
-````
+```
+
+### 3.6 Layout: Fixed Footer
+
+編集画面や設定画面において、保存やキャンセルなどの主要アクションを常にアクセス可能にするための画面下部固定領域。
+
+- **Styling**: `position: fixed; bottom: 0; width: 100%; z-index: 1000;`
+- **Content**: `ui container` を内包し、左右にアクションを配置 (`display: flex; justify-content: space-between;`)。`
 
 ## 4. Container / Presenter 実装例
 
@@ -221,7 +229,7 @@ export function ContentConfigEditor({
     </form>
   )
 }
-````
+`````
 
 ## 5. CSS Strategy
 

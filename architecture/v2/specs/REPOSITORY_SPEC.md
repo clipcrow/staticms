@@ -38,11 +38,14 @@ Staticms GitHub App
 - **Card Item**:
   - **Icon**: Private (`lock`) / Public (`globe`) / Fork (`code branch`)。
   - **Name**: `Owner / Repo` (強調表示)。
+  - **Branch**: 設定済みブランチ名（デフォルトと異なる場合のみ表示）。
   - **Description**: GitHub 上のリポジトリ説明文（2行で切り詰め）。
   - **Stats**: Star 数や最終更新日。
   - **Status Tags**:
     - `localStorage` 内のドラフト数 (`Draft (N)`) や PR数 (`PR (N)`)
       を集計して表示。
+  - **Actions**:
+    - "Settings": リポジトリ設定画面へ遷移するボタン。
 
 #### List View
 
@@ -51,7 +54,16 @@ Staticms GitHub App
   - **Visibility**: Public/Private バッジ。
   - **Updated**: 最終更新日時。
   - **Status**: ドラフト数やPR数をバッジで表示。
-  - **Action**: 選択ボタン。
+  - **Action**: 「設定」(`cog`) ボタン、選択ボタン。
+
+### 5. リポジトリ設定 (Repository Settings)
+
+リポジトリリスト内の設定ボタン (`cog` アイコン) から、リポジトリごとの設定画面
+(`/:owner/:repo/settings`) へ遷移します。
+
+- **Config**: 編集対象ブランチ（Branch）の指定など。
+- **Logic**:
+  ブランチ変更時にリモート存在確認を行い、必要に応じて自動作成フロー（確認ダイアログ）を実行します。
 
 ### 4. Empty State (リポジトリなし)
 

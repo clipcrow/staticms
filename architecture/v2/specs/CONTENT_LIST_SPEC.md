@@ -13,16 +13,14 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 ### UI 構成
 
+### UI 構成
+
 - **ヘッダー**:
-  - **Breadcrumbs**: `Owner/Repo` (現在地)
-  - **Actions**:
-    - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
-    - **Add New Content**: 設定追加画面への遷移ボタン。
-
-### 検索・フィルタ (Search Bar)
-
-- **Search Input**: コンテンツ名でリアルタイムフィルタリングするための入力欄。
-- **Filter**: `Collection` / `Singleton` の種別フィルタ（将来的な拡張）。
+  - **Breadcrumbs**: `Owner/Repo (Branch Label)` (現在地)
+- **Toolbar**:
+  - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
+  - **Search Input**: コンテンツ名でリアルタイムフィルタリングするための入力欄。
+  - **Add New Content**: 設定追加画面への遷移ボタン。
 
 ### リスト表示 (`ContentList`)
 
@@ -63,16 +61,11 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 ### UI 構成
 
 - **ヘッダー**:
-  - **Breadcrumbs**: `Owner/Repo > CollectionName`
-  - **Actions**:
-    - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
-    - **New Article**: 入力欄と `Create` ボタン。
-
-### 検索・フィルタ (Search Bar)
-
-- **Search Input**: ファイル名でリアルタイムフィルタリングするための入力欄。
-- **Pagination**: クライアントサイドでのページネーション（1ページあたり 50
-  件）。
+  - **Breadcrumbs**: `Owner/Repo (Branch Label) > CollectionName`
+- **Toolbar**:
+  - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
+  - **Search Input**: ファイル名でリアルタイムフィルタリングするための入力欄。
+  - **New Article**: 入力欄と `Create` ボタン。
 
 ### リスト表示 (`ArticleList`)
 
@@ -86,7 +79,7 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
     - **Name**: ファイル名 (クリックで編集画面へ)。
     - **Updated**: 最終更新日時 (Git Commit Date)。
     - **Status**: `Draft` / `PR Open` 等のステータスバッジ。
-    - **Actions**: `Delete` ボタン。
+    - **Actions**: なし（削除は編集画面で実行）。
 
 ### インタラクション詳細
 
@@ -101,13 +94,8 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 #### 2. 記事の削除 (Delete)
 
-1. リスト上の `Delete` ボタンを押下。
-2. **確認モーダル (Confirmation Modal)** が表示される。
-   - Message: "Are you sure you want to delete 'example.md'?"
-   - Warning: "This action will create a delete commit/PR."
-3. `Confirm` 押下で API 呼び出し。
-   - `DELETE /api/repo/:owner/:repo/contents/:path`
-4. 成功時、トーストを表示しリストをリフレッシュ。
+一覧画面からの削除機能は廃止されました。
+記事を削除する場合は、対象の記事を開き、編集画面のフッターにある削除ボタンを使用してください。
 
 ## UI Polish Guidelines
 

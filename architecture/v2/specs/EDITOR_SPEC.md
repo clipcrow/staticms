@@ -19,16 +19,13 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 
 ### 1. ヘッダー (Header)
 
-画面上部に固定され、ナビゲーションと主要アクションを提供します。
+画面上部に固定され、ナビゲーションとステータス表示を提供します。
 
-- **Left**: パンくずリスト (`Owner/Repo > Collection > Filename`)
+- **Left**: パンくずリスト (`Owner/Repo (Branch Label) > Collection > Filename`)
   - コレクション部分は `ArticleList` へのリンクとなります。
-- **Right**: アクションボタン群
+- **Right**: ステータス表示エリア
   - **Status Indicator**: PR Open / Merged / Locked 等の状態表示。
   - **Draft Restored Label**: ローカルドラフト復元時に表示（オレンジ色）。
-  - **Reset Button**: ローカルの変更（ドラフト）を破棄し、サーバーの状態へ戻す。
-  - **Save / Create PR Button**: 変更をコミットし、PR を作成/更新する（Primary
-    Action）。
 
 ### 2. メインエリア (Main Column)
 
@@ -186,6 +183,16 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
          はリモート一致状態としつつ、`pr`
          情報を保持するためにオブジェクトを保存・維持する。
      - **不一致の場合 (Dirty)**: `localStorage` に保存し、Dirty 状態とする。
+
+### 4. フッター (Fixed Footer)
+
+画面下部に固定表示されるアクションエリア。メインコンテンツのスクロールに関わらず常にアクセス可能。
+
+- **Left Actions**:
+  - **Reset Button**: ローカル変更の破棄 (Revert to Server)。
+  - **Save / Create PR Button**: 保存およびPR作成/更新 (Primary)。
+- **Right Actions**:
+  - **Delete Button**: 記事削除（条件付き表示: 既存記事かつSingleton以外）。
 
 ### 5. 保存プロセス (Save / Create PR)
 
