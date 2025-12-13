@@ -29,6 +29,7 @@ export interface EditorLayoutProps {
   isYamlMode: boolean;
   isListMode: boolean;
   folderPath: string;
+  branch: string;
 
   onSave: () => void;
   onReset: () => void;
@@ -55,6 +56,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   isYamlMode,
   isListMode,
   folderPath,
+  branch,
   onSave,
   onReset,
   onFrontMatterChange,
@@ -182,6 +184,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 onRemovePending={onPendingImageRemove}
                 onInsert={onImageInsert}
                 folderPath={folderPath}
+                branch={branch}
               />
             </div>
           )}
@@ -223,11 +226,11 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
             type="button"
             className={`ui primary button ${isSaving ? "loading" : ""}`}
             onClick={onSave}
-            disabled={isSaving || isLocked || isSynced}
+            disabled={isSaving || isLocked}
             title={isLocked
               ? "Editing is locked because a PR is open"
               : isSynced
-              ? "No changes to save"
+              ? "No changes detected"
               : "Save changes like a text editor"}
           >
             <i className={prInfo ? "sync icon" : "plus icon"}></i>

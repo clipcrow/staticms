@@ -68,10 +68,21 @@ export function useContentSync({
     fetchedPathRef.current = filePath;
     fetch(`/api/repo/${owner}/${repo}/contents/${filePath}`)
       .then(async (res) => {
+        if (res.status === 404) return null;
         if (!res.ok) throw new Error("Failed to fetch remote content");
         return await res.text();
       })
       .then((text) => {
+        if (text === null) {
+          // 404 Case
+          if (fromStorageRef.current) {
+            // We have a local draft, proceed with it.
+            // originalDraft remains null.
+            return;
+          } else {
+            throw new Error("Content not found");
+          }
+        }
         try {
           // Detect YAML mode by extension
           const isYaml = filePath.endsWith(".yml") ||

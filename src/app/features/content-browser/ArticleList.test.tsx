@@ -31,8 +31,25 @@ Deno.test({
       if (url.endsWith("/config")) {
         return Promise.resolve(new Response(MOCK_CONFIG));
       }
+      if (url.match(/\/api\/repo\/[^/]+\/[^/]+$/)) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              name: "repo",
+              owner: { login: "user" },
+              default_branch: "main",
+              configured_branch: "main",
+            }),
+            { headers: { "content-type": "application/json" } },
+          ),
+        );
+      }
       if (url.includes("/content/posts")) {
-        return Promise.resolve(new Response(JSON.stringify(MOCK_FILES)));
+        return Promise.resolve(
+          new Response(JSON.stringify(MOCK_FILES), {
+            headers: { "content-type": "application/json" },
+          }),
+        );
       }
       return Promise.resolve(new Response(null, { status: 404 }));
     });

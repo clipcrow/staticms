@@ -17,7 +17,10 @@ Deno.test({
         "fetch",
         () =>
           Promise.resolve(
-            new Response(JSON.stringify(mockFiles), { status: 200 }),
+            new Response(JSON.stringify(mockFiles), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            }),
           ),
       );
       try {

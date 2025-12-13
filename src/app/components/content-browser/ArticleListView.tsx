@@ -10,6 +10,7 @@ import type { Collection } from "@/app/hooks/useContentConfig.ts";
 export interface ArticleListViewProps {
   owner: string;
   repo: string;
+  branch?: string;
   collectionName: string;
   collectionDef?: Collection;
   files: FileItem[];
@@ -39,6 +40,7 @@ export interface ArticleListViewProps {
 export const ArticleListView: React.FC<ArticleListViewProps> = ({
   owner,
   repo,
+  branch = "main",
   collectionName,
   collectionDef,
   files,
@@ -60,6 +62,12 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   onDeleteCancel,
   onPageChange,
 }) => {
+  const isDuplicate = files.some((f) =>
+    f.name === newArticleName || f.name.replace(/\.md$/, "") === newArticleName
+  );
+  const hasInvalidChars = /[\\/:*?"<>|]/.test(newArticleName);
+  const isCreateDisabled = !newArticleName || isDuplicate || hasInvalidChars;
+
   if (loading) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
@@ -69,7 +77,13 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
               to: `/${owner}/${repo}`,
             },
-            { label: collectionName || "" },
+            {
+              label: (
+                <>
+                  {collectionName || ""} <small>({branch})</small>
+                </>
+              ),
+            },
           ]}
         />
         <div className="ui placeholder segment">
@@ -164,20 +178,42 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
           {/* 3. Create New (Combined Input & Button) */}
           <div style={{ flex: 1, minWidth: "300px" }}>
-            <div className="ui action input fluid">
+            <div
+              className={`ui action input fluid ${
+                files.some((f) =>
+                    f.name === newArticleName ||
+                    f.name.replace(/\.md$/, "") === newArticleName
+                  )
+                  ? "error"
+                  : ""
+              }`}
+            >
               <input
                 type="text"
                 placeholder="New article name (e.g. my-post)"
                 value={newArticleName}
                 onChange={(e) => onNewArticleNameChange(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") onCreate();
+                  if (
+                    // deno-lint-ignore no-explicit-any
+                    e.key === "Enter" && !(e.nativeEvent as any).isComposing
+                  ) {
+                    if (
+                      newArticleName && !isDuplicate && !hasInvalidChars
+                    ) onCreate();
+                  }
                 }}
               />
               <button
                 type="button"
                 className="ui primary button"
                 onClick={onCreate}
+                disabled={isCreateDisabled}
+                title={isDuplicate
+                  ? "Article already exists"
+                  : hasInvalidChars
+                  ? 'Contains invalid characters (e.g. / : * ? " < > |)'
+                  : "Create new article"}
               >
                 <i className="plus icon"></i>
                 Create
@@ -212,7 +248,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                     const status = getContentStatus(
                       owner || "",
                       repo || "",
-                      "main", // Assuming main branch for now
+                      branch,
                       file.path || "",
                       false,
                     );
@@ -264,7 +300,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                     const status = getContentStatus(
                       owner || "",
                       repo || "",
-                      "main", // Assuming main branch for now
+                      branch,
                       file.path || "",
                       false,
                     );

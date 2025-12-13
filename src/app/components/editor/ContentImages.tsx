@@ -9,6 +9,7 @@ interface ContentImagesProps {
   onRemovePending: (name: string) => void;
   onInsert: (filename: string) => void;
   folderPath: string;
+  branch: string;
 }
 
 export const ContentImages: React.FC<ContentImagesProps> = ({
@@ -17,6 +18,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   onRemovePending,
   onInsert,
   folderPath,
+  branch,
 }) => {
   const { owner, repo } = useParams();
   // Fetch nearby images
@@ -24,6 +26,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
     owner,
     repo,
     folderPath,
+    branch,
   );
 
   const images = nearbyFiles.filter((f) => {

@@ -4,6 +4,7 @@ import { Collection, useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { useDraft } from "@/app/hooks/useDraft.ts";
 import { useAuth } from "@/app/hooks/useAuth.ts";
 import { useToast } from "@/app/contexts/ToastContext.tsx";
+import { useRepository } from "@/app/hooks/useRepositories.ts";
 import yaml from "js-yaml";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
 
@@ -40,6 +41,15 @@ export function ContentEditor(
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
   const { username: _currentUser } = useAuth();
+  const { repository } = useRepository(owner, repo);
+  const branch = repository?.configured_branch || repository?.default_branch ||
+    "main";
+
+  // Check for initial slug/name passed from navigation state
+  // deno-lint-ignore no-explicit-any
+  const locationState = location.state as any;
+  const proposedSlug = locationState?.slug || locationState?.name ||
+    locationState?.initialTitle;
 
   const [saving, setSaving] = useState(false);
   const [isMerged, setIsMerged] = useState(false);
@@ -80,9 +90,11 @@ export function ContentEditor(
 
   const user = localStorage.getItem("staticms_user") || "anonymous";
   const effectiveArticleName = articleName ||
-    (collection?.type === "singleton" ? "singleton" : "__new__");
+    (collection?.type === "singleton"
+      ? "singleton"
+      : (proposedSlug || "__new__"));
   const draftKey =
-    `staticms_draft_${user}|${owner}|${repo}|main|${collectionName}/${effectiveArticleName}`;
+    `staticms_draft_${user}|${owner}|${repo}|${branch}|${collectionName}/${effectiveArticleName}`;
 
   const { draft, setDraft, loaded, fromStorage, clearDraft, isSynced } =
     useDraft(
@@ -197,7 +209,10 @@ export function ContentEditor(
     setSaving(true);
 
     // Check for empty changes (prevent Empty PR)
-    if (originalDraft && (draft.pendingImages || []).length === 0) {
+    if (
+      mode !== "new" && originalDraft &&
+      (draft.pendingImages || []).length === 0
+    ) {
       // Compare FrontMatter
       const fmChanged = JSON.stringify(draft.frontMatter) !==
         JSON.stringify(originalDraft.frontMatter);
@@ -214,7 +229,7 @@ export function ContentEditor(
 
     // Reconstruct currentContent for savePrStatus utility
     // It matches the one in render but needs to be accessible here
-    const currentArticleName = articleName || "__new__";
+    const currentArticleName = effectiveArticleName;
 
     const currentContent: V1Content = {
       owner: owner || "",
@@ -225,34 +240,62 @@ export function ContentEditor(
       type: "collection-files",
     };
 
+    let finalSlug = articleName;
+
     try {
       let savePath: string;
-      let filename: string;
 
       // deno-lint-ignore no-explicit-any
-      const title = (draft.frontMatter as any).title as string;
+      const fm = draft.frontMatter as any;
+      let title = (fm.title || fm.Title || fm.name || fm.Name) as string;
+
+      if (!title && collection?.fields) {
+        const firstStringField = collection.fields.find((f) =>
+          f.widget === "string"
+        );
+        if (firstStringField) {
+          title = fm[firstStringField.name] as string;
+        }
+      }
 
       if (mode === "new") {
-        filename = `post-${Date.now()}.md`;
-        if (title) {
-          filename = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
+        let slug: string;
+
+        if (proposedSlug) {
+          slug = proposedSlug;
+        } else if (title) {
+          slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
             /(^-|-$)/g,
             "",
-          ) + ".md";
+          );
         } else {
+          slug = `post-${Date.now()}`;
           // Fallback if title missing, user might have wanted explicit name
           if (!articleName || articleName === "__new__") {
-            const userInput = prompt("Enter filename:", filename);
+            const userInput = prompt("Enter filename (slug):", slug);
             if (!userInput) throw new Error("Filename required");
-            filename = userInput;
+            slug = userInput;
           } else {
-            filename = articleName;
+            slug = articleName;
           }
         }
-        if (!filename.endsWith(".md")) filename += ".md";
+
+        // Normalize slug by removing extension if typed
+        slug = slug.replace(/\.md$/, "");
+
+        // Capture for navigation
+        finalSlug = slug;
 
         const folder = collection?.path || collection?.folder || "";
-        savePath = folder ? `${folder}/${filename}` : filename;
+
+        if (collection?.binding === "directory") {
+          savePath = folder ? `${folder}/${slug}/index.md` : `${slug}/index.md`;
+        } else {
+          savePath = folder ? `${folder}/${slug}.md` : `${slug}.md`;
+        }
+
+        // Clean double slashes
+        savePath = savePath.replace("//", "/");
 
         // Update currentContent filePath for correct PR key generation if it was new
         currentContent.filePath = savePath;
@@ -305,7 +348,7 @@ export function ContentEditor(
           },
           body: JSON.stringify({
             message: `Update ${savePath}`,
-            branch: "main", // TODO: Configurable
+            branch,
             updates,
             createPr: true,
           }),
@@ -320,6 +363,18 @@ export function ContentEditor(
       const data = await res.json();
       // If backend returns PR info
       if (data.pr) {
+        showToast("Pull Request created/updated!", "success");
+
+        if (mode === "new" && finalSlug) {
+          // Clear the __new__ draft to prevent ghost drafts
+          clearDraft();
+          // Navigate to the new article URL to initialize proper draft state
+          navigate(`/${owner}/${repo}/${collectionName}/${finalSlug}`, {
+            replace: true,
+          });
+          return;
+        }
+
         setDraft(
           (prev) => ({
             ...prev,
@@ -332,14 +387,16 @@ export function ContentEditor(
           undefined,
           true,
         );
-
-        showToast("Pull Request created/updated!", "success");
       } else {
         showToast("Saved successfully!", "success");
         // No PR created? Just clean sync.
         setDraft((prev) => prev, undefined, true);
-        if (mode === "new") {
-          // Provide feedback or reload
+
+        if (mode === "new" && finalSlug) {
+          clearDraft();
+          navigate(`/${owner}/${repo}/${collectionName}/${finalSlug}`, {
+            replace: true,
+          });
         }
       }
     } catch (e) {
@@ -438,7 +495,7 @@ export function ContentEditor(
           body: JSON.stringify({
             message: `Delete ${effectiveArticleName}`,
             sha: sha,
-            branch: "main", // TODO: Configurable
+            branch,
           }),
         },
       );
@@ -536,6 +593,7 @@ export function ContentEditor(
       isYamlMode={isYamlMode}
       isListMode={isListMode || false}
       folderPath={folder || ""}
+      branch={branch}
       onSave={handleSave}
       onReset={handleReset}
       onFrontMatterChange={handleFrontMatterChange}

@@ -49,7 +49,23 @@ Deno.test({
     const fetchStub = stub(
       globalThis,
       "fetch",
-      () => Promise.resolve(new Response(null, { status: 200 })),
+      (input) => {
+        const url = input.toString();
+        if (url.match(/\/api\/repo\/[^/]+\/[^/]+$/)) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                name: "testrepo",
+                owner: { login: "testuser" },
+                default_branch: "main",
+                configured_branch: "main",
+              }),
+              { headers: { "content-type": "application/json" } },
+            ),
+          );
+        }
+        return Promise.resolve(new Response(null, { status: 200 }));
+      },
     );
 
     // Stub window.alert to prevent blocking/error during tests

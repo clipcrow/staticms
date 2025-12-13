@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useRepository } from "@/app/hooks/useRepositories.ts";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/shared/types.ts";
@@ -10,6 +11,9 @@ export function ArticleList() {
   const navigate = useNavigate();
   const { config, loading: configLoading, error: configError } =
     useContentConfig(owner, repo);
+  const { repository, loading: repoLoading } = useRepository(owner, repo);
+  const branch = repository?.configured_branch || repository?.default_branch ||
+    "main";
 
   // We use collectionName as the key to find definition
   const collectionDef = config?.collections.find((c) =>
@@ -20,15 +24,54 @@ export function ArticleList() {
 
   const { files, loading: contentLoading, error: contentError } =
     useRepoContent(
-      owner,
-      repo,
+      repoLoading ? undefined : owner,
+      repoLoading ? undefined : repo,
       folder,
+      branch,
     );
 
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [newArticleName, setNewArticleName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
+  const [localDrafts, setLocalDrafts] = useState<FileItem[]>([]);
+
+  // Scan for local drafts
+  useEffect(() => {
+    if (!collectionName) return;
+    const user = localStorage.getItem("staticms_user") || "anonymous";
+    const draftPrefix =
+      `staticms_draft_${user}|${owner}|${repo}|${branch}|${collectionName}/`;
+
+    const found: FileItem[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(draftPrefix)) {
+        const articleName = key.substring(draftPrefix.length);
+        if (!articleName || articleName === "__new__") continue;
+
+        // Construct path based on binding
+        let path = "";
+        if (binding === "directory") {
+          path = folder
+            ? `${folder}/${articleName}/index.md`
+            : `${articleName}/index.md`;
+        } else {
+          path = folder ? `${folder}/${articleName}.md` : `${articleName}.md`;
+        }
+        path = path.replace("//", "/");
+
+        found.push({
+          name: articleName,
+          path: path,
+          type: binding === "directory" ? "dir" : "file",
+          sha: "draft",
+          content: undefined,
+        });
+      }
+    }
+    setLocalDrafts(found);
+  }, [owner, repo, branch, collectionName, binding, folder, viewMode]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -40,7 +83,8 @@ export function ArticleList() {
 
   // Combine loading/error states for simpler prop passing
   // Ideally handled better, but for now:
-  const isLoading = configLoading || (!!folder && contentLoading);
+  const isLoading = configLoading || repoLoading ||
+    (!!folder && contentLoading);
   const combinedError = configError || contentError;
 
   // Filter and map files based on binding
@@ -58,7 +102,14 @@ export function ArticleList() {
       content: undefined,
     }));
 
-  const filteredFiles = v1Files.filter((f) =>
+  // Merge drafts
+  const remotePaths = new Set(v1Files.map((f) => f.path));
+  const newDrafts = localDrafts.filter((d) => !remotePaths.has(d.path));
+  const allFiles = [...newDrafts, ...v1Files].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
+  const filteredFiles = allFiles.filter((f) =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -76,10 +127,19 @@ export function ArticleList() {
   };
 
   const handleSelectArticle = (path: string) => {
-    // Path is usually full path e.g. "content/posts/foo.md"
-    // We need just "foo.md"
-    const filename = path.split("/").pop();
-    navigate(`/${owner}/${repo}/${collectionName}/${filename}`);
+    let target = "";
+    if (binding === "directory") {
+      // path: content/posts/my-slug/index.md -> my-slug
+      const parts = path.split("/");
+      if (parts[parts.length - 1] === "index.md") {
+        parts.pop();
+      }
+      target = parts.pop() || "";
+    } else {
+      // path: content/posts/foo.md -> foo.md
+      target = path.split("/").pop() || "";
+    }
+    navigate(`/${owner}/${repo}/${collectionName}/${target}`);
   };
 
   const handleDelete = async () => {
@@ -97,7 +157,7 @@ export function ArticleList() {
           body: JSON.stringify({
             message: `Delete ${deleteTarget.name}`,
             sha: deleteTarget.sha,
-            branch: "main", // TODO: Configurable
+            branch,
           }),
         },
       );
@@ -121,6 +181,7 @@ export function ArticleList() {
     <ArticleListView
       owner={owner!}
       repo={repo!}
+      branch={branch}
       collectionName={collectionName!}
       collectionDef={collectionDef}
       files={paginatedFiles}

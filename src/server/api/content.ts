@@ -25,9 +25,10 @@ export const getContent = async (
 
   try {
     const client = new GitHubUserClient(token);
+    const branch = ctx.request.url.searchParams.get("branch") || undefined;
 
     // deno-lint-ignore no-explicit-any
-    const data: any = await client.getContent(owner, repo, path);
+    const data: any = await client.getContent(owner, repo, path, branch);
 
     if (Array.isArray(data)) {
       // Directory
