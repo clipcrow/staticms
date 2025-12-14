@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { BranchManagementForm } from "@/app/components/config/BranchManagementForm.tsx";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
+import { useRepository } from "@/app/hooks/useRepositories.ts";
 
 interface BranchManagementProps {
   owner: string;
@@ -24,6 +25,32 @@ export function BranchManagement({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { repository } = useRepository(owner, repo);
+  // deno-lint-ignore no-explicit-any
+  const [unmergedCommits, setUnmergedCommits] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!repository || !config.branch) return;
+    const defaultBranch = repository.default_branch;
+    const targetBranch = config.branch;
+
+    if (!defaultBranch || defaultBranch === targetBranch) {
+      setUnmergedCommits([]);
+      return;
+    }
+
+    fetchWithAuth(
+      `/api/repo/${owner}/${repo}/compare?base=${defaultBranch}&head=${targetBranch}`,
+    )
+      .then((res) => {
+        if (res.ok) return res.json();
+        return { commits: [] };
+      })
+      .then((data) => {
+        setUnmergedCommits(data.commits || []);
+      })
+      .catch(console.error);
+  }, [repository, config.branch, owner, repo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +129,7 @@ export function BranchManagement({
         breadcrumbs={[]}
         title={`${owner}/${repo}`}
         loading={saving}
+        unmergedCommits={unmergedCommits}
       />
     </div>
   );

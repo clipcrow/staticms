@@ -13,6 +13,7 @@ import { authRouter } from "@/server/auth.ts";
 import { batchCommitHandler } from "@/server/api/commits.ts";
 import { createBranch, getBranch } from "@/server/api/branches.ts";
 import { dumpKvKeys } from "@/server/api/debug.ts";
+import { compareRouter } from "@/server/api/compare.ts";
 
 export const app = new Application();
 const router = new Router();
@@ -52,6 +53,10 @@ router.post("/_debug/shutdown", (ctx) => {
 // Mount Auth
 app.use(authRouter.routes());
 app.use(authRouter.allowedMethods());
+
+// Mount Compare
+app.use(compareRouter.routes());
+app.use(compareRouter.allowedMethods());
 
 router.get("/api/repositories", listRepositories);
 router.get("/api/user/repos", listRepositories); // v1 compatibility

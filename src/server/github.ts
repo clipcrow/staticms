@@ -235,6 +235,18 @@ export class GitHubUserClient {
     );
   }
 
+  async compareCommits(
+    owner: string,
+    repo: string,
+    base: string,
+    head: string,
+  ) {
+    return await githubRequest(
+      `https://api.github.com/repos/${owner}/${repo}/compare/${base}...${head}`,
+      { token: this.token },
+    );
+  }
+
   async deleteFile(
     owner: string,
     repo: string,

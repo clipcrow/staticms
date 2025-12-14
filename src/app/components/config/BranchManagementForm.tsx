@@ -10,6 +10,8 @@ interface BranchManagementFormProps {
   loading?: boolean;
   breadcrumbs: BreadcrumbItem[];
   title?: React.ReactNode;
+  // deno-lint-ignore no-explicit-any
+  unmergedCommits?: any[];
 }
 
 export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
@@ -20,6 +22,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
   loading = false,
   breadcrumbs,
   title,
+  unmergedCommits,
 }) => {
   const handleChange = (key: keyof Config, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -73,6 +76,43 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
               defaults to the repository's default branch.
             </small>
           </div>
+
+          {unmergedCommits && unmergedCommits.length > 0 && (
+            <div className="ui segment">
+              <h4 className="ui header">
+                <i className="list icon"></i>
+                <div className="content">
+                  Unmerged Commits
+                  <div className="sub header">
+                    Commits in {config.branch} that are not in default branch
+                  </div>
+                </div>
+              </h4>
+              <div className="ui relaxed divided list">
+                {/* deno-lint-ignore no-explicit-any */}
+                {unmergedCommits.map((commit: any) => (
+                  <div className="item" key={commit.sha}>
+                    <i className="large github middle aligned icon"></i>
+                    <div className="content">
+                      <a
+                        className="header"
+                        href={commit.html_url}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        {commit.commit.message}
+                      </a>
+                      <div className="description">
+                        {commit.commit.author.name} committed on{" "}
+                        {new Date(commit.commit.author.date)
+                          .toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
