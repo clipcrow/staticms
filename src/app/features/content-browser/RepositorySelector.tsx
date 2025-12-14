@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRepositories } from "@/app/hooks/useRepositories.ts";
 import { RepositoryList } from "@/app/components/content-browser/RepositoryList.tsx";
 import { RepoConfigPage } from "@/app/features/config/RepoConfigPage.tsx";
@@ -7,7 +7,7 @@ import { RepoConfigPage } from "@/app/features/config/RepoConfigPage.tsx";
 export function RepositorySelector() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { repos, loading, error } = useRepositories();
+  const { repos, loading, error, refresh } = useRepositories();
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<
@@ -16,6 +16,16 @@ export function RepositorySelector() {
 
   // Query parameter handling for settings
   const settingsParam = searchParams.get("settings");
+  const prevSettingsParam = useRef(settingsParam);
+
+  useEffect(() => {
+    // If returning from settings page, refresh repositories
+    if (prevSettingsParam.current && !settingsParam) {
+      refresh();
+    }
+    prevSettingsParam.current = settingsParam;
+  }, [settingsParam, refresh]);
+
   if (settingsParam) {
     const [owner, repo] = settingsParam.split("/");
     if (owner && repo) {

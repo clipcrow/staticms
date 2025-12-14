@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 export interface GitHubFile {
   name: string;
@@ -27,7 +28,7 @@ export function useRepoContent(
 
     setLoading(true);
     // Use the catch-all content API
-    fetch(
+    fetchWithAuth(
       `/api/repo/${owner}/${repo}/contents/${path}?branch=${
         encodeURIComponent(branch)
       }`,

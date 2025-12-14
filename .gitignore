@@ -10,3 +10,7 @@ public/js/bundle.js
 public/js/bundle.css
 public/styles/main.css
 test_debug.log
+*.db
+*.db-journal
+*.db-wal
+*.db-shm

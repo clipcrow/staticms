@@ -2,6 +2,7 @@ import { useState } from "react";
 import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { RepoConfigForm } from "@/app/components/config/RepoConfigForm.tsx";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 interface RepoConfigEditorProps {
   owner: string;
@@ -33,7 +34,7 @@ export function RepoConfigEditor({
       // 0. Check Branch Existence if updated
       const branchName = config.branch?.trim();
       if (branchName && branchName !== initialConfig.branch) {
-        const checkRes = await fetch(
+        const checkRes = await fetchWithAuth(
           `/api/repo/${owner}/${repo}/branches/${branchName}`,
         );
         if (checkRes.status === 404) {
@@ -42,7 +43,7 @@ export function RepoConfigEditor({
               `Branch '${branchName}' does not exist. Do you want to create it?`,
             )
           ) {
-            const createRes = await fetch(
+            const createRes = await fetchWithAuth(
               `/api/repo/${owner}/${repo}/branches`,
               {
                 method: "POST",
@@ -68,7 +69,7 @@ export function RepoConfigEditor({
       // Ensure collections exists
       if (!newConfig.collections) newConfig.collections = [];
 
-      const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
+      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: {
           "Content-Type": "text/yaml",

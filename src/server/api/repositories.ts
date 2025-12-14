@@ -1,7 +1,7 @@
 import { RouterContext } from "@oak/oak";
 import { parse } from "@std/yaml";
 import { getSessionToken, kv } from "@/server/auth.ts";
-import { GitHubUserClient } from "@/server/github.ts";
+import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
 
 export const listRepositories = async (ctx: RouterContext<string>) => {
   const token = await getSessionToken(ctx);
@@ -79,6 +79,11 @@ export const listRepositories = async (ctx: RouterContext<string>) => {
     ctx.response.type = "application/json";
   } catch (e) {
     console.error("Failed to list repositories:", e);
+    if (e instanceof GitHubAPIError && e.status === 401) {
+      ctx.response.status = 401;
+      ctx.response.body = { error: "GitHub Authentication Failed" };
+      return;
+    }
     ctx.response.status = 500;
     ctx.response.body = { error: "Failed to fetch repositories" };
   }
@@ -123,6 +128,11 @@ export const getRepository = async (ctx: RouterContext<string>) => {
     ctx.response.type = "application/json";
   } catch (e) {
     console.error(`Failed to get repository ${owner}/${repo}:`, e);
+    if (e instanceof GitHubAPIError && e.status === 401) {
+      ctx.response.status = 401;
+      ctx.response.body = { error: "GitHub Authentication Failed" };
+      return;
+    }
     // deno-lint-ignore no-explicit-any
     if ((e as any).status === 404) {
       ctx.response.status = 404;

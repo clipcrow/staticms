@@ -7,6 +7,7 @@ import { useToast } from "@/app/contexts/ToastContext.tsx";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
 import yaml from "js-yaml";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 // Presenter
 import { EditorLayout } from "@/app/components/editor/EditorLayout.tsx";
@@ -343,7 +344,7 @@ export function ContentEditor(
         }
       }
 
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `/api/repo/${owner}/${repo}/batch-commit`,
         {
           method: "POST",
@@ -491,7 +492,7 @@ export function ContentEditor(
 
     setSaving(true);
     try {
-      const res = await fetch(
+      const res = await fetchWithAuth(
         `/api/repo/${owner}/${repo}/contents/${filePath}`,
         {
           method: "DELETE",

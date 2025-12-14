@@ -41,7 +41,10 @@ Deno.test({
 
         await waitFor(() => {
           assertSpyCall(fetchStub, 0, {
-            args: ["/api/repo/user/repo/contents/test.md?branch=main"],
+            args: [
+              "/api/repo/user/repo/contents/test.md?branch=main",
+              undefined,
+            ],
           });
         });
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 export interface Repository {
   id: number;
@@ -25,7 +26,7 @@ export function useRepositories() {
   const fetchRepos = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/repositories");
+      const response = await fetchWithAuth("/api/repositories");
       if (!response.ok) throw new Error("Failed to fetch repositories");
       const data = await response.json();
       setRepos(data);
@@ -76,7 +77,7 @@ export function useRepository(owner?: string, repo?: string) {
     let mounted = true;
     setLoading(true);
 
-    fetch(`/api/repo/${owner}/${repo}`)
+    fetchWithAuth(`/api/repo/${owner}/${repo}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch repository");
         return res.json();

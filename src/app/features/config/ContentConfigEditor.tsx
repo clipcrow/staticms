@@ -3,6 +3,7 @@ import yaml from "js-yaml";
 import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
 import { ConfigForm } from "@/app/components/config/ConfigForm.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 interface ContentConfigEditorProps {
   owner: string;
@@ -93,7 +94,7 @@ export function ContentConfigEditor({
       }
 
       // 4. Save
-      const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
+      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: {
           "Content-Type": "text/yaml",
@@ -126,7 +127,7 @@ export function ContentConfigEditor({
         c.name !== initialData?.name
       );
 
-      const res = await fetch(`/api/repo/${owner}/${repo}/config`, {
+      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
         method: "POST",
         headers: { "Content-Type": "text/yaml" },
         body: yaml.dump(newConfig),

@@ -88,6 +88,9 @@ export const getContent = async (
     if (e instanceof GitHubAPIError && e.status === 404) {
       ctx.response.status = 404;
       ctx.response.body = { error: "Not Found" };
+    } else if (e instanceof GitHubAPIError && e.status === 401) {
+      ctx.response.status = 401;
+      ctx.response.body = { error: "GitHub Authentication Failed" };
     } else {
       console.error("Failed to fetch content:", e);
       ctx.response.status = 500;

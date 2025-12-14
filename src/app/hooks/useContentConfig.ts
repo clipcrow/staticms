@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import yaml from "js-yaml";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 export interface Field {
   name: string;
@@ -48,7 +49,7 @@ export function useContentConfig(owner?: string, repo?: string) {
 
     setLoading(true);
     // Updated to fetch from Deno KV config endpoint
-    fetch(`/api/repo/${owner}/${repo}/config`)
+    fetchWithAuth(`/api/repo/${owner}/${repo}/config`)
       .then(async (res) => {
         if (!res.ok) {
           // For now, if 404, we might want to return default or error

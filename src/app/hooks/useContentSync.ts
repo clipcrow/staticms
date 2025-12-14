@@ -2,6 +2,7 @@ import yaml from "js-yaml";
 import { useEffect, useRef, useState } from "react";
 import { Draft } from "@/shared/types.ts";
 import { parseFrontMatter } from "@/app/components/editor/utils.ts";
+import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 interface UseContentSyncProps {
   owner: string;
@@ -69,7 +70,7 @@ export function useContentSync({
 
     setFetching(true);
     fetchedKeyRef.current = currentKey;
-    fetch(
+    fetchWithAuth(
       `/api/repo/${owner}/${repo}/contents/${filePath}?branch=${
         encodeURIComponent(branch)
       }`,

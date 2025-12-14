@@ -9,7 +9,7 @@ const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
 const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
 // Deno KV for session storage
-const kvPath = Deno.env.get("DENO_KV_PATH");
+const kvPath = Deno.env.get("DENO_KV_PATH") || "./kv.db";
 export const kv = await Deno.openKv(kvPath);
 export const closeKv = () => kv.close();
 
@@ -20,7 +20,7 @@ async function createSession(accessToken: string): Promise<string> {
   const sessionId = crypto.randomUUID();
   // Store session for 1 week
   await kv.set(["sessions", sessionId], accessToken, {
-    expireIn: 60 * 60 * 24 * 7,
+    expireIn: 60 * 60 * 24 * 7 * 1000,
   });
   return sessionId;
 }
