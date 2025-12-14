@@ -23,6 +23,10 @@ interface BranchManagementFormProps {
   breadcrumbs: BreadcrumbItem[];
   title?: React.ReactNode;
   unmergedCommits?: UnmergedCommit[];
+  prTitle?: string;
+  onPrTitleChange?: (title: string) => void;
+  onCreatePr?: () => void;
+  creatingPr?: boolean;
 }
 
 export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
@@ -34,6 +38,10 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
   breadcrumbs,
   title,
   unmergedCommits,
+  prTitle,
+  onPrTitleChange,
+  onCreatePr,
+  creatingPr = false,
 }) => {
   const handleChange = (key: keyof Config, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -119,6 +127,39 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* PR Creation Area */}
+              <div
+                style={{
+                  marginTop: "1.5rem",
+                  borderTop: "1px solid rgba(34,36,38,.15)",
+                  paddingTop: "1rem",
+                }}
+              >
+                <div style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>
+                  Create Merge Pull Request for Default Branch
+                </div>
+                <div className="ui action input" style={{ width: "400px" }}>
+                  <input
+                    type="text"
+                    placeholder="Pull Request Title"
+                    value={prTitle || ""}
+                    onChange={(e) =>
+                      onPrTitleChange && onPrTitleChange(e.target.value)}
+                    disabled={creatingPr}
+                  />
+                  <button
+                    type="button"
+                    className={`ui primary button ${
+                      creatingPr ? "loading" : ""
+                    }`}
+                    onClick={onCreatePr}
+                    disabled={creatingPr || !prTitle}
+                  >
+                    Create PR
+                  </button>
+                </div>
               </div>
             </div>
           )}

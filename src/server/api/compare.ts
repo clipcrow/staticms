@@ -28,6 +28,12 @@ compareRouter.get("/api/repo/:owner/:repo/compare", async (ctx) => {
     ctx.response.body = result;
     // deno-lint-ignore no-explicit-any
   } catch (e: any) {
+    if (e.status === 404) {
+      // 404 implies one of the branches doesn't exist yet. Return empty logic.
+      ctx.response.status = 404;
+      ctx.response.body = { error: "Branch not found", commits: [] };
+      return;
+    }
     console.error("Compare error:", e);
     ctx.response.status = e.status || 500;
     ctx.response.body = { error: e.message };

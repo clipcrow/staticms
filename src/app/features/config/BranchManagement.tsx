@@ -30,6 +30,9 @@ export function BranchManagement({
   const [unmergedCommits, setUnmergedCommits] = useState<any[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  const [prTitle, setPrTitle] = useState("");
+  const [creatingPr, setCreatingPr] = useState(false);
+
   useEffect(() => {
     if (!repository) return;
     const defaultBranch = repository.default_branch;
@@ -120,6 +123,42 @@ export function BranchManagement({
     }
   };
 
+  const handleCreatePr = async () => {
+    if (!prTitle || !repository || !config.branch) return;
+    setCreatingPr(true);
+    try {
+      const defaultBranch = repository.default_branch;
+      if (!defaultBranch) throw new Error("Default branch not found");
+
+      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/pulls`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: prTitle,
+          head: config.branch,
+          base: defaultBranch,
+          body: "Created from Staticms Branch Management",
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create PR");
+      }
+
+      const pr = await res.json();
+      alert(`Pull Request created successfully!\n${pr.html_url}`);
+      globalThis.open(pr.html_url, "_blank");
+
+      setPrTitle("");
+    } catch (e) {
+      console.error(e);
+      alert((e as Error).message);
+    } finally {
+      setCreatingPr(false);
+    }
+  };
+
   return (
     <div className="repo-config-editor">
       {error && <div className="error-message">{error}</div>}
@@ -132,6 +171,10 @@ export function BranchManagement({
         title={`${owner}/${repo}`}
         loading={saving}
         unmergedCommits={unmergedCommits}
+        prTitle={prTitle}
+        onPrTitleChange={setPrTitle}
+        onCreatePr={handleCreatePr}
+        creatingPr={creatingPr}
       />
     </div>
   );
