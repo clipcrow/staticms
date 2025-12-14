@@ -111,17 +111,27 @@ export function ContentConfigEditor({
         throw new Error(`Failed to validate path: ${validatePath}`);
       }
 
-      const valData = await valRes.json();
+      const contentType = valRes.headers.get("content-type") || "";
+      let isDirectory = false;
+
+      if (contentType.includes("application/json")) {
+        const valData = await valRes.json();
+        if (Array.isArray(valData)) {
+          isDirectory = true;
+        }
+      } else {
+        await valRes.text(); // Consume body
+      }
 
       if (sanitizedCollection.type === "collection") {
-        if (!Array.isArray(valData)) {
+        if (!isDirectory) {
           throw new Error(
             `Path '${validatePath}' must be a folder (for Collection).`,
           );
         }
       } else {
         // Singleton (File or Directory->index.md)
-        if (Array.isArray(valData) || valData.type !== "file") {
+        if (isDirectory) {
           throw new Error(`Path '${validatePath}' must be a file.`);
         }
       }
