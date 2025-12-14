@@ -96,13 +96,12 @@ export function useContentSync({
           const isYaml = filePath.endsWith(".yml") ||
             filePath.endsWith(".yaml");
           // deno-lint-ignore no-explicit-any
-          let data: Record<string, any> = {};
+          let data: any = {};
           let content = "";
 
           if (isYaml) {
             // Parse as pure YAML
-            // deno-lint-ignore no-explicit-any
-            data = (yaml.load(text) as any) || {};
+            data = yaml.load(text) || {};
             content = "";
           } else {
             // Parse as FrontMatter + Markdown
