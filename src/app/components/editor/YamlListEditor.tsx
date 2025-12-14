@@ -98,55 +98,25 @@ export function YamlListEditor({
         {safeItems.map((item, index) => (
           <div
             key={index}
-            className="ui segment"
             draggable={!isLocked}
             onDragStart={(e) => onDragStart(e, index)}
             onDragOver={(e) => onDragOver(e, index)}
             onDrop={(e) => onDrop(e, index)}
             style={{
               display: "flex",
-              gap: "1rem",
+              gap: "0.5rem",
+              marginBottom: "0.25rem",
               opacity: draggedIndex === index ? 0.5 : 1,
               cursor: isLocked ? "default" : "move",
+              alignItems: "stretch", // Stretch to same height
             }}
           >
-            {/* Drag Handle */}
-            <div
-              className="drag-handle"
-              style={{ display: "flex", alignItems: "center", color: "#ccc" }}
-            >
-              <i className="bars icon"></i>
-            </div>
-
-            {/* Content */}
+            {/* Content (Left) */}
             <div
               style={{ flex: 1, cursor: "default" }}
               onDragStart={(e) => e.stopPropagation()}
               draggable={false}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <div className="ui label">Item #{index + 1}</div>
-                <i
-                  className="trash alternate outline icon"
-                  style={{
-                    cursor: isLocked ? "default" : "pointer",
-                    color: isLocked ? undefined : "#db2828",
-                    opacity: isLocked ? 0.5 : 1,
-                    margin: 0,
-                  }}
-                  onClick={() => !isLocked && handleRemoveItem(index)}
-                  title="Remove Item"
-                >
-                </i>
-              </div>
-
-              {/* Reuse FrontMatterItemEditor logic by tricking it into treating this item as frontMatter */}
               {
                 /* Note: FrontMatterItemEditor expects 'frontMatter' prop.
                   We pass individual item as frontMatter.
@@ -168,6 +138,45 @@ export function YamlListEditor({
                 }}
                 isPrLocked={!!isLocked}
               />
+            </div>
+
+            {/* Right Controls */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "40px",
+                flexShrink: 0,
+                paddingTop: "0.5rem",
+                paddingBottom: "0.5rem",
+              }}
+            >
+              <div
+                style={{
+                  fontWeight: "bold",
+                  color: "#999",
+                  fontSize: "1em",
+                }}
+              >
+                #{index + 1}
+              </div>
+
+              {!isLocked && (
+                <button
+                  type="button"
+                  className="ui icon button mini basic"
+                  style={{
+                    marginTop: "auto",
+                    marginBottom: "auto",
+                    boxShadow: "none",
+                  }}
+                  onClick={() => handleRemoveItem(index)}
+                  title="Remove Item"
+                >
+                  <i className="trash icon red"></i>
+                </button>
+              )}
             </div>
           </div>
         ))}

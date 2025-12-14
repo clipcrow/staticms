@@ -68,11 +68,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         style={{ marginTop: "2rem", paddingBottom: "80px" }}
       >
         <div className="ui stackable grid">
-          <div
-            className={isListMode
-              ? "sixteen wide column"
-              : "twelve wide column"}
-          >
+          <div className="twelve wide column">
             {isListMode
               ? (
                 <YamlListEditor
@@ -118,9 +114,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 </>
               )}
           </div>
-          {!isYamlMode && (
-            <div className="four wide column">
-              {/* Future Sidebar (History, Images) */}
+          <div className="four wide column">
+            {/* Future Sidebar (History, Images) */}
+            {!isYamlMode && (
               <ContentImages
                 pendingImages={draft.pendingImages || []}
                 onUpload={(files) => Array.from(files).forEach(onImageUpload)}
@@ -129,8 +125,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 folderPath={folderPath}
                 branch={branch}
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       <div
