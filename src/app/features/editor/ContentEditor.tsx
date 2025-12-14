@@ -418,10 +418,13 @@ export function ContentEditor(
       // Revert to remote
       if (originalDraft) {
         setDraft(originalDraft, undefined, true);
+        triggerReload();
       } else {
+        // No remote content (New file case) -> Cancel creation
         clearDraft();
+        navigate(`/${owner}/${repo}/${contentName}`);
+        showToast("Draft discarded", "info");
       }
-      triggerReload();
     }
   };
 

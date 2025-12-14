@@ -197,6 +197,8 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 
 - **Left Actions**:
   - **Reset Button**: ローカル変更の破棄 (Revert to Server)。
+    - **Note**:
+      リモートにファイルが存在しない（新規作成時のステータス）状態でリセットを実行した場合、ローカルドラフトを削除し、**記事一覧画面へ遷移**します（実質的なキャンセル動作）。
   - **Save / Create PR Button**: 保存およびPR作成/更新 (Primary)。
 - **Right Actions**:
   - **Delete Button**: 記事削除（条件付き表示: 既存記事かつSingleton以外）。
