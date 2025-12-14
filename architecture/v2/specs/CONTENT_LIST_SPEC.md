@@ -98,12 +98,27 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 #### 1. 記事の新規作成 (Create New)
 
-1. 操作ユーザーがヘッダーの入力欄にファイル名（例:
-   `my-new-post`）を入力し、Create ボタンを押下。
-2. アプリは入力値を正規化し（拡張子 `.md` の補完など）、URL 生成。
-3. `/:owner/:repo/:collection/new?filename=my-new-post.md` へ遷移。
-4. エディタ画面が「新規モード」で開き、FrontMatter の `title`
-   等にファイル名がプリセットされる。
+#### 1. 記事の新規作成 (Create New)
+
+1. 操作ユーザーがヘッダーの入力欄に記事名（例: `my-new-post`）を入力し、Create
+   ボタンを押下。
+2. アプリは入力値を正規化し、ファイルパスを決定する。
+   - Binding が `File` の場合: 末尾に `.md` がなければ付与する。
+   - Binding が `Directory` の場合: それをディレクトリ名として扱う。直下に
+     `index.md` を作成する。
+3. **即時ドラフト作成**:
+   - `localStorage` に該当パスのドラフトを初期状態で作成する。
+   - **初期値の適用**: コンテンツ設定 (Config)
+     に基づき、以下のデータを初期値として適用する。
+     - **FrontMatter**: `Fields` 設定で定義された `default` 値を適用する。
+     - **Body**: `Archetype Template`
+       で定義されたテンプレートテキストを適用する。
+   - この時点ではリモートには存在せず、ローカルのみの状態となる。
+4. **エディタ遷移**:
+   - `/:owner/:repo/:collection/my-new-post` へ遷移する。
+   - エディタは `localStorage`
+     のドラフトを読み込んで表示するため、ユーザーはすぐに執筆を開始できる。
+   - `/new` という中間ルートは使用しない。
 
 #### 2. 記事の削除 (Delete)
 

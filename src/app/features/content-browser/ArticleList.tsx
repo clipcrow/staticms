@@ -141,9 +141,57 @@ export function ArticleList() {
 
   const handleCreateArticle = () => {
     if (!newArticleName.trim()) return;
-    navigate(`/${owner}/${repo}/${content}/new`, {
-      state: { initialTitle: newArticleName },
-    });
+
+    // 1. Normalize name and create slug
+    let slug = newArticleName.trim();
+    // For file binding, ensure extension or leave as is?
+    // ContentEditor usually works with the filename.
+    // If user typed "hello", we treat it as slug "hello".
+    // If they typed "hello.md", we treat "hello.md".
+    // Let's rely on ContentEditor-like logic here or just pass the slug.
+    // Actually, to make a draft, we need a key.
+
+    // Normalize slug similar to ContentEditor saves (remove illegal chars?)
+    // Basic normalization:
+    slug = slug.replace(/[^a-z0-9\._\-]/gi, "-").replace(/-+/g, "-");
+
+    // Ensure extension for file binding if missing
+    let fileName = slug;
+    if (binding !== "directory" && !slug.toLowerCase().endsWith(".md")) {
+      fileName = `${slug}.md`;
+    }
+
+    // 2. Generate Draft Key
+    const user = localStorage.getItem("staticms_user") || "anonymous";
+    const draftKey =
+      `staticms_draft_${user}|${owner}|${repo}|${branch}|${content}/${fileName}`;
+
+    // 3. Create Initial Draft State
+    // Apply Field Defaults
+    // deno-lint-ignore no-explicit-any
+    const initialFrontMatter: any = { title: newArticleName };
+    if (collectionDef?.fields) {
+      for (const f of collectionDef.fields) {
+        if (f.default !== undefined) {
+          initialFrontMatter[f.name] = f.default;
+        }
+      }
+    }
+
+    // Apply Archetype Body
+    const initialBody = collectionDef?.archetype || "";
+
+    const initialDraft = {
+      frontMatter: initialFrontMatter,
+      body: initialBody,
+      isDirty: true,
+      updatedAt: Date.now(),
+    };
+
+    localStorage.setItem(draftKey, JSON.stringify(initialDraft));
+
+    // 4. Navigate directly to edit page
+    navigate(`/${owner}/${repo}/${content}/${fileName}`, { replace: true });
   };
 
   const handleSelectArticle = (path: string) => {

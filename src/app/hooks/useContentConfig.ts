@@ -26,6 +26,7 @@ export interface Collection {
   folder?: string;
   file?: string;
   files?: Array<{ name: string; file: string; label: string }>;
+  archetype?: string;
 
   fields?: Field[];
   // deno-lint-ignore no-explicit-any
