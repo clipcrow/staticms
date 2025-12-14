@@ -155,7 +155,7 @@ Staticms
 ### 5.1 データストア (Deno KV)
 
 - `sessions/<sessionId>`: アクセストークン管理 (TTLあり)
-- `config`: コンテンツ設定 (`staticms-config.json` 相当)
+- `config`: Staticms設定
 
 ### 5.2 GitHub API 連携
 

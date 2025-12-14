@@ -30,7 +30,7 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
     - **Collection**:
       構成記事のステータスを集計し、同種のタグが複数ある場合は件数を接尾表示（例:
       `Draft (3)`）。
-    - **Singleton**: 単体のステータス（`Draft`, `PR`）を表示。
+    - **Singleton**: ステータス（`Draft`, `PR`、またはその両方）を表示。
   - **Actions**: カード右下に「設定」(`cog` アイコン)
     ボタンを配置。クリックで設定編集画面 (`?settings=:content`) へ遷移。
 - **List View**:

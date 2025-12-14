@@ -15,6 +15,8 @@ Staticms GitHub App
 ### 1. ヘッダー (Header)
 
 - **Label**: `Repositories`
+- **Note**: 本画面では、アプリ共通ヘッダーの左上にある GitHub
+  アイコン（ルートリンク）は無効化されます（現在の画面がルートであるため）。
 - **Actions**:
   - **View Toggle**: 表示モード切替ボタン (Icons: `th` / `list`)。
     - **Card View**: グリッド形式でカードを表示。

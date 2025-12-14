@@ -56,7 +56,7 @@ Deno KV はシンプルかつ堅牢なキーバリューストアとして利用
 
 ### 3.1 Config & Content
 
-`staticms-config.json` に相当する設定データの構造です。
+Staticmsの設定データの構造です。
 
 ```typescript
 export interface Config {
