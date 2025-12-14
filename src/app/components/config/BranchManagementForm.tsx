@@ -2,7 +2,7 @@ import React from "react";
 import { BreadcrumbItem, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 
-interface RepoConfigFormProps {
+interface BranchManagementFormProps {
   config: Config;
   setConfig: React.Dispatch<React.SetStateAction<Config>>;
   onSave: (e: React.FormEvent) => void;
@@ -12,7 +12,7 @@ interface RepoConfigFormProps {
   title?: React.ReactNode;
 }
 
-export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
+export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
   config,
   setConfig,
   onSave,
@@ -31,15 +31,14 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
     <>
       <div
         className="ui container"
-        // Add padding bottom to prevent content from being hidden behind footer
         style={{ marginTop: "2rem", paddingBottom: "100px" }}
       >
-        <form id="repo-config-form" onSubmit={onSave}>
-          <div className="ui form" style={{ marginBottom: "2rem" }}>
-            <h4 className="ui header">Repository Settings</h4>
+        <div className="ui form" style={{ marginBottom: "2rem" }}>
+          <h4 className="ui header">Branch Management</h4>
 
-            <div className="field">
-              <label htmlFor="repo-config-branch">Target Branch</label>
+          <div className="field">
+            <label htmlFor="repo-config-branch">Target Branch</label>
+            <div className="ui action input" style={{ width: "400px" }}>
               <input
                 id="repo-config-branch"
                 type="text"
@@ -47,17 +46,37 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
                 value={config.branch || ""}
                 onChange={(e) => handleChange("branch", e.target.value)}
                 disabled={loading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                  }
+                }}
               />
-              <small className="helper-text">
-                The branch where content changes will be committed. If empty,
-                defaults to the repository's default branch.
-              </small>
+              <button
+                type="button"
+                className={`ui primary button ${loading ? "loading" : ""}`}
+                disabled={loading || !config.branch}
+                onClick={(e) => onSave(e)}
+              >
+                Switch
+              </button>
             </div>
+            <small
+              className="helper-text"
+              style={{
+                display: "block",
+                marginTop: "0.5rem",
+                color: "rgba(0,0,0,0.6)",
+              }}
+            >
+              The branch where content changes will be committed. If empty,
+              defaults to the repository's default branch.
+            </small>
           </div>
-        </form>
+        </div>
       </div>
 
-      {/* Fixed Footer Actions */}
+      {/* Footer with Modify/Cancel Actions */}
       <div
         style={{
           position: "fixed",
@@ -74,24 +93,14 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
           boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
         }}
       >
-        <div style={{ display: "flex", gap: "1rem" }}>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="ui button"
-            disabled={loading}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            form="repo-config-form"
-            className={`ui primary button ${loading ? "loading" : ""}`}
-            disabled={loading}
-          >
-            Update
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="ui button"
+          disabled={loading}
+        >
+          Cancel
+        </button>
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
-import { RepoConfigForm } from "@/app/components/config/RepoConfigForm.tsx";
+import { BranchManagementForm } from "@/app/components/config/BranchManagementForm.tsx";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 interface BranchManagementProps {
@@ -81,7 +81,7 @@ export function BranchManagement({
         throw new Error("Failed to save repository config");
       }
 
-      onSave();
+      alert("Target branch switched successfully.");
     } catch (e) {
       console.error(e);
       setError((e as Error).message);
@@ -94,7 +94,7 @@ export function BranchManagement({
   return (
     <div className="repo-config-editor">
       {error && <div className="error-message">{error}</div>}
-      <RepoConfigForm
+      <BranchManagementForm
         config={config}
         setConfig={setConfig}
         onSave={handleSubmit}
