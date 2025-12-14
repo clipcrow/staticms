@@ -573,12 +573,10 @@ export function ContentEditor(
       {!isSynced && (
         <div
           className="ui horizontal label orange medium"
-          title={fromStorage
-            ? "Restored from local backup"
-            : "Unsaved local changes"}
+          title="Unsaved local changes"
         >
           <i className="pencil alternate icon"></i>
-          {fromStorage ? "Draft Restored" : "Draft"}
+          Draft
         </div>
       )}
 

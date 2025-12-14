@@ -91,9 +91,9 @@ PRがマージされずにクローズされた状態です。変更が拒否さ
 
 操作中のコンテキストを強調するため、より大きなラベルやメッセージバーを使用します。
 
-- **Draft Restored**:
-  - ヘッダー右側に `Orange Label` で `Draft Restored` を表示。
-  - 「ローカルのバックアップから復元されました」というツールチップまたはトーストを表示。
+- **Draft**:
+  - ヘッダー右側に `Orange Label` で `Draft` を表示。
+  - ツールチップには "Unsaved local changes" 等を表示。
 - **Locked by PR**:
   - ヘッダーに `Warning Message` または `Lock Icon` を表示。
   - "Locked by PR #123" というリンク付きテキストを配置。
