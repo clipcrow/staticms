@@ -118,7 +118,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 </>
               )}
           </div>
-          {!isListMode && (
+          {!isYamlMode && (
             <div className="four wide column">
               {/* Future Sidebar (History, Images) */}
               <ContentImages
