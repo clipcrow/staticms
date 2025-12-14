@@ -15,6 +15,7 @@ export interface HeaderState {
   breadcrumbs: BreadcrumbItem[];
   title?: ReactNode;
   rightContent?: ReactNode;
+  disableRootLink?: boolean;
 }
 
 const HeaderStateContext = createContext<HeaderState | null>(null);
@@ -46,6 +47,7 @@ export function useSetHeader(
   breadcrumbs: BreadcrumbItem[],
   title?: ReactNode,
   rightContent?: ReactNode,
+  disableRootLink?: boolean,
 ) {
   const setHeader = useContext(HeaderDispatchContext);
   if (!setHeader) {
@@ -53,11 +55,12 @@ export function useSetHeader(
   }
 
   useEffect(() => {
-    setHeader({ breadcrumbs, title, rightContent });
+    setHeader({ breadcrumbs, title, rightContent, disableRootLink });
   }, [
     setHeader,
     title,
     rightContent,
+    disableRootLink,
     breadcrumbs.length,
     ...breadcrumbs.map((b) => b.to),
   ]);

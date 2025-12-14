@@ -3,7 +3,7 @@ import { Header } from "@/app/components/common/Header.tsx";
 import { useHeader } from "@/app/contexts/HeaderContext.tsx";
 
 export function MainLayout() {
-  const { breadcrumbs, title, rightContent } = useHeader();
+  const { breadcrumbs, title, rightContent, disableRootLink } = useHeader();
 
   return (
     <>
@@ -11,6 +11,7 @@ export function MainLayout() {
         breadcrumbs={breadcrumbs}
         title={title}
         rightContent={rightContent}
+        rootLink={!disableRootLink}
       />
       <Outlet />
     </>

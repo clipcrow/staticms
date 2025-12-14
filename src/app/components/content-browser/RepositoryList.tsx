@@ -31,7 +31,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   onSelect,
   onSettings,
 }) => {
-  useSetHeader([], "Repositories");
+  useSetHeader([], "Repositories", undefined, true);
 
   return (
     <div>
