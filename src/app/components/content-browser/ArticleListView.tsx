@@ -70,7 +70,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   if (loading) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <>
         <Header
           breadcrumbs={[
             {
@@ -90,12 +90,14 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
             </>
           }
         />
-        <div className="ui placeholder segment">
-          <div className="ui active inverted dimmer">
-            <div className="ui loader"></div>
+        <div className="ui container" style={{ marginTop: "2rem" }}>
+          <div className="ui placeholder segment">
+            <div className="ui active inverted dimmer">
+              <div className="ui loader"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
