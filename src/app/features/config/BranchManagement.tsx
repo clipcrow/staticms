@@ -17,7 +17,7 @@ export function BranchManagement({
   repo,
   initialConfig,
   onCancel,
-  onSave,
+  onSave: _onSave,
 }: BranchManagementProps) {
   const [config, setConfig] = useState<Config>(
     JSON.parse(JSON.stringify(initialConfig)),

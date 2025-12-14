@@ -44,7 +44,7 @@ Deno.test({
     );
 
     // Check header (use explicit verification)
-    const headers = getAllByText("Repository Settings");
+    const headers = getAllByText("Branch Management");
     assert(headers.length >= 1);
 
     // Check initial values
@@ -54,7 +54,7 @@ Deno.test({
 });
 
 Deno.test({
-  name: "RepoConfigEditor: Saves config",
+  name: "BranchManagement: Saves config",
   fn: async () => {
     const fetchStub = stub(
       globalThis,
@@ -101,14 +101,14 @@ Deno.test({
       // Here we verify that the form submission triggers the API call with valid config.
 
       // Click Update
-      const saveBtn = getByRole("button", { name: /update/i });
+      const saveBtn = getByRole("button", { name: /switch/i });
 
       await act(() => {
         fireEvent.click(saveBtn);
       });
 
       await waitFor(() => {
-        assertSpyCalls(onSaveSpy, 1);
+        assertSpyCalls(alertStub, 1);
       });
 
       // Verify fetch call payload
