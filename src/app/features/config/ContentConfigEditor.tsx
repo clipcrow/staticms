@@ -76,7 +76,57 @@ export function ContentConfigEditor({
       if (!sanitizedCollection.name) throw new Error("Identifier is required");
       if (!sanitizedCollection.path) throw new Error("Path is required");
 
-      // 3. Update Config
+      // Check for duplicate path
+      const isDuplicate = config.collections?.some((c) => {
+        // Skip self if editing
+        if (mode === "edit" && c.name === initialData?.name) return false;
+        return c.path === sanitizedCollection.path;
+      });
+
+      if (isDuplicate) {
+        throw new Error("Content with this path already exists.");
+      }
+
+      // 3. Path Existence Check
+      const branchParam = config.branch
+        ? `?branch=${encodeURIComponent(config.branch)}`
+        : "";
+
+      let validatePath = sanitizedCollection.path;
+      if (
+        sanitizedCollection.type === "singleton" &&
+        sanitizedCollection.binding === "directory"
+      ) {
+        validatePath = `${validatePath}/index.md`.replace(/\/+/g, "/");
+      }
+
+      const valRes = await fetchWithAuth(
+        `/api/repo/${owner}/${repo}/contents/${validatePath}${branchParam}`,
+      );
+
+      if (valRes.status === 404) {
+        throw new Error(`Path does not exist in repository: ${validatePath}`);
+      }
+      if (!valRes.ok) {
+        throw new Error(`Failed to validate path: ${validatePath}`);
+      }
+
+      const valData = await valRes.json();
+
+      if (sanitizedCollection.type === "collection") {
+        if (!Array.isArray(valData)) {
+          throw new Error(
+            `Path '${validatePath}' must be a folder (for Collection).`,
+          );
+        }
+      } else {
+        // Singleton (File or Directory->index.md)
+        if (Array.isArray(valData) || valData.type !== "file") {
+          throw new Error(`Path '${validatePath}' must be a file.`);
+        }
+      }
+
+      // 4. Update Config
       const newConfig: Config = JSON.parse(JSON.stringify(config));
       if (!newConfig.collections) newConfig.collections = [];
 
