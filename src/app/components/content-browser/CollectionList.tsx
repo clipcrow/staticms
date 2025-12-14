@@ -160,7 +160,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                     const status = getContentStatus(
                       owner,
                       repo,
-                      "main",
+                      branch,
                       statusPath,
                       !isSingleton,
                     );
@@ -221,21 +221,20 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                             </button>
                           </span>
                           <span>
-                            {status.hasDraft
-                              ? (
-                                <StatusBadge
-                                  status="draft"
-                                  count={status.draftCount}
-                                />
-                              )
-                              : status.hasPr
-                              ? (
-                                <StatusBadge
-                                  status="pr_open"
-                                  prNumber={status.prNumber}
-                                />
-                              )
-                              : null}
+                            {status.hasDraft && (
+                              <StatusBadge
+                                status="draft"
+                                count={status.draftCount}
+                                style={{ marginRight: "4px" }}
+                              />
+                            )}
+                            {status.hasPr && (
+                              <StatusBadge
+                                status="pr_open"
+                                prNumber={status.prNumber}
+                                count={status.prCount}
+                              />
+                            )}
                           </span>
                         </div>
                       </div>
@@ -256,7 +255,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                     const status = getContentStatus(
                       owner,
                       repo,
-                      "main",
+                      branch,
                       statusPath,
                       !isSingleton,
                     );
