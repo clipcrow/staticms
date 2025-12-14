@@ -2,7 +2,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useRepositories } from "@/app/hooks/useRepositories.ts";
 import { RepositoryList } from "@/app/components/content-browser/RepositoryList.tsx";
-import { RepoConfigPage } from "@/app/features/config/RepoConfigPage.tsx";
+import { BranchManagementPage } from "@/app/features/config/BranchManagementPage.tsx";
 
 export function RepositorySelector() {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export function RepositorySelector() {
   if (settingsParam) {
     const [owner, repo] = settingsParam.split("/");
     if (owner && repo) {
-      return <RepoConfigPage owner={owner} repo={repo} />;
+      return <BranchManagementPage owner={owner} repo={repo} />;
     }
   }
 

@@ -299,10 +299,10 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                           e.stopPropagation();
                           onSettings(repo.full_name);
                         }}
-                        title="Repository Settings"
+                        title="Branch Management"
                         style={{ margin: 0 }}
                       >
-                        <i className="cog icon"></i>
+                        <i className="code branch icon"></i>
                       </button>
                     </span>
                     <span
@@ -414,10 +414,10 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                           e.stopPropagation();
                           onSettings(repo.full_name);
                         }}
-                        title="Settings"
+                        title="Branch Management"
                         style={{ marginRight: "0.5em" }}
                       >
-                        <i className="cog icon"></i>
+                        <i className="code branch icon"></i>
                       </button>
                       <button
                         type="button"

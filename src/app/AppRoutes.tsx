@@ -5,7 +5,7 @@ import { ContentBrowser } from "@/app/features/content-browser/ContentBrowser.ts
 import { ContentRoute } from "@/app/features/content-browser/ContentRoute.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
 import { ConfigPage } from "@/app/features/config/ConfigPage.tsx";
-import { RepoConfigPage } from "@/app/features/config/RepoConfigPage.tsx";
+import { BranchManagementPage } from "@/app/features/config/BranchManagementPage.tsx";
 import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
 import { NotFound } from "@/app/components/common/NotFound.tsx";
 import { MainLayout } from "@/app/components/layout/MainLayout.tsx";
@@ -19,7 +19,7 @@ export interface AppRoutesProps {
   ContentRouteComponent?: React.ElementType;
   ContentEditorComponent?: React.ElementType;
   ConfigPageComponent?: React.ElementType;
-  RepoConfigPageComponent?: React.ElementType;
+  BranchManagementPageComponent?: React.ElementType;
   ConfigDebuggerComponent?: React.ElementType;
 }
 
@@ -29,7 +29,8 @@ export function AppRoutes({
   ContentRouteComponent = ContentRoute,
   ContentEditorComponent = ContentEditor,
   ConfigPageComponent: _ConfigPageComponent = ConfigPage,
-  RepoConfigPageComponent: _RepoConfigPageComponent = RepoConfigPage,
+  BranchManagementPageComponent: _BranchManagementPageComponent =
+    BranchManagementPage,
   ConfigDebuggerComponent = ConfigDebugger,
 }: AppRoutesProps) {
   return (

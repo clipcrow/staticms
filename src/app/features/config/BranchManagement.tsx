@@ -4,7 +4,7 @@ import { Config } from "@/app/hooks/useContentConfig.ts";
 import { RepoConfigForm } from "@/app/components/config/RepoConfigForm.tsx";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
-interface RepoConfigEditorProps {
+interface BranchManagementProps {
   owner: string;
   repo: string;
   initialConfig: Config;
@@ -12,13 +12,13 @@ interface RepoConfigEditorProps {
   onSave: () => void;
 }
 
-export function RepoConfigEditor({
+export function BranchManagement({
   owner,
   repo,
   initialConfig,
   onCancel,
   onSave,
-}: RepoConfigEditorProps) {
+}: BranchManagementProps) {
   const [config, setConfig] = useState<Config>(
     JSON.parse(JSON.stringify(initialConfig)),
   );

@@ -1,14 +1,16 @@
 import { useNavigate } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
-import { RepoConfigEditor } from "./RepoConfigEditor.tsx";
+import { BranchManagement } from "./BranchManagement.tsx";
 import { Header } from "@/app/components/common/Header.tsx";
 
-interface RepoConfigPageProps {
+interface BranchManagementPageProps {
   owner?: string;
   repo?: string;
 }
 
-export function RepoConfigPage({ owner, repo }: RepoConfigPageProps) {
+export function BranchManagementPage(
+  { owner, repo }: BranchManagementPageProps,
+) {
   const navigate = useNavigate();
   // Ensure owner/repo are present before calling hook, or hook should handle skip
   const { config, loading, error } = useContentConfig(owner, repo);
@@ -27,7 +29,7 @@ export function RepoConfigPage({ owner, repo }: RepoConfigPageProps) {
       <div className="ui container" style={{ marginTop: "2rem" }}>
         <Header
           breadcrumbs={[
-            { label: "Repository Settings" },
+            { label: "Branch Management" },
           ]}
         />
         <div className="ui placeholder segment">
@@ -44,7 +46,7 @@ export function RepoConfigPage({ owner, repo }: RepoConfigPageProps) {
       <div className="ui container" style={{ marginTop: "2rem" }}>
         <Header
           breadcrumbs={[]}
-          title="Repository Settings"
+          title="Branch Management"
         />
         <div className="ui negative message">
           Error loading configuration: {error?.message || "Unknown error"}
@@ -59,7 +61,7 @@ export function RepoConfigPage({ owner, repo }: RepoConfigPageProps) {
   }
 
   return (
-    <RepoConfigEditor
+    <BranchManagement
       owner={owner}
       repo={repo}
       initialConfig={config}

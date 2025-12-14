@@ -10,7 +10,7 @@ import {
 import { assert, assertEquals, assertExists } from "@std/assert";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { MemoryRouter } from "react-router-dom";
-import { RepoConfigEditor } from "./RepoConfigEditor.tsx";
+import { BranchManagement } from "./BranchManagement.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
@@ -27,12 +27,12 @@ const MOCK_CONFIG: Config = {
 };
 
 Deno.test({
-  name: "RepoConfigEditor: Renders form with initial config",
+  name: "BranchManagement: Renders form with initial config",
   fn: () => {
     const { getByDisplayValue, getAllByText } = render(
       <HeaderProvider>
         <MemoryRouter>
-          <RepoConfigEditor
+          <BranchManagement
             owner="testuser"
             repo="testrepo"
             initialConfig={MOCK_CONFIG}
@@ -85,7 +85,7 @@ Deno.test({
       const { getByRole } = render(
         <HeaderProvider>
           <MemoryRouter>
-            <RepoConfigEditor
+            <BranchManagement
               owner="testuser"
               repo="testrepo"
               initialConfig={MOCK_CONFIG}

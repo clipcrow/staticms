@@ -53,6 +53,21 @@ Deno.test({
       "fetch",
       (input) => {
         const url = input.toString();
+
+        // Handle Contents API calls (Validation)
+        if (url.includes("/contents/")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({
+                type: "file",
+                name: "new.md",
+                path: "content/new.md",
+              }),
+              { headers: { "content-type": "application/json" } },
+            ),
+          );
+        }
+
         if (url.match(/\/api\/repo\/[^/]+\/[^/]+$/)) {
           return Promise.resolve(
             new Response(
