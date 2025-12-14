@@ -100,7 +100,7 @@ export function RepoConfigEditor({
         onSave={handleSubmit}
         onCancel={onCancel}
         breadcrumbs={[]}
-        title="Repository Settings"
+        title={`${owner}/${repo}`}
         loading={saving}
       />
     </div>
