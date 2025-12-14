@@ -2,6 +2,18 @@ import React from "react";
 import { BreadcrumbItem, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 
+interface UnmergedCommit {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author: {
+      name: string;
+      date: string;
+    };
+  };
+}
+
 interface BranchManagementFormProps {
   config: Config;
   setConfig: React.Dispatch<React.SetStateAction<Config>>;
@@ -10,8 +22,7 @@ interface BranchManagementFormProps {
   loading?: boolean;
   breadcrumbs: BreadcrumbItem[];
   title?: React.ReactNode;
-  // deno-lint-ignore no-explicit-any
-  unmergedCommits?: any[];
+  unmergedCommits?: UnmergedCommit[];
 }
 
 export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
@@ -58,7 +69,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
               <button
                 type="button"
                 className={`ui primary button ${loading ? "loading" : ""}`}
-                disabled={loading || !config.branch}
+                disabled={loading}
                 onClick={(e) => onSave(e)}
               >
                 Switch
@@ -78,9 +89,8 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
           </div>
 
           {unmergedCommits && unmergedCommits.length > 0 && (
-            <div className="ui segment">
+            <div style={{ marginTop: "2rem" }}>
               <h4 className="ui header">
-                <i className="list icon"></i>
                 <div className="content">
                   Unmerged Commits
                   <div className="sub header">
@@ -89,8 +99,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
                 </div>
               </h4>
               <div className="ui relaxed divided list">
-                {/* deno-lint-ignore no-explicit-any */}
-                {unmergedCommits.map((commit: any) => (
+                {unmergedCommits.map((commit) => (
                   <div className="item" key={commit.sha}>
                     <i className="large github middle aligned icon"></i>
                     <div className="content">

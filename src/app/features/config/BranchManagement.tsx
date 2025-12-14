@@ -28,11 +28,12 @@ export function BranchManagement({
   const { repository } = useRepository(owner, repo);
   // deno-lint-ignore no-explicit-any
   const [unmergedCommits, setUnmergedCommits] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    if (!repository || !config.branch) return;
+    if (!repository) return;
     const defaultBranch = repository.default_branch;
-    const targetBranch = config.branch;
+    const targetBranch = config.branch || defaultBranch;
 
     if (!defaultBranch || defaultBranch === targetBranch) {
       setUnmergedCommits([]);
@@ -50,7 +51,7 @@ export function BranchManagement({
         setUnmergedCommits(data.commits || []);
       })
       .catch(console.error);
-  }, [repository, config.branch, owner, repo]);
+  }, [repository, owner, repo, refreshKey]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +110,7 @@ export function BranchManagement({
       }
 
       alert("Target branch switched successfully.");
+      setRefreshKey((prev) => prev + 1);
     } catch (e) {
       console.error(e);
       setError((e as Error).message);
