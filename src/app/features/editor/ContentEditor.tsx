@@ -202,13 +202,41 @@ export function ContentEditor(
   };
 
   const handleValidation = () => {
-    // Basic validation
+    if (!collection?.fields) return true;
+
+    // Helper to check object
     // deno-lint-ignore no-explicit-any
-    const title = (draft.frontMatter as any).title;
-    if (!title && mode === "new") {
-      // Only require title for new? Or always?
-      // For now, lenient.
+    const checkObject = (obj: any, index?: number) => {
+      // deno-lint-ignore no-explicit-any
+      for (const field of (collection.fields as any[])) {
+        if (field.required) {
+          const val = obj[field.name];
+          if (
+            val === undefined || val === null ||
+            (typeof val === "string" && val.trim() === "")
+          ) {
+            const prefix = index !== undefined ? `Item #${index + 1}: ` : "";
+            showToast(
+              `${prefix}Field '${field.label || field.name}' is required.`,
+              "error",
+            );
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+
+    if (Array.isArray(draft.frontMatter)) {
+      // List validation
+      for (let i = 0; i < draft.frontMatter.length; i++) {
+        if (!checkObject(draft.frontMatter[i], i)) return false;
+      }
+    } else {
+      // Object validation
+      if (!checkObject(draft.frontMatter)) return false;
     }
+
     return true;
   };
 
