@@ -74,7 +74,13 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
         <Header
           breadcrumbs={[
             {
-              label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+              label: (
+                <RepoBreadcrumbLabel
+                  owner={owner}
+                  repo={repo}
+                  branch={branch}
+                />
+              ),
               to: `/${owner}/${repo}`,
             },
           ]}
@@ -118,7 +124,9 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
       <Header
         breadcrumbs={[
           {
-            label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+            label: (
+              <RepoBreadcrumbLabel owner={owner} repo={repo} branch={branch} />
+            ),
             to: `/${owner}/${repo}`,
           },
         ]}

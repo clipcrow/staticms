@@ -11,6 +11,7 @@ export interface CollectionListProps {
   collections: Collection[];
   owner: string;
   repo: string;
+  branch?: string;
   viewMode: "card" | "list";
   searchQuery: string;
   onViewModeChange: (mode: "card" | "list") => void;
@@ -24,6 +25,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
   collections,
   owner,
   repo,
+  branch = "main",
   viewMode,
   searchQuery,
   onViewModeChange,
@@ -38,7 +40,13 @@ export const CollectionList: React.FC<CollectionListProps> = ({
         <Header
           breadcrumbs={[
             {
-              label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+              label: (
+                <RepoBreadcrumbLabel
+                  owner={owner}
+                  repo={repo}
+                  branch={branch}
+                />
+              ),
             },
           ]}
           title="Contents"
@@ -79,7 +87,9 @@ export const CollectionList: React.FC<CollectionListProps> = ({
       <Header
         breadcrumbs={[
           {
-            label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+            label: (
+              <RepoBreadcrumbLabel owner={owner} repo={repo} branch={branch} />
+            ),
           },
         ]}
         title="Contents"

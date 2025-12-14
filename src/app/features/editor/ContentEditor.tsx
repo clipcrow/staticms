@@ -38,12 +38,15 @@ export function ContentEditor(
   const repo = params.repo;
   const contentName = propColName || params.content;
   const articleName = propArtName || params.article;
-  const { config } = useContentConfig(owner, repo);
+  const { config, loading: configLoading } = useContentConfig(owner, repo);
   const { showToast } = useToast();
   const { username: _currentUser } = useAuth();
-  const { repository } = useRepository(owner, repo);
-  const branch = repository?.configured_branch || repository?.default_branch ||
-    "main";
+  const { repository, loading: repoLoading } = useRepository(owner, repo);
+
+  const branchConfigured = !!config?.branch;
+  const branchReady = !configLoading && (branchConfigured || !repoLoading);
+
+  const branch = config?.branch || repository?.default_branch || "main";
 
   // Check for initial slug/name passed from navigation state
   // deno-lint-ignore no-explicit-any
@@ -126,6 +129,7 @@ export function ContentEditor(
   const { fetching: _fetching, originalDraft, triggerReload } = useContentSync({
     owner: owner || "",
     repo: repo || "",
+    branch,
     filePath,
     mode,
     loaded,
@@ -515,7 +519,7 @@ export function ContentEditor(
     }
   };
 
-  if (!collection || !config) {
+  if (!collection || !config || !branchReady) {
     return <div className="ui active centered inline loader"></div>;
   }
 
@@ -545,7 +549,13 @@ export function ContentEditor(
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      label: <RepoBreadcrumbLabel owner={owner!} repo={repo!} />,
+      label: (
+        <RepoBreadcrumbLabel
+          owner={owner!}
+          repo={repo!}
+          branch={branch}
+        />
+      ),
       to: `/${owner}/${repo}`,
     },
   ];

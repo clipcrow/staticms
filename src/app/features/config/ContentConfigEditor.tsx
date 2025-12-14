@@ -144,7 +144,13 @@ export function ContentConfigEditor({
 
   const breadcrumbs = [
     {
-      label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
+      label: (
+        <RepoBreadcrumbLabel
+          owner={owner}
+          repo={repo}
+          branch={config.branch || "main"}
+        />
+      ),
       to: `/${owner}/${repo}`,
     },
   ];

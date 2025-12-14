@@ -42,6 +42,15 @@ Deno.test({
         if (url.includes("/content/posts/hello.md")) {
           return Promise.resolve(new Response(MOCK_CONTENT));
         }
+        // Mock Repository Info
+        if (
+          url.includes("/api/repo/") && !url.endsWith("/config") &&
+          !url.includes("/contents/")
+        ) {
+          return Promise.resolve(
+            new Response(JSON.stringify({ default_branch: "main" })),
+          );
+        }
         if (url.includes("/api/user")) {
           return Promise.resolve(
             new Response(JSON.stringify({ login: "testuser" })),

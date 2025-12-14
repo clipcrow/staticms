@@ -70,6 +70,7 @@ export function ContentBrowser() {
             collections={config.collections}
             owner={owner}
             repo={repo}
+            branch={config.branch || "main"}
           />
         )}
     </>

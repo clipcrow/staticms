@@ -1,8 +1,26 @@
 import { useRepository } from "@/app/hooks/useRepositories.ts";
 
 export const RepoBreadcrumbLabel = (
-  { owner, repo }: { owner: string; repo: string },
+  { owner, repo, branch }: { owner: string; repo: string; branch?: string },
 ) => {
+  if (branch) {
+    return (
+      <span
+        style={{ display: "inline-flex", alignItems: "center", gap: "0.5em" }}
+      >
+        <span>{owner}/{repo}</span>
+        <span
+          className="ui label tiny basic"
+          style={{ fontWeight: "normal", margin: 0 }}
+        >
+          <i className="code branch icon"></i>
+          {branch}
+        </span>
+      </span>
+    );
+  }
+
+  // Fallback if branch is not provided (legacy behavior)
   const { repository } = useRepository(owner, repo);
 
   // While loading or if error, just show the name

@@ -12,8 +12,11 @@ export function ArticleList() {
   const { config, loading: configLoading, error: configError } =
     useContentConfig(owner, repo);
   const { repository, loading: repoLoading } = useRepository(owner, repo);
-  const branch = repository?.configured_branch || repository?.default_branch ||
-    "main";
+
+  const branchConfigured = !!config?.branch;
+  const branchReady = !configLoading && (branchConfigured || !repoLoading);
+
+  const branch = config?.branch || repository?.default_branch || "main";
 
   // We use content as the key to find definition
   const collectionDef = config?.collections.find((c) => c.name === content);
@@ -22,8 +25,8 @@ export function ArticleList() {
 
   const { files, loading: contentLoading, error: contentError } =
     useRepoContent(
-      repoLoading ? undefined : owner,
-      repoLoading ? undefined : repo,
+      branchReady ? owner : undefined,
+      branchReady ? repo : undefined,
       folder,
       branch,
     );
@@ -81,7 +84,7 @@ export function ArticleList() {
 
   // Combine loading/error states for simpler prop passing
   // Ideally handled better, but for now:
-  const isLoading = configLoading || repoLoading ||
+  const isLoading = configLoading || !branchReady ||
     (!!folder && contentLoading);
   const combinedError = configError || contentError;
 

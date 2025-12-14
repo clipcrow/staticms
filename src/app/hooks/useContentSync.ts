@@ -6,6 +6,7 @@ import { parseFrontMatter } from "@/app/components/editor/utils.ts";
 interface UseContentSyncProps {
   owner: string;
   repo: string;
+  branch?: string;
   filePath: string;
   mode: "new" | "edit";
   loaded: boolean;
@@ -25,6 +26,7 @@ interface UseContentSyncProps {
 export function useContentSync({
   owner,
   repo,
+  branch = "main",
   filePath,
   mode,
   loaded,
@@ -34,7 +36,7 @@ export function useContentSync({
   showToast,
 }: UseContentSyncProps) {
   const [fetching, setFetching] = useState(false);
-  const fetchedPathRef = useRef<string | null>(null);
+  const fetchedKeyRef = useRef<string | null>(null);
   const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
   const [reloadTrigger, setReloadTrigger] = useState(0);
 
@@ -47,11 +49,12 @@ export function useContentSync({
   }, [draft, fromStorage]);
 
   const triggerReload = () => {
-    fetchedPathRef.current = null;
+    fetchedKeyRef.current = null;
     setReloadTrigger((prev) => prev + 1);
   };
 
   useEffect(() => {
+    const currentKey = `${branch}:${filePath}`;
     if (
       mode === "new" ||
       !loaded ||
@@ -59,14 +62,18 @@ export function useContentSync({
       !repo ||
       !filePath ||
       fetching ||
-      fetchedPathRef.current === filePath
+      fetchedKeyRef.current === currentKey
     ) {
       return;
     }
 
     setFetching(true);
-    fetchedPathRef.current = filePath;
-    fetch(`/api/repo/${owner}/${repo}/contents/${filePath}`)
+    fetchedKeyRef.current = currentKey;
+    fetch(
+      `/api/repo/${owner}/${repo}/contents/${filePath}?branch=${
+        encodeURIComponent(branch)
+      }`,
+    )
       .then(async (res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error("Failed to fetch remote content");
@@ -150,6 +157,7 @@ export function useContentSync({
     owner,
     repo,
     filePath,
+    branch,
     fetching,
     setDraft,
     showToast,

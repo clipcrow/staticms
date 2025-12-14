@@ -7,9 +7,12 @@ interface ContentListProps {
   collections: Collection[];
   owner: string;
   repo: string;
+  branch?: string;
 }
 
-export function ContentList({ collections, owner, repo }: ContentListProps) {
+export function ContentList(
+  { collections, owner, repo, branch }: ContentListProps,
+) {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
@@ -31,6 +34,7 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
       collections={collections}
       owner={owner}
       repo={repo}
+      branch={branch}
       viewMode={viewMode}
       searchQuery={searchQuery}
       onViewModeChange={setViewMode}
