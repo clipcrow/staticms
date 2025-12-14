@@ -242,11 +242,17 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               {viewMode === "card" && (
                 <div className="ui three stackable cards">
                   {files.map((file) => {
+                    // Construct status check key that matches ContentEditor's save format (collectionName/fileName)
+                    // If collectionName is missing, fall back to file.path (though shouldn't happen in this view)
+                    const statusCheckKey = collectionName
+                      ? `${collectionName}/${file.name}`
+                      : (file.path || "");
+
                     const status = getContentStatus(
                       owner || "",
                       repo || "",
                       branch,
-                      file.path || "",
+                      statusCheckKey,
                       false,
                     );
                     return (
@@ -294,11 +300,15 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               {viewMode === "list" && (
                 <div className="ui relaxed divided list">
                   {files.map((file) => {
+                    const statusCheckKey = collectionName
+                      ? `${collectionName}/${file.name}`
+                      : (file.path || "");
+
                     const status = getContentStatus(
                       owner || "",
                       repo || "",
                       branch,
-                      file.path || "",
+                      statusCheckKey,
                       false,
                     );
                     return (

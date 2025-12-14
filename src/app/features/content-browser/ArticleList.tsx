@@ -20,7 +20,13 @@ export function ArticleList() {
 
   // We use content as the key to find definition
   const collectionDef = config?.collections.find((c) => c.name === content);
-  const folder = collectionDef?.path || collectionDef?.folder;
+
+  // Normalize folder path to ensure consistent matching with GitHub API paths
+  let folder = collectionDef?.path || collectionDef?.folder || "";
+  if (folder.startsWith("./")) folder = folder.substring(2);
+  if (folder.startsWith("/")) folder = folder.substring(1);
+  if (folder.endsWith("/")) folder = folder.slice(0, -1);
+
   const binding = collectionDef?.binding || "file";
 
   const { files, loading: contentLoading, error: contentError } =
@@ -58,9 +64,16 @@ export function ArticleList() {
             ? `${folder}/${articleName}/index.md`
             : `${articleName}/index.md`;
         } else {
-          path = folder ? `${folder}/${articleName}.md` : `${articleName}.md`;
+          // Check if extension is already present (ContentEditor saves with extension for file binding)
+          const fileName = articleName.toLowerCase().endsWith(".md")
+            ? articleName
+            : `${articleName}.md`;
+          path = folder ? `${folder}/${fileName}` : fileName;
         }
         path = path.replace("//", "/");
+        if (path.startsWith("/")) {
+          path = path.substring(1);
+        }
 
         found.push({
           name: articleName,
@@ -99,13 +112,19 @@ export function ArticleList() {
       name: f.name,
       path: f.path,
       type: f.type,
-      sha: f.sha || "unknown",
+      sha: "unknown",
       content: undefined,
     }));
 
   // Merge drafts
-  const remotePaths = new Set(v1Files.map((f) => f.path));
-  const newDrafts = localDrafts.filter((d) => !remotePaths.has(d.path));
+  // Deduplicate based on file name to be robust against path mismatches (GitHub API vs Local Config)
+  // Since we are listing a specific folder, file names must be unique within this list.
+  const remoteFileNames = new Set(v1Files.map((f) => f.name.toLowerCase()));
+
+  const newDrafts = localDrafts.filter((d) =>
+    !remoteFileNames.has(d.name.toLowerCase())
+  );
+
   const allFiles = [...newDrafts, ...v1Files].sort((a, b) =>
     a.name.localeCompare(b.name)
   );
