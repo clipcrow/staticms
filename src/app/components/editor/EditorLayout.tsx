@@ -34,6 +34,8 @@ export interface EditorLayoutProps {
   onPendingImageRemove: (name: string) => void;
   onImageInsert: (name: string) => void;
   onDelete?: () => void;
+  commitMessage?: string;
+  onCommitMessageChange?: (message: string) => void;
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
@@ -48,6 +50,8 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   isListMode,
   folderPath,
   branch,
+  commitMessage,
+  onCommitMessageChange,
   onSave,
   onReset,
   onFrontMatterChange,
@@ -148,33 +152,76 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
         className="staticms-editor-footer"
       >
         {/* Actions (Left) */}
-        <div style={{ display: "flex", gap: "1rem" }}>
-          {!isSynced && (
-            <button
-              type="button"
-              className="ui button negative basic"
-              onClick={onReset}
-              disabled={isSaving}
-              title="Discard local draft and reload from server"
-            >
-              Reset
-            </button>
-          )}
-
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
           <button
             type="button"
-            className={`ui primary button ${isSaving ? "loading" : ""}`}
-            onClick={onSave}
-            disabled={isSaving || isLocked}
-            title={isLocked
-              ? "Editing is locked because a PR is open"
-              : isSynced
-              ? "No changes detected"
-              : "Save changes like a text editor"}
+            className="ui button"
+            onClick={onReset}
+            disabled={isSaving || isLocked || isSynced}
+            title={isSynced
+              ? "No changes to reset"
+              : "Discard local draft and reload from server"}
           >
-            <i className={prInfo ? "sync icon" : "plus icon"}></i>
-            {isLocked ? "Locked (PR Open)" : prInfo ? "Update PR" : "Create PR"}
+            Reset
           </button>
+
+          {onCommitMessageChange !== undefined
+            ? (
+              <div
+                className={`ui action input ${
+                  commitMessage === "" ? "error" : ""
+                }`}
+                style={{ width: "400px" }}
+              >
+                <input
+                  type="text"
+                  placeholder="Commit message (required)"
+                  value={commitMessage || ""}
+                  onChange={(e) => onCommitMessageChange(e.target.value)}
+                  disabled={isLocked || isSaving || isSynced}
+                />
+                <button
+                  type="button"
+                  className={`ui primary button ${isSaving ? "loading" : ""}`}
+                  onClick={onSave}
+                  disabled={isSaving || isLocked || !commitMessage || isSynced}
+                  title={isLocked
+                    ? "Editing is locked because a PR is open"
+                    : isSynced
+                    ? "No changes to commit"
+                    : !commitMessage
+                    ? "Commit message is required"
+                    : "Save changes and commit"}
+                >
+                  <i className={prInfo ? "sync icon" : "plus icon"}></i>
+                  {isLocked
+                    ? "Locked (PR Open)"
+                    : prInfo
+                    ? "Update PR"
+                    : "Create PR"}
+                </button>
+              </div>
+            )
+            : (
+              <button
+                type="button"
+                className={`ui primary button ${isSaving ? "loading" : ""}`}
+                onClick={onSave}
+                disabled={isSaving || isLocked || isSynced}
+                title={isLocked
+                  ? "Editing is locked because a PR is open"
+                  : isSynced
+                  ? "No changes detected"
+                  : "Save changes like a text editor"}
+              >
+                <i className={prInfo ? "sync icon" : "plus icon"}></i>
+                {isLocked
+                  ? "Locked (PR Open)"
+                  : prInfo
+                  ? "Update PR"
+                  : "Create PR"}
+              </button>
+            )}
         </div>
 
         {/* Delete Action (Right) */}

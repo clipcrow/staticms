@@ -60,6 +60,8 @@ export function ContentEditor(
   const [isMerged, setIsMerged] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
 
+  const [commitMessage, setCommitMessage] = useState("");
+
   const collection = config?.collections.find((c: Collection) =>
     c.name === contentName
   );
@@ -353,7 +355,7 @@ export function ContentEditor(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            message: `Update ${savePath}`,
+            message: commitMessage || `Update ${savePath}`,
             branch,
             updates,
             createPr: true,
@@ -370,6 +372,9 @@ export function ContentEditor(
       // If backend returns PR info
       if (data.pr) {
         showToast("Pull Request created/updated!", "success");
+
+        // Clear commit message after successful save
+        setCommitMessage("");
 
         if (mode === "new" && finalSlug) {
           // Clear the __new__ draft to prevent ghost drafts
@@ -395,6 +400,7 @@ export function ContentEditor(
         );
       } else {
         showToast("Saved successfully!", "success");
+        setCommitMessage("");
         // No PR created? Just clean sync.
         setDraft((prev) => prev, undefined, true);
 
@@ -656,6 +662,8 @@ export function ContentEditor(
       isListMode={isListMode || false}
       folderPath={folder || ""}
       branch={branch}
+      commitMessage={commitMessage}
+      onCommitMessageChange={setCommitMessage}
       onSave={handleSave}
       onReset={handleReset}
       onFrontMatterChange={handleFrontMatterChange}
