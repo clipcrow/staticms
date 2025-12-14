@@ -34,7 +34,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   return (
     <div>
       <Header
-        breadcrumbs={[{ label: "Repositories" }]}
+        breadcrumbs={[]}
+        title="Repositories"
         rootLink={false}
       />
       <div

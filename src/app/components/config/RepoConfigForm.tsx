@@ -9,6 +9,8 @@ interface RepoConfigFormProps {
   onCancel: () => void;
   loading?: boolean;
   breadcrumbs: BreadcrumbItem[];
+  title?: React.ReactNode;
+  rootLink?: boolean;
 }
 
 export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
@@ -18,6 +20,8 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
   onCancel,
   loading = false,
   breadcrumbs,
+  title,
+  rootLink,
 }) => {
   const handleChange = (key: keyof Config, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -25,7 +29,7 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
 
   return (
     <>
-      <Header breadcrumbs={breadcrumbs} />
+      <Header breadcrumbs={breadcrumbs} title={title} rootLink={rootLink} />
       <div
         className="ui container"
         // Add padding bottom to prevent content from being hidden behind footer

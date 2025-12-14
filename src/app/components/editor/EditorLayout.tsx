@@ -10,6 +10,7 @@ import { Content as V1Content, FileItem } from "@/shared/types.ts";
 
 export interface EditorLayoutProps {
   breadcrumbs: BreadcrumbItem[];
+  title?: React.ReactNode;
   isLocked: boolean;
   isSynced: boolean;
   isSaving: boolean;
@@ -43,6 +44,7 @@ export interface EditorLayoutProps {
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
   breadcrumbs,
+  title,
   isLocked,
   isSynced,
   isSaving,
@@ -70,6 +72,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
     <>
       <Header
         breadcrumbs={breadcrumbs}
+        title={title}
         rightContent={
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {prInfo && (

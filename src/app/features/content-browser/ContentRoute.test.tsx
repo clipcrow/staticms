@@ -50,7 +50,7 @@ Deno.test({
           <MemoryRouter initialEntries={["/user/repo/posts"]}>
             <Routes>
               <Route
-                path="/:owner/:repo/:collectionName"
+                path="/:owner/:repo/:content"
                 element={<ContentRoute />}
               />
             </Routes>
@@ -111,7 +111,7 @@ Deno.test({
           <MemoryRouter initialEntries={["/user/repo/site_settings"]}>
             <Routes>
               <Route
-                path="/:owner/:repo/:collectionName"
+                path="/:owner/:repo/:content"
                 element={<ContentRoute />}
               />
             </Routes>
@@ -158,7 +158,7 @@ Deno.test({
           <MemoryRouter initialEntries={["/user/repo/unknown-col"]}>
             <Routes>
               <Route
-                path="/:owner/:repo/:collectionName"
+                path="/:owner/:repo/:content"
                 element={<ContentRoute />}
               />
             </Routes>

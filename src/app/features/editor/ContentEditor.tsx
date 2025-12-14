@@ -36,8 +36,8 @@ export function ContentEditor(
   const location = useLocation();
   const owner = params.owner;
   const repo = params.repo;
-  const collectionName = propColName || params.collectionName;
-  const articleName = propArtName || params.articleName;
+  const contentName = propColName || params.content;
+  const articleName = propArtName || params.article;
   const { config } = useContentConfig(owner, repo);
   const { showToast } = useToast();
   const { username: _currentUser } = useAuth();
@@ -56,7 +56,7 @@ export function ContentEditor(
   const [isClosed, setIsClosed] = useState(false);
 
   const collection = config?.collections.find((c: Collection) =>
-    c.name === collectionName
+    c.name === contentName
   );
 
   // Resolve File Path and Folder
@@ -94,7 +94,7 @@ export function ContentEditor(
       ? "singleton"
       : (proposedSlug || "__new__"));
   const draftKey =
-    `staticms_draft_${user}|${owner}|${repo}|${branch}|${collectionName}/${effectiveArticleName}`;
+    `staticms_draft_${user}|${owner}|${repo}|${branch}|${contentName}/${effectiveArticleName}`;
 
   const { draft, setDraft, loaded, fromStorage, clearDraft, isSynced } =
     useDraft(
@@ -369,7 +369,7 @@ export function ContentEditor(
           // Clear the __new__ draft to prevent ghost drafts
           clearDraft();
           // Navigate to the new article URL to initialize proper draft state
-          navigate(`/${owner}/${repo}/${collectionName}/${finalSlug}`, {
+          navigate(`/${owner}/${repo}/${contentName}/${finalSlug}`, {
             replace: true,
           });
           return;
@@ -394,7 +394,7 @@ export function ContentEditor(
 
         if (mode === "new" && finalSlug) {
           clearDraft();
-          navigate(`/${owner}/${repo}/${collectionName}/${finalSlug}`, {
+          navigate(`/${owner}/${repo}/${contentName}/${finalSlug}`, {
             replace: true,
           });
         }
@@ -506,7 +506,7 @@ export function ContentEditor(
       }
 
       showToast("Deleted successfully", "success");
-      navigate(`/${owner}/${repo}/${collectionName}`);
+      navigate(`/${owner}/${repo}/${contentName}`);
     } catch (e) {
       console.error(e);
       showToast((e as Error).message, "error");
@@ -541,6 +541,8 @@ export function ContentEditor(
     type: "collection-files", // Simplified assumption
   };
 
+  const initialTitle = locationState?.initialTitle;
+
   const breadcrumbs: BreadcrumbItem[] = [
     {
       label: <RepoBreadcrumbLabel owner={owner!} repo={repo!} />,
@@ -548,23 +550,21 @@ export function ContentEditor(
     },
   ];
 
+  let title: React.ReactNode = "";
+
   if (collection) {
-    breadcrumbs.push({
-      label: collection.label || collection.path || collectionName ||
-        "Collection",
-      to: `/${owner}/${repo}/${collection.name}`,
-    });
-  }
-
-  // deno-lint-ignore no-explicit-any
-  const initialTitle = (location.state as any)?.initialTitle;
-
-  if (collection?.type !== "singleton") {
-    breadcrumbs.push({
-      label: mode === "new"
+    if (collection.type === "singleton") {
+      title = collection.label || collection.path || contentName || "Singleton";
+    } else {
+      breadcrumbs.push({
+        label: collection.label || collection.path || contentName ||
+          "Collection",
+        to: `/${owner}/${repo}/${collection.name}`,
+      });
+      title = mode === "new"
         ? (initialTitle || "New Content")
-        : effectiveArticleName,
-    });
+        : effectiveArticleName;
+    }
   }
 
   // Check if root is array
@@ -576,6 +576,7 @@ export function ContentEditor(
   return (
     <EditorLayout
       breadcrumbs={breadcrumbs}
+      title={title}
       isLocked={isLocked}
       isSynced={isSynced}
       isSaving={saving}

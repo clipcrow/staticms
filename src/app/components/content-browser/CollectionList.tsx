@@ -39,9 +39,9 @@ export const CollectionList: React.FC<CollectionListProps> = ({
           breadcrumbs={[
             {
               label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
-              to: `/${owner}/${repo}`,
             },
           ]}
+          title="Contents"
         />
         <div className="ui container" style={{ marginTop: "2rem" }}>
           <div className="ui placeholder segment">
@@ -80,9 +80,9 @@ export const CollectionList: React.FC<CollectionListProps> = ({
         breadcrumbs={[
           {
             label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
-            to: `/${owner}/${repo}`,
           },
         ]}
+        title="Contents"
       />
 
       <div

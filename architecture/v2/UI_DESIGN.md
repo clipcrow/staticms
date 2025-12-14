@@ -35,18 +35,17 @@ Staticms V2 の画面構成と遷移設計について定義します。 デザ�
 
 ```mermaid
 graph TD
-    RepoSelect[Repository Selection] -->|Select Repo| Dashboard[Content Dashboard]
-    RepoSelect -->|Settings| RepoSettings[Repository Settings]
+    RepoSelect[Repository Selection /] -->|Select Repo| Dashboard[Content Dashboard /:owner/:repo]
+    RepoSelect -->|Query: ?settings=...| RepoSettings[Repository Settings]
     
-    Dashboard -->|Select Collection| ArticleList[Article List]
-    Dashboard -->|Query: ?action=add| ConfigEditorNew[Content Config (New)]
-    Dashboard -->|Query: ?action=edit| ConfigEditor[Content Config (Edit)]
-    Dashboard -->|Settings Link| RepoSettings
+    Dashboard -->|Select Collection| ArticleList[Article List /:owner/:repo/:content]
+    Dashboard -->|Query: ?settings| ConfigEditorNew[Content Config (New)]
+    Dashboard -->|Query: ?settings=:content| ConfigEditor[Content Config (Edit)]
     
-    Dashboard -->|Select Singleton| Editor[Content Editor]
+    Dashboard -->|Select Singleton| Editor[Content Editor /:owner/:repo/:content]
     
-    ArticleList -->|Select Article| Editor
-    ArticleList -->|Create New Article| Editor
+    ArticleList -->|Select Article| EditorArticle[Article Editor /:owner/:repo/:content/:article]
+    ArticleList -->|Create New Article| EditorArticle
 ```
 
 ## 4. Screen Definitions
@@ -54,35 +53,44 @@ graph TD
 ### 4.1 Repository Selection (Root)
 
 - **Path**: `/`
+- **Settings Path**: `/?settings=:owner|:repo` (Repository Settings)
 - **UI**:
-  - **Header**: `[GitHub Icon]` (表示のみ・リンクなし)
+  - **Header**:
+    - List: `[GitHub Icon] Repositories`
+    - Settings: `[GitHub Icon] Repository Settings`
   - **Content**:
     - アクセス可能なリポジトリの一覧カード。
     - 各カードにはリポジトリ名に加え、**設定済みブランチ名**（デフォルトブランチと異なる場合）を表示。
   - **Actions**:
     - "Connect Repository" (Install App)。
-    - 各カードの "Settings" ボタン -> Repository Settings へ。
+    - 各カードの "Settings" ボタン -> Repository Settings (`/?settings=...`)
+      へ。
 
 ### 4.2 Content Dashboard (Content Browser)
 
 - **Path**: `/:owner/:repo`
+- **Config Path**:
+  - New: `/:owner/:repo?settings`
+  - Edit: `/:owner/:repo?settings=:content`
 - **UI**:
-  - **Header**: `[GitHub Icon] / Owner/Repo (Branch Label)`
+  - **Header**:
+    - Dashboard: `[GitHub Icon] > :owner/:repo (Branch) Contents`
+    - Config (New): `[GitHub Icon] > :owner/:repo (Branch) New Content`
+    - Config (Edit): `[GitHub Icon] > :owner/:repo (Branch) Content Settings`
   - **Toolbar**:
     - View Toggle (Card/List), Search, "Add New Content" ボタン。
   - **Content Cards**:
     - コンテンツ定義（Collection / Singleton）のカード一覧。
     - **Actions**:
-      - "Browse" (Collection) -> Article List へ
-      - "Edit" (Singleton) -> Content Editor へ
-      - "Edit Config" -> 同じパスでクエリ付加
-        `?action=edit&target=:collectionName`
+      - "Browse" (Collection) -> Article List (`/:owner/:repo/:content`) へ
+      - "Edit" (Singleton) -> Content Editor (`/:owner/:repo/:content`) へ
+      - "Edit Config" -> 同じパスでクエリ付加 `?settings=:content`
 
 ### 4.3 Article List
 
-- **Path**: `/:owner/:repo/:collectionName`
+- **Path**: `/:owner/:repo/:content`
 - **UI**:
-  - **Header**: `[GitHub Icon] / Owner/Repo (Branch Label) / :collectionName`
+  - **Header**: `[GitHub Icon] > :owner/:repo (Branch) > :contentName (or Path)`
   - **Toolbar**:
     - View Toggle (Card/List), Search, "New Article" ボタン (Create)。
   - **Content**:
@@ -90,16 +98,17 @@ graph TD
     - **削除機能**:
       一覧画面からの削除ボタンは廃止されました。各記事の編集画面へ移動して削除を行います。
 
-### 4.4 Content Editor
+### 4.4 Content / Article Editor
 
 - **Path**:
-  - Article: `/:owner/:repo/:collectionName/:articleName`
-  - Singleton: `/:owner/:repo/:singletonName`
+  - Singleton: `/:owner/:repo/:content`
+  - Article: `/:owner/:repo/:content/:article`
 - **UI**:
   - **Header**:
+    - Singleton:
+      `[GitHub Icon] > :owner/:repo (Branch) > :contentName (or Path) Edit Content`
     - Article:
-      `[GitHub Icon] / Owner/Repo (Branch Label) / :collectionName / :articleName`
-    - Singleton: `[GitHub Icon] / Owner/Repo (Branch Label) / :singletonName`
+      `[GitHub Icon] > :owner/:repo (Branch) > :content (Name or Path) > :article Edit Article`
     - **Right Content**: Status Indicators (Draft, In Review, Approved, etc.)
       を配置。
   - **Layout**:
@@ -114,12 +123,13 @@ graph TD
 
 ### 4.5 Content Config Editor (Overlay/View)
 
-- **Path**: `/:owner/:repo/config/:collectionName` (or `new`)
+- **Path**:
+  - New: `/:owner/:repo?settings`
+  - Edit: `/:owner/:repo?settings=:content`
 - **UI**:
   - **Header**:
-    - Edit:
-      `[GitHub Icon] / Owner/Repo (Branch Label) / Settings / :collectionName`
-    - New: `[GitHub Icon] / Owner/Repo (Branch Label) / Add Content`
+    - New: `[GitHub Icon] > :owner/:repo (Branch) New Content`
+    - Edit: `[GitHub Icon] > :owner/:repo (Branch) Content Settings`
   - **Form**: Type, Name, Path, Fields Definition.
   - **Fixed Footer**:
     - **Left**: Cancel, Save.
@@ -127,10 +137,9 @@ graph TD
 
 ### 4.6 Repository Settings
 
-- **Path**: `/:owner/:repo/settings`
+- **Path**: `/?settings=:owner|:repo`
 - **UI**:
-  - **Header**:
-    `[GitHub Icon] / Owner/Repo (Branch Label) / Repository Settings`
+  - **Header**: `[GitHub Icon] Repository Settings`
   - **Form**:
     - Branch Name: コンテンツ管理に使用するブランチ名（デフォルトは `main`
       またはリポジトリのデフォルトブランチ）。

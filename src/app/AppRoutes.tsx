@@ -27,8 +27,8 @@ export function AppRoutes({
   ContentBrowserComponent = ContentBrowser,
   ContentRouteComponent = ContentRoute,
   ContentEditorComponent = ContentEditor,
-  ConfigPageComponent = ConfigPage,
-  RepoConfigPageComponent = RepoConfigPage,
+  ConfigPageComponent: _ConfigPageComponent = ConfigPage,
+  RepoConfigPageComponent: _RepoConfigPageComponent = RepoConfigPage,
   ConfigDebuggerComponent = ConfigDebugger,
 }: AppRoutesProps) {
   return (
@@ -42,31 +42,11 @@ export function AppRoutes({
         }
       />
 
-      {/* Config Routes */}
-      <Route
-        path="/:owner/:repo/config/:collectionName"
-        element={
-          <RequireAuth>
-            <ConfigPageComponent />
-          </RequireAuth>
-        }
-      />
-
       <Route
         path="/:owner/:repo/debug"
         element={
           <RequireAuth>
             <ConfigDebuggerComponent />
-          </RequireAuth>
-        }
-      />
-
-      {/* Repo Settings Route */}
-      <Route
-        path="/:owner/:repo/settings"
-        element={
-          <RequireAuth>
-            <RepoConfigPageComponent />
           </RequireAuth>
         }
       />
@@ -80,30 +60,22 @@ export function AppRoutes({
         }
       />
 
-      {/* Content Editor Routes */}
+      {/* Content Routes (Article List or Singleton Editor) */}
       <Route
-        path="/:owner/:repo/:collectionName/new"
+        path="/:owner/:repo/:content"
         element={
           <RequireAuth>
-            <ContentEditorComponent mode="new" />
-          </RequireAuth>
-        }
-      />
-      <Route
-        path="/:owner/:repo/:collectionName/:articleName"
-        element={
-          <RequireAuth>
-            <ContentEditorComponent mode="edit" />
+            <ContentRouteComponent />
           </RequireAuth>
         }
       />
 
-      {/* Article List / Singleton Handling */}
+      {/* Article Editor Route */}
       <Route
-        path="/:owner/:repo/:collectionName"
+        path="/:owner/:repo/:content/:article"
         element={
           <RequireAuth>
-            <ContentRouteComponent />
+            <ContentEditorComponent mode="edit" />
           </RequireAuth>
         }
       />

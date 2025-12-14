@@ -1,20 +1,33 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { RepoConfigEditor } from "./RepoConfigEditor.tsx";
 import { Header } from "@/app/components/common/Header.tsx";
 
-export function RepoConfigPage() {
-  const { owner, repo } = useParams();
+interface RepoConfigPageProps {
+  owner?: string;
+  repo?: string;
+}
+
+export function RepoConfigPage({ owner, repo }: RepoConfigPageProps) {
   const navigate = useNavigate();
+  // Ensure owner/repo are present before calling hook, or hook should handle skip
   const { config, loading, error } = useContentConfig(owner, repo);
+
+  if (!owner || !repo) {
+    // Should not happen if called correctly
+    return null;
+  }
+
+  const handleBack = () => {
+    navigate("/");
+  };
 
   if (loading) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
         <Header
           breadcrumbs={[
-            { label: `${owner}/${repo}`, to: `/${owner}/${repo}` },
-            { label: "Settings" },
+            { label: "Repository Settings" },
           ]}
         />
         <div className="ui placeholder segment">
@@ -29,28 +42,29 @@ export function RepoConfigPage() {
   if (error || !config) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
+        <Header
+          breadcrumbs={[]}
+          title="Repository Settings"
+        />
         <div className="ui negative message">
           Error loading configuration: {error?.message || "Unknown error"}
+          <div style={{ marginTop: "1rem" }}>
+            <button type="button" className="ui button" onClick={handleBack}>
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  const handleCancel = () => {
-    navigate(`/${owner}/${repo}`);
-  };
-
-  const handleSave = () => {
-    navigate(`/${owner}/${repo}`);
-  };
-
   return (
     <RepoConfigEditor
-      owner={owner!}
-      repo={repo!}
+      owner={owner}
+      repo={repo}
       initialConfig={config}
-      onCancel={handleCancel}
-      onSave={handleSave}
+      onCancel={handleBack}
+      onSave={handleBack}
     />
   );
 }

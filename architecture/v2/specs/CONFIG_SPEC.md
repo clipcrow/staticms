@@ -12,7 +12,7 @@
 
 リポジトリ全体に適用される共通設定を管理する画面です。
 
-- **URL**: `/:owner/:repo/settings`
+- **URL**: `/?settings=:owner|:repo`
 - **アクセス元**: リポジトリ一覧 (`/`)
   の各カード・行にある設定ボタン、またはアプリ内ナビゲーション。
 
@@ -40,7 +40,7 @@
 
 個別のコンテンツユニット（コレクションまたはシングルトン）の定義を追加・編集する画面です。
 
-- **URL**: `/:owner/:repo/config/:collectionName`
+- **URL**: `/:owner/:repo?settings=:content` (or `?settings` for new)
 
 ### UI 構成
 

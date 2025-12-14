@@ -2,7 +2,6 @@ import { useState } from "react";
 import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { RepoConfigForm } from "@/app/components/config/RepoConfigForm.tsx";
-import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 
 interface RepoConfigEditorProps {
   owner: string;
@@ -99,15 +98,8 @@ export function RepoConfigEditor({
         setConfig={setConfig}
         onSave={handleSubmit}
         onCancel={onCancel}
-        breadcrumbs={[
-          { label: "Home", to: "/" },
-          { label: "Repositories", to: "/repositories" },
-          {
-            label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
-            to: `/${owner}/${repo}`,
-          },
-          { label: "Settings", to: `/${owner}/${repo}/settings` },
-        ]}
+        breadcrumbs={[]}
+        title="Repository Settings"
         loading={saving}
       />
     </div>

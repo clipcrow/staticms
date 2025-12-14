@@ -9,8 +9,8 @@ import {
 } from "@/app/components/common/Feedback.tsx";
 
 export function ContentRoute() {
-  const { owner, repo, collectionName } = useParams();
-  // Assume collectionName corresponds to collectionName or singletonName based on config
+  const { owner, repo, content } = useParams();
+  // Assume content corresponds to collectionName or singletonName based on config
   const { config, loading, error } = useContentConfig(owner, repo);
 
   if (loading) {
@@ -25,12 +25,12 @@ export function ContentRoute() {
     );
   }
 
-  const def = config?.collections.find((c) => c.name === collectionName);
+  const def = config?.collections.find((c) => c.name === content);
 
   if (!def) {
     return (
       <WarningCallout>
-        Content "{collectionName}" not found in configuration.
+        Content "{content}" not found in configuration.
       </WarningCallout>
     );
   }

@@ -15,15 +15,15 @@ export function ContentList({ collections, owner, repo }: ContentListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddNewContent = () => {
-    navigate(`/${owner}/${repo}/config/new`);
+    navigate("?settings");
   };
 
   const handleSelectContent = (collectionName: string) => {
-    navigate(`/${owner}/${repo}/${collectionName}`);
+    navigate(collectionName);
   };
 
   const handleSettingsClick = (collectionName: string) => {
-    navigate(`/${owner}/${repo}/config/${collectionName}`);
+    navigate(`?settings=${collectionName}`);
   };
 
   return (

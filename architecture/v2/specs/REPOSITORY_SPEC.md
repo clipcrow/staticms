@@ -59,7 +59,7 @@ Staticms GitHub App
 ### 5. リポジトリ設定 (Repository Settings)
 
 リポジトリリスト内の設定ボタン (`cog` アイコン) から、リポジトリごとの設定画面
-(`/:owner/:repo/settings`) へ遷移します。
+(`/?settings=:owner|:repo`) へ遷移します。
 
 - **Config**: 編集対象ブランチ（Branch）の指定など。
 - **Logic**:

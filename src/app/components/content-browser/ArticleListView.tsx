@@ -77,14 +77,12 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
               to: `/${owner}/${repo}`,
             },
-            {
-              label: (
-                <>
-                  {collectionName || ""} <small>({branch})</small>
-                </>
-              ),
-            },
           ]}
+          title={
+            <>
+              {collectionName || "Articles"} <small>({branch})</small>
+            </>
+          }
         />
         <div className="ui placeholder segment">
           <div className="ui active inverted dimmer">
@@ -123,11 +121,9 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
             label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
             to: `/${owner}/${repo}`,
           },
-          {
-            label: collectionDef.label || collectionDef.path ||
-              collectionName || "",
-          },
         ]}
+        title={collectionDef.label || collectionDef.path ||
+          collectionName || "Articles"}
       />
       <div
         className="ui container"

@@ -9,12 +9,14 @@ export interface BreadcrumbItem {
 
 interface HeaderProps {
   breadcrumbs?: BreadcrumbItem[];
+  title?: React.ReactNode;
   rightContent?: React.ReactNode;
   rootLink?: boolean;
 }
 
 export const Header = ({
   breadcrumbs,
+  title,
   rightContent,
   rootLink = true,
 }: HeaderProps) => {
@@ -50,57 +52,65 @@ export const Header = ({
             </div>
           )}
 
-        {breadcrumbs && (
-          <>
-            <div className="ui breadcrumb staticms-header-breadcrumb">
-              {/* Root GitHub Icon */}
-              {rootLink
-                ? (
-                  // @ts-ignore: React 19 types issue
-                  <Link to="/" className="section">
-                    <i className="github icon"></i>
-                  </Link>
-                )
-                : (
-                  <div className="section">
-                    <i className="github icon"></i>
-                  </div>
-                )}
+        {(breadcrumbs || title) && (
+          <div
+            className="ui breadcrumb staticms-header-breadcrumb"
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            {/* Root GitHub Icon */}
+            {rootLink
+              ? (
+                // @ts-ignore: React 19 types issue
+                <Link to="/" className="section">
+                  <i className="github icon"></i>
+                </Link>
+              )
+              : (
+                <div className="section">
+                  <i className="github icon"></i>
+                </div>
+              )}
 
-              {breadcrumbs.map((item, index) => {
-                const isLast = index === breadcrumbs.length - 1;
-                // If rootLink is effectively disabled (false), we treat the first breadcrumb as a caption,
-                // so we skip the divider between the root icon and the first item.
-                const showDivider = !(index === 0 && !rootLink);
+            {/* Breadcrumbs (Path) */}
+            {breadcrumbs?.map((item, index) => (
+              <React.Fragment key={index}>
+                <i className="right chevron icon divider"></i>
+                {item.to
+                  ? (
+                    // @ts-ignore: React 19 types issue
+                    <Link to={item.to} className="section">
+                      {item.label}
+                    </Link>
+                  )
+                  : item.onClick
+                  ? (
+                    <span
+                      className="section clickable"
+                      onClick={item.onClick}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {item.label}
+                    </span>
+                  )
+                  : <div className="section">{item.label}</div>}
+              </React.Fragment>
+            ))}
 
-                return (
-                  <React.Fragment key={index}>
-                    {showDivider && (
-                      <i className="right chevron icon divider"></i>
-                    )}
-                    {!isLast && item.to
-                      ? (
-                        // @ts-ignore: React 19 types issue
-                        <Link to={item.to} className="section">
-                          {item.label}
-                        </Link>
-                      )
-                      : !isLast && item.onClick
-                      ? (
-                        <span
-                          className="section clickable"
-                          onClick={item.onClick}
-                          style={{ cursor: "pointer" }}
-                        >
-                          {item.label}
-                        </span>
-                      )
-                      : <div className="active section">{item.label}</div>}
-                  </React.Fragment>
-                );
-              })}
-            </div>
-          </>
+            {title && (
+              <div
+                className="section"
+                style={{
+                  fontWeight: "800",
+                  fontSize: "1.5rem",
+                  marginLeft: "0.8rem",
+                  color: "#1F2328",
+                  lineHeight: "1.25",
+                }}
+              >
+                {title}
+              </div>
+            )}
+          </div>
         )}
       </div>
       <div className="staticms-header-end">

@@ -7,7 +7,7 @@ import { FileItem } from "@/shared/types.ts";
 import { ArticleListView } from "@/app/components/content-browser/ArticleListView.tsx";
 
 export function ArticleList() {
-  const { owner, repo, collectionName } = useParams();
+  const { owner, repo, content } = useParams();
   const navigate = useNavigate();
   const { config, loading: configLoading, error: configError } =
     useContentConfig(owner, repo);
@@ -15,10 +15,8 @@ export function ArticleList() {
   const branch = repository?.configured_branch || repository?.default_branch ||
     "main";
 
-  // We use collectionName as the key to find definition
-  const collectionDef = config?.collections.find((c) =>
-    c.name === collectionName
-  );
+  // We use content as the key to find definition
+  const collectionDef = config?.collections.find((c) => c.name === content);
   const folder = collectionDef?.path || collectionDef?.folder;
   const binding = collectionDef?.binding || "file";
 
@@ -38,10 +36,10 @@ export function ArticleList() {
 
   // Scan for local drafts
   useEffect(() => {
-    if (!collectionName) return;
+    if (!content) return;
     const user = localStorage.getItem("staticms_user") || "anonymous";
     const draftPrefix =
-      `staticms_draft_${user}|${owner}|${repo}|${branch}|${collectionName}/`;
+      `staticms_draft_${user}|${owner}|${repo}|${branch}|${content}/`;
 
     const found: FileItem[] = [];
     for (let i = 0; i < localStorage.length; i++) {
@@ -71,7 +69,7 @@ export function ArticleList() {
       }
     }
     setLocalDrafts(found);
-  }, [owner, repo, branch, collectionName, binding, folder, viewMode]);
+  }, [owner, repo, branch, content, binding, folder, viewMode]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -121,7 +119,7 @@ export function ArticleList() {
 
   const handleCreateArticle = () => {
     if (!newArticleName.trim()) return;
-    navigate(`/${owner}/${repo}/${collectionName}/new`, {
+    navigate(`/${owner}/${repo}/${content}/new`, {
       state: { initialTitle: newArticleName },
     });
   };
@@ -139,7 +137,7 @@ export function ArticleList() {
       // path: content/posts/foo.md -> foo.md
       target = path.split("/").pop() || "";
     }
-    navigate(`/${owner}/${repo}/${collectionName}/${target}`);
+    navigate(`/${owner}/${repo}/${content}/${target}`);
   };
 
   const handleDelete = async () => {
@@ -182,7 +180,7 @@ export function ArticleList() {
       owner={owner!}
       repo={repo!}
       branch={branch}
-      collectionName={collectionName!}
+      collectionName={content!}
       collectionDef={collectionDef}
       files={paginatedFiles}
       loading={isLoading}

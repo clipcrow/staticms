@@ -60,7 +60,7 @@ Deno.test({
           <MemoryRouter initialEntries={["/user/repo/settings"]}>
             <Routes>
               <Route
-                path="/:owner/:repo/:collectionName"
+                path="/:owner/:repo/:content"
                 element={<ContentEditor />}
               />
             </Routes>

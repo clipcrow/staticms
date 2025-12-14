@@ -15,6 +15,7 @@ interface ConfigFormProps {
   repoInfo: { owner: string; repo: string };
   loading?: boolean;
   breadcrumbs: BreadcrumbItem[];
+  title?: React.ReactNode;
 }
 
 export const ConfigForm: React.FC<ConfigFormProps> = ({
@@ -27,6 +28,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
   repoInfo,
   loading = false,
   breadcrumbs,
+  title,
 }) => {
   // Initialize type/binding if missing (e.g. fresh add)
   useEffect(() => {
@@ -64,7 +66,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
   return (
     <>
-      <Header breadcrumbs={breadcrumbs} />
+      <Header breadcrumbs={breadcrumbs} title={title} />
       <div
         className="ui container"
         style={{ marginTop: "2rem", paddingBottom: "100px" }}

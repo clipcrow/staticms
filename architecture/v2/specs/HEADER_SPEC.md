@@ -40,45 +40,17 @@ Header）の詳細仕様を定義します。 StaticMS v2
 ### A. リポジトリ選択画面 (`RepositorySelector`)
 
 - **Breadcrumbs**: `Repositories` (固定)
+- **Settings Breadcrumbs**: `Repository Settings` (クエリ `?settings=...` 時)
 - **Actions**:
   1. **Search/Filter**:
-     リポジトリ検索・絞り込み入力欄（UI上のスペース許容範囲でヘッダーに配置、またはメインエリア上部）。
-  2. **View Toggle**:
-     - `Card View` (Grid Icon) / `List View` (List Icon) の排他切替。
-     - 状態は `localStorage` に保存。
-  3. **Connect Repository**: `Connect` ボタン (Secondary)。
-
-### B. コンテンツ一覧画面 (`ContentList`)
-
-- **Breadcrumbs**: `Owner / Repo`
-- **Actions**:
-  1. **View Toggle**: `Card` / `List` 切替。
-  2. **Add Content**: `Add Content` ボタン (Primary)。設定画面へ遷移。
-
-### C. 記事一覧画面 (`ArticleList`)
-
-- **Breadcrumbs**: `Owner / Repo > Collection`
-- **Actions**:
-  1. **View Toggle**: `Card` / `List` 切替。
-  2. **New Article Form**:
-     - `Input`: 新規記事名入力欄。
-     - `Button`: `Create` ボタン (Primary)。
-
-### D. 記事エディタ画面 (`ContentEditor`)
-
-- **Breadcrumbs**: `Owner / Repo > Collection > Filename`
-- **Actions**:
-  1. **Status Indicator**:
-     - `Draft Restored` (Label, Orange): ローカルドラフト復元時。
-     - `Locked by PR #123` (Link): PRロック時。
-  2. **Edit Actions**:
-     - `Reset`: ドラフト破棄ボタン (Negative/Basic)。
      - `Save / Update PR`: 保存ボタン (Primary)。
        - 保存中は `Saving...` (Loading Spinner)。
 
 ### E. 設定編集画面 (`ContentConfigEditor`)
 
-- **Breadcrumbs**: `Owner / Repo > Settings` (or `Add Content`)
+- **Breadcrumbs**:
+  - New: `Owner / Repo (Branch) New Content`
+  - Edit: `Owner / Repo (Branch) Content Settings`
 - **Actions**:
   1. **Cancel**: 戻るボタン。
   2. **Save**: `Save Config` ボタン (Primary)。

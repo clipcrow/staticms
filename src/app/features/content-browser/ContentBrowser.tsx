@@ -14,8 +14,8 @@ export function ContentBrowser() {
 
   if (!owner || !repo) return null;
 
-  const action = searchParams.get("action");
-  const target = searchParams.get("target");
+  const hasSettings = searchParams.has("settings");
+  const settingsValue = searchParams.get("settings") || "";
 
   const handleCancel = () => {
     setSearchParams({}); // Clear params to show dashboard
@@ -26,7 +26,8 @@ export function ContentBrowser() {
     globalThis.location.href = `/${owner}/${repo}`;
   };
 
-  const isEditing = action === "add" || (action === "edit" && target);
+  const isEditing = hasSettings;
+  const mode = settingsValue ? "edit" : "add";
 
   if (loading) {
     return (
@@ -56,9 +57,9 @@ export function ContentBrowser() {
             owner={owner}
             repo={repo}
             config={config}
-            mode={action as "add" | "edit"}
-            initialData={action === "edit"
-              ? config.collections.find((c) => c.name === target)
+            mode={mode as "add" | "edit"}
+            initialData={mode === "edit"
+              ? config.collections.find((c) => c.name === settingsValue)
               : undefined}
             onCancel={handleCancel}
             onSave={handleSave}

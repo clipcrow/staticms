@@ -16,7 +16,7 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 ### UI 構成
 
 - **ヘッダー**:
-  - **Breadcrumbs**: `Owner/Repo (Branch Label)` (現在地)
+  - **Breadcrumbs**: `Owner/Repo (Branch)` (現在地)
 - **Toolbar**:
   - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。
   - **Search Input**: コンテンツ名でリアルタイムフィルタリングするための入力欄。
@@ -32,20 +32,21 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
       `Draft (3)`）。
     - **Singleton**: 単体のステータス（`Draft`, `PR`）を表示。
   - **Actions**: カード右下に「設定」(`cog` アイコン)
-    ボタンを配置。クリックで設定編集画面へ遷移。
+    ボタンを配置。クリックで設定編集画面 (`?settings=:content`) へ遷移。
 - **List View**:
   - 省スペースなテーブル表示。
   - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`
     (Collectionの場合は集計数を表示), `Last Modified`, `Actions`。
   - **Actions**:
-    - **Settings**: `cog` アイコン。クリックで設定編集画面へ遷移。
+    - **Settings**: `cog` アイコン。クリックで設定編集画面
+      (`?settings=:content`) へ遷移。
 
 ### インタラクション
 
 - カード全体がクリッカブルエリア。
 - コレクション -> `ArticleList` 画面へ。
 - シングルトン -> `ContentEditor` 画面へ。
-- 設定ボタン -> コンテンツ設定編集画面 (`/config/:collectionName`) へ。
+- 設定ボタン -> コンテンツ設定編集画面 (`/:owner/:repo?settings=:content`) へ。
 
 ### データフロー
 
@@ -61,7 +62,7 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 ### UI 構成
 
 - **ヘッダー**:
-  - **Breadcrumbs**: `Owner/Repo (Branch Label) > CollectionName`
+  - **Breadcrumbs**: `Owner/Repo (Branch) > CollectionName`
     - ブランチラベルが表示され、ブランチ切り替え中はローディング状態を維持する。
 - **Toolbar**:
   - **View Toggle**: 表示モード切替 (`th` / `list`)。`localStorage` で維持。

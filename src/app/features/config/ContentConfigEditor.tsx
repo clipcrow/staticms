@@ -147,8 +147,8 @@ export function ContentConfigEditor({
       label: <RepoBreadcrumbLabel owner={owner} repo={repo} />,
       to: `/${owner}/${repo}`,
     },
-    { label: "Configuration" },
   ];
+  const title = mode === "add" ? "New Content" : "Content Settings";
 
   return (
     <ConfigForm
@@ -161,6 +161,7 @@ export function ContentConfigEditor({
       repoInfo={{ owner, repo }}
       loading={saving}
       breadcrumbs={breadcrumbs}
+      title={title}
     />
   );
 }
