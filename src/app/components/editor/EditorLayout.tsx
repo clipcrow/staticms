@@ -1,5 +1,4 @@
 import React from "react";
-import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
 import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FrontMatterItemEditor } from "@/app/components/editor/FrontMatterItemEditor.tsx";
 import { YamlListEditor } from "@/app/components/editor/YamlListEditor.tsx";
@@ -9,14 +8,9 @@ import { Collection } from "@/app/hooks/useContentConfig.ts";
 import { Content as V1Content, FileItem } from "@/shared/types.ts";
 
 export interface EditorLayoutProps {
-  breadcrumbs: BreadcrumbItem[];
-  title?: React.ReactNode;
   isLocked: boolean;
   isSynced: boolean;
   isSaving: boolean;
-  isMerged: boolean;
-  isClosed: boolean;
-  fromStorage: boolean;
   prInfo?: { url: string; number: number; state: string } | null;
 
   draft: {
@@ -43,14 +37,9 @@ export interface EditorLayoutProps {
 }
 
 export const EditorLayout: React.FC<EditorLayoutProps> = ({
-  breadcrumbs,
-  title,
   isLocked,
   isSynced,
   isSaving,
-  isMerged,
-  isClosed,
-  fromStorage,
   prInfo,
   draft,
   collection,
@@ -70,59 +59,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 }) => {
   return (
     <>
-      <Header
-        breadcrumbs={breadcrumbs}
-        title={title}
-        rightContent={
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            {prInfo && (
-              <a
-                href={prInfo.url}
-                target="_blank"
-                rel="noreferrer"
-                className="ui horizontal label teal medium"
-                title="View Pull Request on GitHub"
-              >
-                <i className="eye icon"></i>
-                In Review (#{prInfo.number})
-              </a>
-            )}
-
-            {!isSynced && (
-              <div
-                className="ui horizontal label orange medium"
-                title={fromStorage
-                  ? "Restored from local backup"
-                  : "Unsaved local changes"}
-              >
-                <i className="pencil alternate icon"></i>
-                {fromStorage ? "Draft Restored" : "Draft"}
-              </div>
-            )}
-
-            {isMerged && !prInfo && isSynced && (
-              <div
-                className="ui horizontal label purple medium"
-                title="Pull Request was merged successfully"
-              >
-                <i className="check circle icon"></i>
-                Approved
-              </div>
-            )}
-
-            {isClosed && !prInfo && isSynced && (
-              <div
-                className="ui horizontal label red medium"
-                title="Pull Request was closed without merge"
-              >
-                <i className="times circle icon"></i>
-                Declined
-              </div>
-            )}
-          </div>
-        }
-      />
-
       <div
         className="ui container content-editor"
         style={{ marginTop: "2rem", paddingBottom: "80px" }}

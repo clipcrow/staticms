@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { assertEquals } from "@std/assert";
 import { RepositorySelector } from "./RepositorySelector.tsx";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 Deno.test({
   name: "RepositorySelector fetches and displays repos",
@@ -10,9 +11,11 @@ Deno.test({
   sanitizeResources: false,
   fn: async () => {
     const { findByText, container } = render(
-      <MemoryRouter>
-        <RepositorySelector />
-      </MemoryRouter>,
+      <HeaderProvider>
+        <MemoryRouter>
+          <RepositorySelector />
+        </MemoryRouter>
+      </HeaderProvider>,
     );
 
     // Wait for items to appear (this implicitly waits for loading to disappear)

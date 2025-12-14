@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { stub } from "@std/testing/mock";
 import { ContentRoute } from "./ContentRoute.tsx";
 import { ToastProvider } from "@/app/contexts/ToastContext.tsx";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 const MOCK_CONFIG = `
 collections:
@@ -46,16 +47,18 @@ Deno.test({
 
     try {
       const { findByPlaceholderText, queryByTestId } = render(
-        <ToastProvider>
-          <MemoryRouter initialEntries={["/user/repo/posts"]}>
-            <Routes>
-              <Route
-                path="/:owner/:repo/:content"
-                element={<ContentRoute />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </ToastProvider>,
+        <HeaderProvider>
+          <ToastProvider>
+            <MemoryRouter initialEntries={["/user/repo/posts"]}>
+              <Routes>
+                <Route
+                  path="/:owner/:repo/:content"
+                  element={<ContentRoute />}
+                />
+              </Routes>
+            </MemoryRouter>
+          </ToastProvider>
+        </HeaderProvider>,
       );
 
       // Should render ArticleList -> "Filter articles..." input
@@ -107,16 +110,18 @@ Deno.test({
 
     try {
       const { findByTestId, queryByPlaceholderText } = render(
-        <ToastProvider>
-          <MemoryRouter initialEntries={["/user/repo/site_settings"]}>
-            <Routes>
-              <Route
-                path="/:owner/:repo/:content"
-                element={<ContentRoute />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </ToastProvider>,
+        <HeaderProvider>
+          <ToastProvider>
+            <MemoryRouter initialEntries={["/user/repo/site_settings"]}>
+              <Routes>
+                <Route
+                  path="/:owner/:repo/:content"
+                  element={<ContentRoute />}
+                />
+              </Routes>
+            </MemoryRouter>
+          </ToastProvider>
+        </HeaderProvider>,
       );
 
       // Should render ContentEditor -> ContentEditor -> MockMDEditor
@@ -154,16 +159,18 @@ Deno.test({
 
     try {
       const { findByText } = render(
-        <ToastProvider>
-          <MemoryRouter initialEntries={["/user/repo/unknown-col"]}>
-            <Routes>
-              <Route
-                path="/:owner/:repo/:content"
-                element={<ContentRoute />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </ToastProvider>,
+        <HeaderProvider>
+          <ToastProvider>
+            <MemoryRouter initialEntries={["/user/repo/unknown-col"]}>
+              <Routes>
+                <Route
+                  path="/:owner/:repo/:content"
+                  element={<ContentRoute />}
+                />
+              </Routes>
+            </MemoryRouter>
+          </ToastProvider>
+        </HeaderProvider>,
       );
 
       await findByText('Content "unknown-col" not found in configuration.');

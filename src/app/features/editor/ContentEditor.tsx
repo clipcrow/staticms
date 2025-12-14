@@ -8,6 +8,7 @@ import { useRepository } from "@/app/hooks/useRepositories.ts";
 import yaml from "js-yaml";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
+import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 
 // Presenter
 import { EditorLayout } from "@/app/components/editor/EditorLayout.tsx";
@@ -520,34 +521,8 @@ export function ContentEditor(
     }
   };
 
-  if (!collection || !config || !branchReady) {
-    return <div className="ui active centered inline loader"></div>;
-  }
-
-  // Adapter: Convert v2 collection/config to v1 Content interface
-  const v1Fields: V1Field[] = collection.fields?.map((f) => ({
-    name: f.name,
-    value: "",
-    defaultValue: "",
-    widget: f.widget,
-    label: f.label,
-    options: f.options,
-    required: f.required,
-  })) || [];
-
-  const currentContent: V1Content = {
-    owner: owner || "",
-    repo: repo || "",
-    filePath: folder
-      ? `${folder}/${effectiveArticleName}`
-      : effectiveArticleName,
-    fields: v1Fields,
-    name: effectiveArticleName,
-    type: "collection-files", // Simplified assumption
-  };
-
+  // Header Logic
   const initialTitle = locationState?.initialTitle;
-
   const breadcrumbs: BreadcrumbItem[] = [
     {
       label: (
@@ -576,7 +551,86 @@ export function ContentEditor(
         ? (initialTitle || "New Content")
         : effectiveArticleName;
     }
+  } else if (contentName) {
+    title = contentName;
   }
+
+  const rightContent = (
+    <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+      {draft.pr && (
+        <a
+          href={draft.pr.url}
+          target="_blank"
+          rel="noreferrer"
+          className="ui horizontal label teal medium"
+          title="View Pull Request on GitHub"
+        >
+          <i className="eye icon"></i>
+          In Review (#{draft.pr.number})
+        </a>
+      )}
+
+      {!isSynced && (
+        <div
+          className="ui horizontal label orange medium"
+          title={fromStorage
+            ? "Restored from local backup"
+            : "Unsaved local changes"}
+        >
+          <i className="pencil alternate icon"></i>
+          {fromStorage ? "Draft Restored" : "Draft"}
+        </div>
+      )}
+
+      {isMerged && !draft.pr && isSynced && (
+        <div
+          className="ui horizontal label purple medium"
+          title="Pull Request was merged successfully"
+        >
+          <i className="check circle icon"></i>
+          Approved
+        </div>
+      )}
+
+      {isClosed && !draft.pr && isSynced && (
+        <div
+          className="ui horizontal label red medium"
+          title="Pull Request was closed without merge"
+        >
+          <i className="times circle icon"></i>
+          Declined
+        </div>
+      )}
+    </div>
+  );
+
+  useSetHeader(breadcrumbs, title, rightContent);
+
+  if (!collection || !config || !branchReady) {
+    return <div className="ui active centered inline loader"></div>;
+  }
+
+  // Adapter: Convert v2 collection/config to v1 Content interface
+  const v1Fields: V1Field[] = collection.fields?.map((f) => ({
+    name: f.name,
+    value: "",
+    defaultValue: "",
+    widget: f.widget,
+    label: f.label,
+    options: f.options,
+    required: f.required,
+  })) || [];
+
+  const currentContent: V1Content = {
+    owner: owner || "",
+    repo: repo || "",
+    filePath: folder
+      ? `${folder}/${effectiveArticleName}`
+      : effectiveArticleName,
+    fields: v1Fields,
+    name: effectiveArticleName,
+    type: "collection-files", // Simplified assumption
+  };
 
   // Check if root is array
   const isListMode = isYamlMode && Array.isArray(draft.frontMatter);
@@ -586,14 +640,9 @@ export function ContentEditor(
 
   return (
     <EditorLayout
-      breadcrumbs={breadcrumbs}
-      title={title}
       isLocked={isLocked}
       isSynced={isSynced}
       isSaving={saving}
-      isMerged={isMerged}
-      isClosed={isClosed}
-      fromStorage={!!fromStorage}
       prInfo={draft.pr as { url: string; number: number; state: string } | null}
       draft={{
         frontMatter: draft.frontMatter as FrontMatterObject | FrontMatterList,

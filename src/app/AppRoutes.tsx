@@ -8,6 +8,7 @@ import { ConfigPage } from "@/app/features/config/ConfigPage.tsx";
 import { RepoConfigPage } from "@/app/features/config/RepoConfigPage.tsx";
 import { RequireAuth } from "@/app/features/auth/RequireAuth.tsx";
 import { NotFound } from "@/app/components/common/NotFound.tsx";
+import { MainLayout } from "@/app/components/layout/MainLayout.tsx";
 
 import { ConfigDebugger } from "@/app/features/debug/ConfigDebugger.tsx";
 
@@ -34,51 +35,39 @@ export function AppRoutes({
   return (
     <Routes>
       <Route
-        path="/"
         element={
           <RequireAuth>
-            <RepositorySelectorComponent />
+            <MainLayout />
           </RequireAuth>
         }
-      />
+      >
+        <Route
+          path="/"
+          element={<RepositorySelectorComponent />}
+        />
 
-      <Route
-        path="/:owner/:repo/debug"
-        element={
-          <RequireAuth>
-            <ConfigDebuggerComponent />
-          </RequireAuth>
-        }
-      />
+        <Route
+          path="/:owner/:repo/debug"
+          element={<ConfigDebuggerComponent />}
+        />
 
-      <Route
-        path="/:owner/:repo"
-        element={
-          <RequireAuth>
-            <ContentBrowserComponent />
-          </RequireAuth>
-        }
-      />
+        <Route
+          path="/:owner/:repo"
+          element={<ContentBrowserComponent />}
+        />
 
-      {/* Content Routes (Article List or Singleton Editor) */}
-      <Route
-        path="/:owner/:repo/:content"
-        element={
-          <RequireAuth>
-            <ContentRouteComponent />
-          </RequireAuth>
-        }
-      />
+        {/* Content Routes (Article List or Singleton Editor) */}
+        <Route
+          path="/:owner/:repo/:content"
+          element={<ContentRouteComponent />}
+        />
 
-      {/* Article Editor Route */}
-      <Route
-        path="/:owner/:repo/:content/:article"
-        element={
-          <RequireAuth>
-            <ContentEditorComponent mode="edit" />
-          </RequireAuth>
-        }
-      />
+        {/* Article Editor Route */}
+        <Route
+          path="/:owner/:repo/:content/:article"
+          element={<ContentEditorComponent mode="edit" />}
+        />
+      </Route>
 
       {/* Not Found */}
       <Route path="*" element={<NotFound />} />

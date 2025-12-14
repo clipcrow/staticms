@@ -4,6 +4,19 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { stub } from "@std/testing/mock";
 import { ContentEditor } from "./ContentEditor.tsx";
 import { ToastProvider } from "@/app/contexts/ToastContext.tsx";
+import { HeaderProvider, useHeader } from "@/app/contexts/HeaderContext.tsx";
+import { Header } from "@/app/components/common/Header.tsx";
+
+function TestHeader() {
+  const { breadcrumbs, title, rightContent } = useHeader();
+  return (
+    <Header
+      breadcrumbs={breadcrumbs}
+      title={title}
+      rightContent={rightContent}
+    />
+  );
+}
 
 const MOCK_CONFIG = `
 collections:
@@ -75,16 +88,23 @@ function setupAndRender(_path: string, initialEntries: string[]) {
   );
 
   const utils = render(
-    <ToastProvider>
-      <MemoryRouter initialEntries={initialEntries}>
-        <Routes>
-          <Route
-            path="/:owner/:repo/:collectionName/new"
-            element={<ContentEditor mode="new" />}
-          />
-        </Routes>
-      </MemoryRouter>
-    </ToastProvider>,
+    <HeaderProvider>
+      <ToastProvider>
+        <MemoryRouter initialEntries={initialEntries}>
+          <Routes>
+            <Route
+              path="/:owner/:repo/:collectionName/new"
+              element={
+                <>
+                  <TestHeader />
+                  <ContentEditor mode="new" />
+                </>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </ToastProvider>
+    </HeaderProvider>,
   );
 
   return {

@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@/app/components/common/Header.tsx";
+import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
@@ -34,43 +34,41 @@ export const CollectionList: React.FC<CollectionListProps> = ({
   onSettings,
   onAdd,
 }) => {
+  const breadcrumbs = [
+    {
+      label: (
+        <RepoBreadcrumbLabel
+          owner={owner}
+          repo={repo}
+          branch={branch}
+        />
+      ),
+    },
+  ];
+
+  useSetHeader(breadcrumbs, "Contents");
+
   if (!collections || collections.length === 0) {
     return (
-      <>
-        <Header
-          breadcrumbs={[
-            {
-              label: (
-                <RepoBreadcrumbLabel
-                  owner={owner}
-                  repo={repo}
-                  branch={branch}
-                />
-              ),
-            },
-          ]}
-          title="Contents"
-        />
-        <div className="ui container" style={{ marginTop: "2rem" }}>
-          <div className="ui placeholder segment">
-            <div className="ui icon header">
-              <i className="file alternate outline icon"></i>
-              No content definitions found.
-            </div>
-            <div className="inline">
-              <p>Start by adding your first content collection.</p>
-              <button
-                type="button"
-                className="ui primary button"
-                onClick={onAdd}
-              >
-                <i className="plus icon"></i>
-                Add New Content
-              </button>
-            </div>
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui placeholder segment">
+          <div className="ui icon header">
+            <i className="file alternate outline icon"></i>
+            No content definitions found.
+          </div>
+          <div className="inline">
+            <p>Start by adding your first content collection.</p>
+            <button
+              type="button"
+              className="ui primary button"
+              onClick={onAdd}
+            >
+              <i className="plus icon"></i>
+              Add New Content
+            </button>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -84,17 +82,6 @@ export const CollectionList: React.FC<CollectionListProps> = ({
 
   return (
     <>
-      <Header
-        breadcrumbs={[
-          {
-            label: (
-              <RepoBreadcrumbLabel owner={owner} repo={repo} branch={branch} />
-            ),
-          },
-        ]}
-        title="Contents"
-      />
-
       <div
         className="ui container"
         style={{ marginTop: "1rem", marginBottom: "1rem" }}

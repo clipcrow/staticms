@@ -12,6 +12,7 @@ import { assertSpyCalls, stub } from "@std/testing/mock";
 import { MemoryRouter } from "react-router-dom";
 import { RepoConfigEditor } from "./RepoConfigEditor.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 const MOCK_CONFIG: Config = {
   branch: "main",
@@ -29,15 +30,17 @@ Deno.test({
   name: "RepoConfigEditor: Renders form with initial config",
   fn: () => {
     const { getByDisplayValue, getAllByText } = render(
-      <MemoryRouter>
-        <RepoConfigEditor
-          owner="testuser"
-          repo="testrepo"
-          initialConfig={MOCK_CONFIG}
-          onCancel={() => {}}
-          onSave={() => {}}
-        />
-      </MemoryRouter>,
+      <HeaderProvider>
+        <MemoryRouter>
+          <RepoConfigEditor
+            owner="testuser"
+            repo="testrepo"
+            initialConfig={MOCK_CONFIG}
+            onCancel={() => {}}
+            onSave={() => {}}
+          />
+        </MemoryRouter>
+      </HeaderProvider>,
     );
 
     // Check header (use explicit verification)
@@ -80,15 +83,17 @@ Deno.test({
 
     try {
       const { getByRole } = render(
-        <MemoryRouter>
-          <RepoConfigEditor
-            owner="testuser"
-            repo="testrepo"
-            initialConfig={MOCK_CONFIG}
-            onCancel={onCancelSpy}
-            onSave={onSaveSpy}
-          />
-        </MemoryRouter>,
+        <HeaderProvider>
+          <MemoryRouter>
+            <RepoConfigEditor
+              owner="testuser"
+              repo="testrepo"
+              initialConfig={MOCK_CONFIG}
+              onCancel={onCancelSpy}
+              onSave={onSaveSpy}
+            />
+          </MemoryRouter>
+        </HeaderProvider>,
       );
 
       // Skip input change test due to issue with fireEvent in this environment

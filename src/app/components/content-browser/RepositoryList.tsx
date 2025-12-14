@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@/app/components/common/Header.tsx";
+import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { getRepoStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import type { Repository } from "@/app/hooks/useRepositories.ts";
@@ -31,13 +31,10 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   onSelect,
   onSettings,
 }) => {
+  useSetHeader([], "Repositories");
+
   return (
     <div>
-      <Header
-        breadcrumbs={[]}
-        title="Repositories"
-        rootLink={false}
-      />
       <div
         className="ui container"
         style={{ marginTop: "1rem", marginBottom: "1rem" }}

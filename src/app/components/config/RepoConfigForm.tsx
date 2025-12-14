@@ -1,5 +1,5 @@
 import React from "react";
-import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
+import { BreadcrumbItem, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 
 interface RepoConfigFormProps {
@@ -10,7 +10,6 @@ interface RepoConfigFormProps {
   loading?: boolean;
   breadcrumbs: BreadcrumbItem[];
   title?: React.ReactNode;
-  rootLink?: boolean;
 }
 
 export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
@@ -21,15 +20,15 @@ export const RepoConfigForm: React.FC<RepoConfigFormProps> = ({
   loading = false,
   breadcrumbs,
   title,
-  rootLink,
 }) => {
   const handleChange = (key: keyof Config, value: unknown) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
+  useSetHeader(breadcrumbs, title);
+
   return (
     <>
-      <Header breadcrumbs={breadcrumbs} title={title} rootLink={rootLink} />
       <div
         className="ui container"
         // Add padding bottom to prevent content from being hidden behind footer

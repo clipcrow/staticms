@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { AppRoutes } from "./AppRoutes.tsx";
 import { assertEquals } from "@std/assert";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 Deno.test({
   name: "AppRoutes routing test",
@@ -24,12 +25,14 @@ Deno.test({
 
     // 1. Home Path
     const { findByTestId, getByText } = render(
-      <MemoryRouter initialEntries={["/"]}>
-        <AppRoutes
-          RepositorySelectorComponent={MockRepositorySelector}
-          ContentBrowserComponent={MockContentBrowser}
-        />
-      </MemoryRouter>,
+      <HeaderProvider>
+        <MemoryRouter initialEntries={["/"]}>
+          <AppRoutes
+            RepositorySelectorComponent={MockRepositorySelector}
+            ContentBrowserComponent={MockContentBrowser}
+          />
+        </MemoryRouter>
+      </HeaderProvider>,
     );
 
     assertEquals(
@@ -53,12 +56,14 @@ Deno.test({
     );
 
     const { findByTestId, getByText } = render(
-      <MemoryRouter initialEntries={["/user/my-repo"]}>
-        <AppRoutes
-          RepositorySelectorComponent={MockRepositorySelector}
-          ContentBrowserComponent={MockContentBrowser}
-        />
-      </MemoryRouter>,
+      <HeaderProvider>
+        <MemoryRouter initialEntries={["/user/my-repo"]}>
+          <AppRoutes
+            RepositorySelectorComponent={MockRepositorySelector}
+            ContentBrowserComponent={MockContentBrowser}
+          />
+        </MemoryRouter>
+      </HeaderProvider>,
     );
 
     // Auth check is async, so we must wait

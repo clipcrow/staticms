@@ -5,6 +5,8 @@ import { assertSpyCalls } from "@std/testing/mock";
 import { assertEquals, assertExists } from "@std/assert";
 import { ContentConfigEditor } from "./ContentConfigEditor.tsx";
 import { Config } from "@/app/hooks/useContentConfig.ts";
+import { MemoryRouter } from "react-router-dom";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 const MOCK_CONFIG: Config = {
   collections: [
@@ -18,23 +20,23 @@ const MOCK_CONFIG: Config = {
   ],
 };
 
-import { MemoryRouter } from "react-router-dom";
-
 Deno.test({
   name: "ContentConfigEditor: Renders form with initial data",
   fn: () => {
     const { getByDisplayValue } = render(
-      <MemoryRouter>
-        <ContentConfigEditor
-          owner="testuser"
-          repo="testrepo"
-          config={MOCK_CONFIG}
-          initialData={MOCK_CONFIG.collections[0]}
-          mode="edit"
-          onCancel={() => {}}
-          onSave={() => {}}
-        />
-      </MemoryRouter>,
+      <HeaderProvider>
+        <MemoryRouter>
+          <ContentConfigEditor
+            owner="testuser"
+            repo="testrepo"
+            config={MOCK_CONFIG}
+            initialData={MOCK_CONFIG.collections[0]}
+            mode="edit"
+            onCancel={() => {}}
+            onSave={() => {}}
+          />
+        </MemoryRouter>
+      </HeaderProvider>,
     );
 
     assertExists(getByDisplayValue("Existing Collection"));
@@ -76,26 +78,28 @@ Deno.test({
       const onCancelSpy = stub({ onCancel: () => {} }, "onCancel");
 
       const { getByText } = render(
-        <MemoryRouter>
-          <ContentConfigEditor
-            owner="testuser"
-            repo="testrepo"
-            config={MOCK_CONFIG}
-            mode="add"
-            onCancel={onCancelSpy}
-            onSave={onSaveSpy}
-            // Inject valid initial data to bypass testing-library event issues in Deno
-            initialData={{
-              name: "", // Will be generated
-              label: "New Col",
-              path: "content/new.md",
-              type: "singleton",
-              binding: "file",
-              fields: [],
-              archetype: "",
-            }}
-          />
-        </MemoryRouter>,
+        <HeaderProvider>
+          <MemoryRouter>
+            <ContentConfigEditor
+              owner="testuser"
+              repo="testrepo"
+              config={MOCK_CONFIG}
+              mode="add"
+              onCancel={onCancelSpy}
+              onSave={onSaveSpy}
+              // Inject valid initial data to bypass testing-library event issues in Deno
+              initialData={{
+                name: "", // Will be generated
+                label: "New Col",
+                path: "content/new.md",
+                type: "singleton",
+                binding: "file",
+                fields: [],
+                archetype: "",
+              }}
+            />
+          </MemoryRouter>
+        </HeaderProvider>,
       );
 
       // Save button (Button text is "Add" when editingIndex/mode is null/"add")

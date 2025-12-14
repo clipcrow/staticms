@@ -1,5 +1,5 @@
 import React from "react";
-import { Header } from "@/app/components/common/Header.tsx";
+import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 import { ContentListItem } from "./ContentListItem.tsx";
 import { getContentStatus } from "@/app/components/editor/utils.ts";
@@ -68,36 +68,39 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   const hasInvalidChars = /[\\/:*?"<>|]/.test(newArticleName);
   const isCreateDisabled = !newArticleName || isDuplicate || hasInvalidChars;
 
+  const breadcrumbs = [
+    {
+      label: (
+        <RepoBreadcrumbLabel
+          owner={owner}
+          repo={repo}
+          branch={branch}
+        />
+      ),
+      to: `/${owner}/${repo}`,
+    },
+  ];
+
+  const titleNode = loading
+    ? (
+      <>
+        {collectionName || "Articles"} <small>({branch})</small>
+      </>
+    )
+    : (collectionDef?.label || collectionDef?.path || collectionName ||
+      "Articles");
+
+  useSetHeader(breadcrumbs, titleNode);
+
   if (loading) {
     return (
-      <>
-        <Header
-          breadcrumbs={[
-            {
-              label: (
-                <RepoBreadcrumbLabel
-                  owner={owner}
-                  repo={repo}
-                  branch={branch}
-                />
-              ),
-              to: `/${owner}/${repo}`,
-            },
-          ]}
-          title={
-            <>
-              {collectionName || "Articles"} <small>({branch})</small>
-            </>
-          }
-        />
-        <div className="ui container" style={{ marginTop: "2rem" }}>
-          <div className="ui placeholder segment">
-            <div className="ui active inverted dimmer">
-              <div className="ui loader"></div>
-            </div>
+      <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui placeholder segment">
+          <div className="ui active inverted dimmer">
+            <div className="ui loader"></div>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -123,18 +126,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   return (
     <>
-      <Header
-        breadcrumbs={[
-          {
-            label: (
-              <RepoBreadcrumbLabel owner={owner} repo={repo} branch={branch} />
-            ),
-            to: `/${owner}/${repo}`,
-          },
-        ]}
-        title={collectionDef.label || collectionDef.path ||
-          collectionName || "Articles"}
-      />
       <div
         className="ui container"
         style={{ marginTop: "1rem", marginBottom: "1rem" }}

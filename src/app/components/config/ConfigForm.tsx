@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { BreadcrumbItem, Header } from "@/app/components/common/Header.tsx";
+import { BreadcrumbItem, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { Collection } from "@/app/hooks/useContentConfig.ts";
 import { MarkdownEditor } from "@/app/components/editor/MarkdownEditor.tsx";
 import { FieldList } from "./ConfigHelpers.tsx";
@@ -64,9 +64,10 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
     branch: formData.branch,
   };
 
+  useSetHeader(breadcrumbs, title);
+
   return (
     <>
-      <Header breadcrumbs={breadcrumbs} title={title} />
       <div
         className="ui container"
         style={{ marginTop: "2rem", paddingBottom: "100px" }}

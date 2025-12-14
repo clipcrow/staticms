@@ -3,6 +3,20 @@ import { render } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { stub } from "@std/testing/mock";
 import { ArticleList } from "./ArticleList.tsx";
+import { HeaderProvider, useHeader } from "@/app/contexts/HeaderContext.tsx";
+import { Header } from "@/app/components/common/Header.tsx";
+
+// Helper component to render header from context
+function TestHeader() {
+  const { breadcrumbs, title, rightContent } = useHeader();
+  return (
+    <Header
+      breadcrumbs={breadcrumbs}
+      title={title}
+      rightContent={rightContent}
+    />
+  );
+}
 
 const MOCK_CONFIG = `
 collections:
@@ -56,15 +70,21 @@ Deno.test({
 
     try {
       const { findByText } = render(
-        // New path: /:owner/:repo/:collectionName
-        <MemoryRouter initialEntries={["/user/repo/posts"]}>
-          <Routes>
-            <Route
-              path="/:owner/:repo/:content"
-              element={<ArticleList />}
-            />
-          </Routes>
-        </MemoryRouter>,
+        <HeaderProvider>
+          <MemoryRouter initialEntries={["/user/repo/posts"]}>
+            <Routes>
+              <Route
+                path="/:owner/:repo/:content"
+                element={
+                  <>
+                    <TestHeader />
+                    <ArticleList />
+                  </>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        </HeaderProvider>,
       );
 
       // Should verify Header

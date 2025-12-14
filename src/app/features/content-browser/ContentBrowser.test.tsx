@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ContentBrowser } from "./ContentBrowser.tsx";
 import { assertEquals, assertExists } from "@std/assert";
 import { assertSpyCall, stub } from "@std/testing/mock";
+import { HeaderProvider } from "@/app/contexts/HeaderContext.tsx";
 
 Deno.test({
   name: "ContentBrowser: fetches config and displays collections",
@@ -33,11 +34,13 @@ collections:
     try {
       // 2. Render Component
       const { getByText } = render(
-        <MemoryRouter initialEntries={["/repo/user/my-blog"]}>
-          <Routes>
-            <Route path="/repo/:owner/:repo" element={<ContentBrowser />} />
-          </Routes>
-        </MemoryRouter>,
+        <HeaderProvider>
+          <MemoryRouter initialEntries={["/repo/user/my-blog"]}>
+            <Routes>
+              <Route path="/repo/:owner/:repo" element={<ContentBrowser />} />
+            </Routes>
+          </MemoryRouter>
+        </HeaderProvider>,
       );
 
       // 4. Verify Fetch Call

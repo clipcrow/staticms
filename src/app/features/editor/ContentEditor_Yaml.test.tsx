@@ -4,6 +4,19 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { stub } from "@std/testing/mock";
 import { ContentEditor } from "./ContentEditor.tsx";
 import { ToastProvider } from "@/app/contexts/ToastContext.tsx";
+import { HeaderProvider, useHeader } from "@/app/contexts/HeaderContext.tsx";
+import { Header } from "@/app/components/common/Header.tsx";
+
+function TestHeader() {
+  const { breadcrumbs, title, rightContent } = useHeader();
+  return (
+    <Header
+      breadcrumbs={breadcrumbs}
+      title={title}
+      rightContent={rightContent}
+    />
+  );
+}
 
 const MOCK_YAML_CONFIG = `
 collections:
@@ -56,16 +69,23 @@ Deno.test({
 
     try {
       const { findByText, queryByTestId, findByDisplayValue, unmount } = render(
-        <ToastProvider>
-          <MemoryRouter initialEntries={["/user/repo/settings"]}>
-            <Routes>
-              <Route
-                path="/:owner/:repo/:content"
-                element={<ContentEditor />}
-              />
-            </Routes>
-          </MemoryRouter>
-        </ToastProvider>,
+        <HeaderProvider>
+          <ToastProvider>
+            <MemoryRouter initialEntries={["/user/repo/settings"]}>
+              <Routes>
+                <Route
+                  path="/:owner/:repo/:content"
+                  element={
+                    <>
+                      <TestHeader />
+                      <ContentEditor />
+                    </>
+                  }
+                />
+              </Routes>
+            </MemoryRouter>
+          </ToastProvider>
+        </HeaderProvider>,
       );
 
       // Verify Config Load
