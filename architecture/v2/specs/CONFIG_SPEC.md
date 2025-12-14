@@ -86,7 +86,6 @@
 - 新規追加時は空の状態から開始されます。
 - **Field Editor**:
   - **Name**: キー名。
-  - **Widget**: 入力タイプ (`string`, `text`, `boolean`, `image` 等)。
   - **Default**: 初期値（Collectionのみ有効）。
   - **Required**: 必須フラグ。
 

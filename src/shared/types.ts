@@ -48,7 +48,6 @@ export interface Field {
   name: string;
   value: string;
   defaultValue?: string;
-  widget?: string;
   label?: string;
   options?: string[];
   required?: boolean;

@@ -23,7 +23,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
   return (
     <tr style={{ verticalAlign: "middle" }}>
       {/* Name (Key) */}
-      <td style={{ width: "25%", minWidth: "150px" }}>
+      <td style={{ width: "35%", minWidth: "150px" }}>
         <div className="ui input fluid mini">
           <input
             type="text"
@@ -36,33 +36,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
         </div>
       </td>
 
-      {/* Widget */}
-      <td style={{ width: "160px" }}>
-        <select
-          className="ui dropdown fluid mini"
-          value={field.widget}
-          onChange={(e) => handleChange("widget", e.target.value)}
-          disabled={disabled}
-          style={{
-            height: "32px",
-            padding: "0 10px",
-            fontSize: ".78571429rem",
-          }}
-        >
-          <option value="string">String (Short)</option>
-          <option value="text">Text (Long)</option>
-          <option value="markdown">Markdown</option>
-          <option value="boolean">Boolean</option>
-          <option value="image">Image</option>
-          <option value="list">List</option>
-          <option value="object">Object</option>
-          <option value="datetime">Datetime</option>
-          <option value="select">Select</option>
-        </select>
-      </td>
-
       {/* Default Value (Collection Only) */}
-      {/* Default Value (Collection Only) or Spacer */}
       {isCollection
         ? (
           <td>
@@ -143,7 +117,7 @@ export const FieldList: React.FC<FieldListProps> = ({
   const handleAddField = () => {
     onChange([
       ...fields,
-      { name: "", widget: "string", required: true },
+      { name: "", required: true },
     ]);
   };
 

@@ -4,7 +4,6 @@ import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 export interface Field {
   name: string;
-  widget: string;
   label?: string;
   default?: unknown;
   required?: boolean;
