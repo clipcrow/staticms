@@ -7,6 +7,7 @@ import { useToast } from "@/app/contexts/ToastContext.tsx";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
 import yaml from "js-yaml";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
+import { useEventSource } from "@/app/hooks/useEventSource.ts";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 
@@ -144,41 +145,31 @@ export function ContentEditor(
   });
 
   // SSE for PR updates
-  useEffect(() => {
+  // SSE for PR updates
+  useEventSource("/api/events", (data) => {
     const prNumber = draft.pr?.number;
     if (!prNumber) return;
 
-    const eventSource = new EventSource("/api/events");
-    eventSource.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "pr_update" && data.prNumber === prNumber) {
-          if (data.status === "merged" || data.status === "closed") {
-            if (data.status === "merged") {
-              setIsMerged(true);
-            } else if (data.status === "closed") {
-              setIsClosed(true);
-            }
-            showToast(
-              `PR #${prNumber} is ${data.status}. Unlocking editor and checking content...`,
-              "info",
-            );
-            // Remove PR info from draft
-            setDraft((prev) => {
-              const { pr: _pr, ...rest } = prev;
-              return rest;
-            });
-            triggerReload();
-          }
+    if (data.type === "pr_update" && data.prNumber === prNumber) {
+      if (data.status === "merged" || data.status === "closed") {
+        if (data.status === "merged") {
+          setIsMerged(true);
+        } else if (data.status === "closed") {
+          setIsClosed(true);
         }
-      } catch (e) {
-        console.error("Failed to parse SSE message", e);
+        showToast(
+          `PR #${prNumber} is ${data.status}. Unlocking editor and checking content...`,
+          "info",
+        );
+        // Remove PR info from draft
+        setDraft((prev) => {
+          const { pr: _pr, ...rest } = prev;
+          return rest;
+        });
+        triggerReload();
       }
-    };
-    return () => {
-      eventSource.close();
-    };
-  }, [draft.pr?.number, showToast, setDraft, triggerReload]);
+    }
+  });
 
   const handleImageUpload = (file: File): Promise<string | null> => {
     return new Promise((resolve) => {
