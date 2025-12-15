@@ -100,7 +100,7 @@ export const Header = ({
               <div
                 className="section"
                 style={{
-                  fontWeight: "800",
+                  fontWeight: "900",
                   fontSize: "1.5rem",
                   marginLeft: "0.8rem",
                   color: "#1F2328",
