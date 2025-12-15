@@ -4,6 +4,7 @@ import { Config } from "@/app/hooks/useContentConfig.ts";
 import { BranchManagementForm } from "@/app/components/config/BranchManagementForm.tsx";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
+import { useEventSource } from "@/app/hooks/useEventSource.ts";
 
 interface BranchManagementProps {
   owner: string;
@@ -55,6 +56,17 @@ export function BranchManagement({
       })
       .catch(console.error);
   }, [repository, owner, repo, refreshKey]);
+
+  // Real-time updates: Refresh unmerged commits when a PR is updated (e.g. merged)
+  useEventSource("/api/events", (data) => {
+    if (data.type === "pr_update") {
+      // Optimistically refresh for any PR update, as it might affect the branch diff
+      // Ideally we should check if data.owner/repo matches, but payloads might be minimal.
+      // Refreshing is cheap enough.
+      console.log("Received PR update, refreshing branch status...");
+      setRefreshKey((prev) => prev + 1);
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
