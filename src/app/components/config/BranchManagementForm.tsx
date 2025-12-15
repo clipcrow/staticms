@@ -96,73 +96,84 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
             </small>
           </div>
 
-          {unmergedCommits && unmergedCommits.length > 0 && (
-            <div style={{ marginTop: "2rem" }}>
-              <h4 className="ui header">
-                <div className="content">
-                  Unmerged Commits
-                  <div className="sub header">
-                    Commits in {config.branch} that are not in default branch
-                  </div>
+          {/* Unmerged Commits Section */}
+          <div style={{ marginTop: "2rem" }}>
+            <h4 className="ui header">
+              <div className="content">
+                Unmerged Commits
+                <div className="sub header">
+                  Commits in {config.branch || "target branch"}{" "}
+                  that are not in default branch
                 </div>
-              </h4>
-              <div className="ui relaxed divided list">
-                {unmergedCommits.map((commit) => (
-                  <div className="item" key={commit.sha}>
-                    <i className="large github middle aligned icon"></i>
-                    <div className="content">
-                      <a
-                        className="header"
-                        href={commit.html_url}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {commit.commit.message}
-                      </a>
-                      <div className="description">
-                        {commit.commit.author.name} committed on{" "}
-                        {new Date(commit.commit.author.date)
-                          .toLocaleDateString()}
+              </div>
+            </h4>
+
+            {unmergedCommits && unmergedCommits.length > 0
+              ? (
+                <div className="ui relaxed divided list">
+                  {unmergedCommits.map((commit) => (
+                    <div className="item" key={commit.sha}>
+                      <i className="large github middle aligned icon"></i>
+                      <div className="content">
+                        <a
+                          className="header"
+                          href={commit.html_url}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {commit.commit.message}
+                        </a>
+                        <div className="description">
+                          {commit.commit.author.name} committed on{" "}
+                          {new Date(commit.commit.author.date)
+                            .toLocaleDateString()}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
+              : (
+                <div className="ui message info">
+                  <i className="info circle icon"></i>
+                  There are no unmerged commits. The target branch is up to date
+                  with the default branch.
+                </div>
+              )}
 
-              {/* PR Creation Area */}
-              <div
-                style={{
-                  marginTop: "1.5rem",
-                  borderTop: "1px solid rgba(34,36,38,.15)",
-                  paddingTop: "1rem",
-                }}
-              >
-                <div style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>
-                  Create Merge Pull Request for Default Branch
-                </div>
-                <div className="ui action input" style={{ width: "400px" }}>
-                  <input
-                    type="text"
-                    placeholder="Pull Request Title"
-                    value={prTitle || ""}
-                    onChange={(e) =>
-                      onPrTitleChange && onPrTitleChange(e.target.value)}
-                    disabled={creatingPr}
-                  />
-                  <button
-                    type="button"
-                    className={`ui primary button ${
-                      creatingPr ? "loading" : ""
-                    }`}
-                    onClick={onCreatePr}
-                    disabled={creatingPr || !prTitle}
-                  >
-                    Create PR
-                  </button>
-                </div>
+            {/* PR Creation Area */}
+            <div
+              style={{
+                marginTop: "1.5rem",
+                borderTop: "1px solid rgba(34,36,38,.15)",
+                paddingTop: "1rem",
+              }}
+            >
+              <div style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>
+                Create Merge Pull Request for Default Branch
+              </div>
+              <div className="ui action input" style={{ width: "400px" }}>
+                <input
+                  type="text"
+                  placeholder="Pull Request Title"
+                  value={prTitle || ""}
+                  onChange={(e) =>
+                    onPrTitleChange && onPrTitleChange(e.target.value)}
+                  disabled={creatingPr || !unmergedCommits ||
+                    unmergedCommits.length === 0}
+                />
+                <button
+                  type="button"
+                  className={`ui primary button ${creatingPr ? "loading" : ""}`}
+                  onClick={onCreatePr}
+                  disabled={creatingPr || !prTitle || !unmergedCommits ||
+                    unmergedCommits.length === 0}
+                >
+                  Create PR
+                </button>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
