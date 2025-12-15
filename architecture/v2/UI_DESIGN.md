@@ -12,6 +12,10 @@ Staticms V2 の画面構成と遷移設計について定義します。 デザ�
   - **Breadcrumb**:
     - `<GitHub Icon> (Root)` / `Owner/Repo (Branch Label)` / `:collectionName` /
       `:articleName`
+    - **Branch Label**:
+      リポジトリのデフォルトブランチと異なる場合のみ表示します。
+    - **FOUC Prevention**:
+      データのロード中であってもヘッダー情報（タイトルやパンくず）を即座に表示するため、画面遷移時に必要なメタデータを引き継ぐことを推奨します。
     - 各階層はリンクとなっており、上位階層へ戻ることができる。
   - **User Menu**: Avatar アイコン (現在のユーザーを表示)。
   - **Right Content**:

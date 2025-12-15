@@ -22,6 +22,7 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 画面上部に固定され、ナビゲーションとステータス表示を提供します。
 
 - **Left**: パンくずリスト (`Owner/Repo (Branch Label) > Collection > Filename`)
+  - **Branch Label**: デフォルトブランチの場合は非表示となります。
   - コレクション部分は `ArticleList` へのリンクとなります。
 - **Right**: ステータス表示エリア
   - **Status Indicator**: PR Open / Merged / Locked 等の状態表示。
@@ -149,6 +150,10 @@ Semantic UI の Grid システムを使用し、画面を大きく2つのカラ�
 
 ### 2. 初期化プロセス (Initialization)
 
+0. **Immediate Rendering (FOUC Prevention)**:
+   - 画面遷移時に `ArticleList` 等から渡された `location.state`
+     (コレクション定義、記事タイトル等)
+     がある場合、Config等のロードを待たずにヘッダーとパンくずリストを即座に描画します。
 1. **State Loading**: `localStorage`
    から上記オブジェクトを取得。ドラフト内容とPR情報の両方を復元します。
    - **Draft Key Strategy**: 新規作成時 (`mode="new"`)
