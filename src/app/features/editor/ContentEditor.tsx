@@ -504,11 +504,6 @@ export function ContentEditor(
     }));
   };
 
-  const handleImageInsert = (name: string) => {
-    navigator.clipboard.writeText(`![${name}](${name})`);
-    showToast(`Copied ![${name}](${name}) to clipboard`, "info");
-  };
-
   const handleDelete = async () => {
     if (
       !confirm(
@@ -689,7 +684,6 @@ export function ContentEditor(
       onBodyChange={handleBodyChange}
       onImageUpload={handleImageUpload}
       onPendingImageRemove={handlePendingImageRemove}
-      onImageInsert={handleImageInsert}
       onDelete={(collection?.type !== "singleton" && mode !== "new")
         ? handleDelete
         : undefined}

@@ -57,6 +57,21 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    // Check for plain text drop first (e.g. from nearby images list)
+    const textData = event.dataTransfer.getData("text/plain");
+    if (textData) {
+      event.preventDefault();
+      event.stopPropagation();
+      const textarea = event.currentTarget.querySelector("textarea");
+      if (textarea) {
+        insertTextAtCursor(textData, textarea);
+      } else {
+        // deno-lint-ignore no-explicit-any
+        (setBody as any)((prev: string) => prev + textData);
+      }
+      return;
+    }
+
     if (!onImageUpload) return;
     const files = event.dataTransfer.files;
     let hasImage = false;

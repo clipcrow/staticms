@@ -32,7 +32,6 @@ export interface EditorLayoutProps {
   onBodyChange: (body: string) => void;
   onImageUpload: (file: File) => Promise<string | null>;
   onPendingImageRemove: (name: string) => void;
-  onImageInsert: (name: string) => void;
   onDelete?: () => void;
   commitMessage?: string;
   onCommitMessageChange?: (message: string) => void;
@@ -58,7 +57,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
   onBodyChange,
   onImageUpload,
   onPendingImageRemove,
-  onImageInsert,
+
   onDelete,
 }) => {
   return (
@@ -121,7 +120,6 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                 pendingImages={draft.pendingImages || []}
                 onUpload={(files) => Array.from(files).forEach(onImageUpload)}
                 onRemovePending={onPendingImageRemove}
-                onInsert={onImageInsert}
                 folderPath={folderPath}
                 branch={branch}
               />
