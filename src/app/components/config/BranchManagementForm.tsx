@@ -99,13 +99,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
           {/* Unmerged Commits Section */}
           <div style={{ marginTop: "2rem" }}>
             <h4 className="ui header">
-              <div className="content">
-                Unmerged Commits
-                <div className="sub header">
-                  Commits in {config.branch || "target branch"}{" "}
-                  that are not in default branch
-                </div>
-              </div>
+              Unmerged Commits
             </h4>
 
             {unmergedCommits && unmergedCommits.length > 0
@@ -200,7 +194,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
           className="ui button"
           disabled={loading}
         >
-          Cancel
+          Back
         </button>
       </div>
     </>

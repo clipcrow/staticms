@@ -78,7 +78,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
             <div className="ui form" style={{ marginTop: "1rem" }}>
               {/* Content Name (Label) */}
               <div className="field">
-                <label>Content Name (Label)</label>
+                <label>Content Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Blog Post"
@@ -156,21 +156,23 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                 </div>
               </div>
 
-              <div
-                className="ui info message mini"
-                style={{ marginTop: "-10px", marginBottom: "20px" }}
+              <small
+                className="helper-text"
+                style={{
+                  display: "block",
+                  marginTop: "-10px",
+                  marginBottom: "20px",
+                }}
               >
-                <p style={{ fontSize: "0.9em" }}>
-                  {isCollection && binding === "file" &&
-                    "Collection + File: Manages multiple Markdown files in the folder."}
-                  {isCollection && binding === "directory" &&
-                    "Collection + Directory: Manages subfolders with index.md in the folder."}
-                  {!isCollection && binding === "file" &&
-                    "Singleton + File: Edits a specific file (Markdown/YAML)."}
-                  {!isCollection && binding === "directory" &&
-                    "Singleton + Directory: Edits index.md in the specific folder."}
-                </p>
-              </div>
+                {isCollection && binding === "file" &&
+                  "Collection + File: Manages multiple Markdown files in the folder."}
+                {isCollection && binding === "directory" &&
+                  "Collection + Directory: Manages subfolders with index.md in the folder."}
+                {!isCollection && binding === "file" &&
+                  "Singleton + File: Edits a specific file (Markdown/YAML)."}
+                {!isCollection && binding === "directory" &&
+                  "Singleton + Directory: Edits index.md in the specific folder."}
+              </small>
 
               {/* Path */}
               <div className="required field">

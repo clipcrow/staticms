@@ -39,6 +39,20 @@ Appとして動作することで、リポジトリ内のMarkdownやYAMLファ�
 
 - Deno v2.0以上
 
+### 環境変数
+
+サーバーの動作には以下の環境変数を設定してください。ルートディレクトリに `.env`
+ファイルを作成して記述します。
+
+| 変数名                  | 必須 | 説明                                                                                            | デフォルト値 |
+| :---------------------- | :--: | :---------------------------------------------------------------------------------------------- | :----------- |
+| `GITHUB_CLIENT_ID`      |  ✅  | GitHub OAuth App の Client ID                                                                   | -            |
+| `GITHUB_CLIENT_SECRET`  |  ✅  | GitHub OAuth App の Client Secret                                                               | -            |
+| `GITHUB_WEBHOOK_SECRET` |  ✅  | GitHub App の Webhook Secret (署名検証用)                                                       | -            |
+| `DENO_KV_PATH`          |  -   | Deno KV データの保存パス                                                                        | `./kv.db`    |
+| `STATICMS_ADMIN_TOKEN`  |  -   | 管理用トークン（サーバーシャットダウン API `/_debug/shutdown` の `X-Admin-Token` ヘッダに使用） | -            |
+| `ENABLE_DEBUG`          |  -   | `"true"` にするとデバッグ用エンドポイント (`/_debug/kv` 等) を有効化                            | `false`      |
+
 ### 開発
 
 開発サーバーを起動し、ファイルの変更を監視します。
