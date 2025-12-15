@@ -157,12 +157,6 @@ export const FieldList: React.FC<FieldListProps> = ({
       >
         <i className="plus icon"></i> Add Field
       </button>
-      <div className="ui message info mini">
-        <p>
-          Note: Markdown Body is handled automatically and should NOT be defined
-          here.
-        </p>
-      </div>
     </div>
   );
 };
