@@ -1,6 +1,7 @@
 import { RouterContext } from "@oak/oak";
 import { getSessionToken } from "@/server/auth.ts";
 import { GitHubUserClient } from "@/server/github.ts";
+import { executeWithBranchFallback } from "@/server/services/github_resilient.ts";
 
 interface UpdateItem {
   path: string;
@@ -49,7 +50,19 @@ export const batchCommitHandler = async (ctx: RouterContext<string>) => {
     const client = new GitHubUserClient(token);
 
     // 1. Get HEAD SHA of Base Branch
-    const branchRef = await client.getBranch(owner, repo, branch);
+    let branchRef;
+    if (createPr) {
+      // If creating a PR, 'branch' is the BASE branch (source).
+      // We do not auto-recover the base branch if it's missing.
+      branchRef = await client.getBranch(owner, repo, branch);
+    } else {
+      // If NOT creating a PR, 'branch' is the TARGET branch.
+      // We want to recover it if it's missing (e.g. content update on a draft branch).
+      branchRef = await executeWithBranchFallback(
+        { client, owner, repo, branch },
+        () => client.getBranch(owner, repo, branch),
+      );
+    }
     const baseCommitSha = branchRef.object.sha;
 
     let targetBranchName = branch;

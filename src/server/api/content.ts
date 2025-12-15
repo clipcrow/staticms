@@ -2,6 +2,7 @@ import { RouterContext } from "@oak/oak";
 import { getSessionToken } from "@/server/auth.ts";
 import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
 import { decodeBase64 } from "@std/encoding/base64";
+import { executeWithBranchFallback } from "@/server/services/github_resilient.ts";
 
 export const getContent = async (
   ctx: RouterContext<string>,
@@ -28,7 +29,10 @@ export const getContent = async (
     const branch = ctx.request.url.searchParams.get("branch") || undefined;
 
     // deno-lint-ignore no-explicit-any
-    const data: any = await client.getContent(owner, repo, path, branch);
+    const data: any = await executeWithBranchFallback(
+      { client, owner, repo, branch },
+      () => client.getContent(owner, repo, path, branch),
+    );
 
     if (Array.isArray(data)) {
       // Directory
@@ -129,7 +133,10 @@ export const deleteContent = async (
     }
 
     const client = new GitHubUserClient(token);
-    await client.deleteFile(owner, repo, path, message, sha, branch);
+    await executeWithBranchFallback(
+      { client, owner, repo, branch },
+      () => client.deleteFile(owner, repo, path, message, sha, branch),
+    );
 
     ctx.response.status = 200;
     ctx.response.body = { success: true };
