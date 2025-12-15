@@ -63,9 +63,11 @@ export function ContentEditor(
 
   const [commitMessage, setCommitMessage] = useState("");
 
-  const collection = config?.collections.find((c: Collection) =>
+  const stateDef = locationState?.collectionDef as Collection | undefined;
+  const configCol = config?.collections.find((c: Collection) =>
     c.name === contentName
   );
+  const collection = configCol || stateDef;
 
   // Resolve File Path and Folder
   let filePath = "";
@@ -553,6 +555,7 @@ export function ContentEditor(
           owner={owner!}
           repo={repo!}
           branch={branch}
+          defaultBranch={repository?.default_branch}
         />
       ),
       to: `/${owner}/${repo}`,
@@ -569,6 +572,7 @@ export function ContentEditor(
         label: collection.label || collection.path || contentName ||
           "Collection",
         to: `/${owner}/${repo}/${collection.name}`,
+        state: { collectionDef: collection },
       });
       title = mode === "new"
         ? (initialTitle || "New Content")
@@ -627,12 +631,12 @@ export function ContentEditor(
 
   useSetHeader(breadcrumbs, title, rightContent);
 
-  if (!collection || !config || !branchReady) {
+  if ((!collection && !contentName) || !config || !branchReady) {
     return <div className="ui active centered inline loader"></div>;
   }
 
   // Adapter: Convert v2 collection/config to v1 Content interface
-  const v1Fields: V1Field[] = collection.fields?.map((f) => ({
+  const v1Fields: V1Field[] = collection!.fields?.map((f) => ({
     name: f.name,
     value: "",
     defaultValue: "",
@@ -670,7 +674,7 @@ export function ContentEditor(
         body: draft.body,
         pendingImages: draft.pendingImages,
       }}
-      collection={collection}
+      collection={collection!}
       currentContent={currentContent}
       isYamlMode={isYamlMode}
       isListMode={isListMode || false}

@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
-import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
+import {
+  type Collection,
+  useContentConfig,
+} from "@/app/hooks/useContentConfig.ts";
 import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/shared/types.ts";
 import { ArticleListView } from "@/app/components/content-browser/ArticleListView.tsx";
@@ -9,6 +12,7 @@ import { ArticleListView } from "@/app/components/content-browser/ArticleListVie
 export function ArticleList() {
   const { owner, repo, content } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { config, loading: configLoading, error: configError } =
     useContentConfig(owner, repo);
   const { repository, loading: repoLoading } = useRepository(owner, repo);
@@ -19,7 +23,10 @@ export function ArticleList() {
   const branch = config?.branch || repository?.default_branch || "main";
 
   // We use content as the key to find definition
-  const collectionDef = config?.collections.find((c) => c.name === content);
+  // Check valid config first, then fall back to passed state if config is loading
+  const configDef = config?.collections.find((c) => c.name === content);
+  const stateDef = location.state?.collectionDef as Collection | undefined;
+  const collectionDef = configDef || stateDef;
 
   // Normalize folder path to ensure consistent matching with GitHub API paths
   let folder = collectionDef?.path || collectionDef?.folder || "";
@@ -191,7 +198,10 @@ export function ArticleList() {
     localStorage.setItem(draftKey, JSON.stringify(initialDraft));
 
     // 4. Navigate directly to edit page
-    navigate(`/${owner}/${repo}/${content}/${fileName}`, { replace: true });
+    navigate(`/${owner}/${repo}/${content}/${fileName}`, {
+      replace: true,
+      state: { collectionDef },
+    });
   };
 
   const handleSelectArticle = (path: string) => {
@@ -207,7 +217,9 @@ export function ArticleList() {
       // path: content/posts/foo.md -> foo.md
       target = path.split("/").pop() || "";
     }
-    navigate(`/${owner}/${repo}/${content}/${target}`);
+    navigate(`/${owner}/${repo}/${content}/${target}`, {
+      state: { collectionDef },
+    });
   };
 
   const handleDelete = async () => {
@@ -250,6 +262,7 @@ export function ArticleList() {
       owner={owner!}
       repo={repo!}
       branch={branch}
+      defaultBranch={repository?.default_branch}
       collectionName={content!}
       collectionDef={collectionDef}
       files={paginatedFiles}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
 import { useNavigate } from "react-router-dom";
 import { CollectionList } from "@/app/components/content-browser/CollectionList.tsx";
+import { useRepository } from "@/app/hooks/useRepositories.ts";
 
 interface ContentListProps {
   collections: Collection[];
@@ -14,6 +15,7 @@ export function ContentList(
   { collections, owner, repo, branch }: ContentListProps,
 ) {
   const navigate = useNavigate();
+  const { repository } = useRepository(owner, repo);
   const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -21,8 +23,8 @@ export function ContentList(
     navigate("?settings");
   };
 
-  const handleSelectContent = (collectionName: string) => {
-    navigate(collectionName);
+  const handleSelectContent = (collection: Collection) => {
+    navigate(collection.name, { state: { collectionDef: collection } });
   };
 
   const handleSettingsClick = (collectionName: string) => {
@@ -35,6 +37,7 @@ export function ContentList(
       owner={owner}
       repo={repo}
       branch={branch}
+      defaultBranch={repository?.default_branch}
       viewMode={viewMode}
       searchQuery={searchQuery}
       onViewModeChange={setViewMode}

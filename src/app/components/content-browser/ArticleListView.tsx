@@ -11,6 +11,7 @@ export interface ArticleListViewProps {
   owner: string;
   repo: string;
   branch?: string;
+  defaultBranch?: string;
   collectionName: string;
   collectionDef?: Collection;
   files: FileItem[];
@@ -41,6 +42,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   owner,
   repo,
   branch = "main",
+  defaultBranch,
   collectionName,
   collectionDef,
   files,
@@ -75,20 +77,23 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
           owner={owner}
           repo={repo}
           branch={branch}
+          defaultBranch={defaultBranch}
         />
       ),
       to: `/${owner}/${repo}`,
     },
   ];
 
-  const titleNode = loading
+  const displayTitle = collectionDef?.label || collectionDef?.path ||
+    collectionName || "Articles";
+
+  const titleNode = loading && !collectionDef
     ? (
       <>
         {collectionName || "Articles"} <small>({branch})</small>
       </>
     )
-    : (collectionDef?.label || collectionDef?.path || collectionName ||
-      "Articles");
+    : displayTitle;
 
   useSetHeader(breadcrumbs, titleNode);
 

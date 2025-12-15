@@ -5,6 +5,8 @@ export interface BreadcrumbItem {
   label: React.ReactNode;
   to?: string;
   onClick?: () => void;
+  // deno-lint-ignore no-explicit-any
+  state?: any;
 }
 
 interface HeaderProps {
@@ -78,7 +80,7 @@ export const Header = ({
                 {item.to
                   ? (
                     // @ts-ignore: React 19 types issue
-                    <Link to={item.to} className="section">
+                    <Link to={item.to} className="section" state={item.state}>
                       {item.label}
                     </Link>
                   )

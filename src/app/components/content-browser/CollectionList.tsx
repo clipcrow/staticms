@@ -12,11 +12,12 @@ export interface CollectionListProps {
   owner: string;
   repo: string;
   branch?: string;
+  defaultBranch?: string;
   viewMode: "card" | "list";
   searchQuery: string;
   onViewModeChange: (mode: "card" | "list") => void;
   onSearchChange: (query: string) => void;
-  onSelect: (collectionName: string) => void;
+  onSelect: (collection: Collection) => void;
   onSettings: (collectionName: string) => void;
   onAdd: () => void;
 }
@@ -26,6 +27,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
   owner,
   repo,
   branch = "main",
+  defaultBranch,
   viewMode,
   searchQuery,
   onViewModeChange,
@@ -41,6 +43,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
           owner={owner}
           repo={repo}
           branch={branch}
+          defaultBranch={defaultBranch}
         />
       ),
     },
@@ -169,7 +172,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                       <div
                         className="card link"
                         key={c.name}
-                        onClick={() => onSelect(c.name)}
+                        onClick={() => onSelect(c)}
                       >
                         <div className="content header-segment">
                           <i
@@ -285,7 +288,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                             <i className="cog icon"></i>
                           </button>
                         }
-                        onClick={() => onSelect(c.name)}
+                        onClick={() => onSelect(c)}
                         status={status}
                       />
                     );
