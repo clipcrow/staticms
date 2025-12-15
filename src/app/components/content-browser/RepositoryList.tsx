@@ -8,10 +8,8 @@ export interface RepositoryListProps {
   repos: Repository[];
   loading: boolean;
   error: string | null;
-  viewMode: "card" | "list";
   searchQuery: string;
   filterType: "all" | "public" | "private" | "fork";
-  onViewModeChange: (mode: "card" | "list") => void;
   onSearchChange: (query: string) => void;
   onFilterTypeChange: (type: "all" | "public" | "private" | "fork") => void;
   onSelect: (repoFullName: string) => void;
@@ -22,10 +20,8 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
   repos,
   loading,
   error,
-  viewMode,
   searchQuery,
   filterType,
-  onViewModeChange,
   onSearchChange,
   onFilterTypeChange,
   onSelect,
@@ -47,28 +43,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
             flexWrap: "wrap",
           }}
         >
-          {/* 1. View Toggle */}
-          <div style={{ flexShrink: 0 }}>
-            <div className="ui icon buttons">
-              <button
-                type="button"
-                className={`ui button ${viewMode === "card" ? "active" : ""}`}
-                onClick={() => onViewModeChange("card")}
-                title="Card View"
-              >
-                <i className="th icon"></i>
-              </button>
-              <button
-                type="button"
-                className={`ui button ${viewMode === "list" ? "active" : ""}`}
-                onClick={() => onViewModeChange("list")}
-                title="List View"
-              >
-                <i className="list icon"></i>
-              </button>
-            </div>
-          </div>
-
           {/* 2. Search Input (Variable Width) */}
           <div style={{ flex: 1, minWidth: "200px" }}>
             <div className="ui icon input fluid">
@@ -184,7 +158,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
           )}
 
         {/* Card View */}
-        {!loading && !error && viewMode === "card" && (
+        {!loading && !error && (
           <div className="ui three stackable cards">
             {repos.filter((repo) => {
               const matchesSearch = repo.full_name.toLowerCase().includes(
@@ -324,113 +298,6 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
               );
             })}
           </div>
-        )}
-
-        {/* List View */}
-        {!loading && !error && viewMode === "list" && (
-          <table className="ui celled striped table selectable">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Visibility</th>
-                <th>Updated</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {repos.filter((repo) => {
-                const matchesSearch = repo.full_name.toLowerCase().includes(
-                  searchQuery.toLowerCase(),
-                );
-                const matchesFilter = filterType === "all" ||
-                  (filterType === "public" && !repo.private) ||
-                  (filterType === "private" && repo.private) ||
-                  (filterType === "fork" && repo.fork);
-                return matchesSearch && matchesFilter;
-              }).map((repo) => {
-                const status = getRepoStatus(repo.owner.login, repo.name);
-                return (
-                  <tr
-                    key={repo.id}
-                    onClick={() => onSelect(repo.full_name)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>
-                      <h4 className="ui image header">
-                        <i className="github icon rounded mini image"></i>
-                        <div className="content">
-                          {repo.full_name}
-                          <div className="sub header">
-                            {repo.configured_branch &&
-                              repo.configured_branch !== repo.default_branch &&
-                              (
-                                <span
-                                  className="ui label tiny basic"
-                                  style={{
-                                    marginRight: "0.5em",
-                                    fontWeight: "normal",
-                                  }}
-                                >
-                                  <i className="code branch icon"></i>
-                                  {repo.configured_branch}
-                                </span>
-                              )}
-                            {repo.description}
-                          </div>
-                        </div>
-                      </h4>
-                    </td>
-                    <td>
-                      {repo.private
-                        ? (
-                          <div className="ui label">
-                            <i className="lock icon"></i> Private
-                          </div>
-                        )
-                        : (
-                          <div className="ui label basic">
-                            <i className="globe icon"></i> Public
-                          </div>
-                        )}
-                    </td>
-                    <td>
-                      {repo.updated_at &&
-                        new Date(repo.updated_at).toLocaleDateString()}
-                    </td>
-                    <td>
-                      {status.hasDraft && (
-                        <StatusBadge status="draft" count={status.draftCount} />
-                      )}
-                      {status.hasPr && (
-                        <StatusBadge status="pr_open" count={status.prCount} />
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="ui icon button basic small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onSettings(repo.full_name);
-                        }}
-                        title="Branch Management"
-                        style={{ marginRight: "0.5em" }}
-                      >
-                        <i className="code branch icon"></i>
-                      </button>
-                      <button
-                        type="button"
-                        className="ui button basic small primary"
-                      >
-                        Select
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         )}
       </div>
     </div>

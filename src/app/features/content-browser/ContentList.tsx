@@ -16,7 +16,7 @@ export function ContentList(
 ) {
   const navigate = useNavigate();
   const { repository } = useRepository(owner, repo);
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddNewContent = () => {
@@ -38,9 +38,7 @@ export function ContentList(
       repo={repo}
       branch={branch}
       defaultBranch={repository?.default_branch}
-      viewMode={viewMode}
       searchQuery={searchQuery}
-      onViewModeChange={setViewMode}
       onSearchChange={setSearchQuery}
       onSelect={handleSelectContent}
       onSettings={handleSettingsClick}

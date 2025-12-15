@@ -44,7 +44,6 @@ export function ArticleList() {
       branch,
     );
 
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
   const [searchQuery, setSearchQuery] = useState("");
   const [newArticleName, setNewArticleName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<FileItem | null>(null);
@@ -92,7 +91,7 @@ export function ArticleList() {
       }
     }
     setLocalDrafts(found);
-  }, [owner, repo, branch, content, binding, folder, viewMode]);
+  }, [owner, repo, branch, content, binding, folder]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -268,13 +267,11 @@ export function ArticleList() {
       files={paginatedFiles}
       loading={isLoading}
       error={combinedError}
-      viewMode={viewMode}
       searchQuery={searchQuery}
       newArticleName={newArticleName}
       deleteTarget={deleteTarget}
       page={page}
       totalPages={totalPages}
-      onViewModeChange={setViewMode}
       onSearchChange={setSearchQuery}
       onNewArticleNameChange={setNewArticleName}
       onCreate={handleCreateArticle}

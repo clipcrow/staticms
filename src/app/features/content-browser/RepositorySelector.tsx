@@ -8,7 +8,7 @@ export function RepositorySelector() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { repos, loading, error, refresh } = useRepositories();
-  const [viewMode, setViewMode] = useState<"card" | "list">("card");
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<
     "all" | "public" | "private" | "fork"
@@ -46,10 +46,8 @@ export function RepositorySelector() {
       repos={repos}
       loading={loading}
       error={error}
-      viewMode={viewMode}
       searchQuery={searchQuery}
       filterType={filterType}
-      onViewModeChange={setViewMode}
       onSearchChange={setSearchQuery}
       onFilterTypeChange={setFilterType}
       onSelect={handleSelect}

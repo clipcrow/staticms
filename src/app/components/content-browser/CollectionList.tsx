@@ -1,7 +1,7 @@
 import React from "react";
 import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
-import { ContentListItem } from "./ContentListItem.tsx";
+
 import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
@@ -13,9 +13,7 @@ export interface CollectionListProps {
   repo: string;
   branch?: string;
   defaultBranch?: string;
-  viewMode: "card" | "list";
   searchQuery: string;
-  onViewModeChange: (mode: "card" | "list") => void;
   onSearchChange: (query: string) => void;
   onSelect: (collection: Collection) => void;
   onSettings: (collectionName: string) => void;
@@ -28,9 +26,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
   repo,
   branch = "main",
   defaultBranch,
-  viewMode,
   searchQuery,
-  onViewModeChange,
   onSearchChange,
   onSelect,
   onSettings,
@@ -97,28 +93,6 @@ export const CollectionList: React.FC<CollectionListProps> = ({
             alignItems: "center",
           }}
         >
-          {/* 1. View Toggle */}
-          <div style={{ flexShrink: 0 }}>
-            <div className="ui icon buttons">
-              <button
-                type="button"
-                className={`ui button ${viewMode === "card" ? "active" : ""}`}
-                onClick={() => onViewModeChange("card")}
-                title="Card View"
-              >
-                <i className="th icon"></i>
-              </button>
-              <button
-                type="button"
-                className={`ui button ${viewMode === "list" ? "active" : ""}`}
-                onClick={() => onViewModeChange("list")}
-                title="List View"
-              >
-                <i className="list icon"></i>
-              </button>
-            </div>
-          </div>
-
           {/* 2. Search Input */}
           <div style={{ flex: 1, minWidth: "200px" }}>
             <div className="ui icon input fluid">
@@ -151,131 +125,65 @@ export const CollectionList: React.FC<CollectionListProps> = ({
           ? <div className="ui message">No collections match your search.</div>
           : (
             <>
-              {viewMode === "card" && (
-                <div className="ui three stackable cards">
-                  {filteredCollections.map((c) => {
-                    // Support both "singleton" and "singleton-file"/"singleton-dir" types
-                    const isSingleton = c.type === "singleton" ||
-                      c.type?.startsWith("singleton-");
-                    const statusPath = isSingleton
-                      ? `${c.name}/singleton`
-                      : c.name;
-                    const status = getContentStatus(
-                      owner,
-                      repo,
-                      branch,
-                      statusPath,
-                      !isSingleton,
-                    );
+              <div className="ui three stackable cards">
+                {filteredCollections.map((c) => {
+                  // Support both "singleton" and "singleton-file"/"singleton-dir" types
+                  const isSingleton = c.type === "singleton" ||
+                    c.type?.startsWith("singleton-");
+                  const statusPath = isSingleton
+                    ? `${c.name}/singleton`
+                    : c.name;
+                  const status = getContentStatus(
+                    owner,
+                    repo,
+                    branch,
+                    statusPath,
+                    !isSingleton,
+                  );
 
-                    return (
-                      <div
-                        className="card link"
-                        key={c.name}
-                        onClick={() => onSelect(c)}
-                      >
-                        <div className="content header-segment">
-                          <i
-                            className={`right floated icon ${
-                              isSingleton ? "file outline" : "folder outline"
-                            }`}
-                            style={{
-                              marginTop: "-0.2em",
-                              marginRight: 0,
-                              opacity: 0.5,
-                            }}
-                          >
-                          </i>
-                          <div
-                            className="header"
-                            style={{ wordBreak: "break-all" }}
-                          >
-                            {getDisplayName(c)}
-                          </div>
-                        </div>
-                        <div className="content">
-                          <div
-                            className="meta"
-                            style={{ fontSize: "0.85em" }}
-                          >
-                            {c.name}
-                          </div>
-                          <div
-                            className="description"
-                            style={{ marginTop: "0.5em" }}
-                          >
-                            {isSingleton
-                              ? "Singleton Content"
-                              : "Collection of entries"}
-                          </div>
-                        </div>
-                        <div className="extra content">
-                          <span className="right floated">
-                            <button
-                              type="button"
-                              className="ui icon button basic mini"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSettings(c.name);
-                              }}
-                              title="Settings"
-                            >
-                              <i className="cog icon"></i>
-                            </button>
-                          </span>
-                          <span>
-                            {status.hasDraft && (
-                              <StatusBadge
-                                status="draft"
-                                count={status.draftCount}
-                                style={{ marginRight: "4px" }}
-                              />
-                            )}
-                            {status.hasPr && (
-                              <StatusBadge
-                                status="pr_open"
-                                prNumber={status.prNumber}
-                                count={status.prCount}
-                              />
-                            )}
-                          </span>
+                  return (
+                    <div
+                      className="card link"
+                      key={c.name}
+                      onClick={() => onSelect(c)}
+                    >
+                      <div className="content header-segment">
+                        <i
+                          className={`right floated icon ${
+                            isSingleton ? "file outline" : "folder outline"
+                          }`}
+                          style={{
+                            marginTop: "-0.2em",
+                            marginRight: 0,
+                            opacity: 0.5,
+                          }}
+                        >
+                        </i>
+                        <div
+                          className="header"
+                          style={{ wordBreak: "break-all" }}
+                        >
+                          {getDisplayName(c)}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {viewMode === "list" && (
-                <div className="ui relaxed divided list">
-                  {filteredCollections.map((c) => {
-                    // Support both "singleton" and "singleton-file"/"singleton-dir" types
-                    const isSingleton = c.type === "singleton" ||
-                      c.type?.startsWith("singleton-");
-                    const statusPath = isSingleton
-                      ? `${c.name}/singleton`
-                      : c.name;
-                    const status = getContentStatus(
-                      owner,
-                      repo,
-                      branch,
-                      statusPath,
-                      !isSingleton,
-                    );
-
-                    return (
-                      <ContentListItem
-                        key={c.name}
-                        icon={
-                          <i
-                            className={`large icon ${
-                              isSingleton ? "file outline" : "folder outline"
-                            }`}
-                          />
-                        }
-                        primaryText={getDisplayName(c)}
-                        secondaryText={c.name}
-                        actions={
+                      <div className="content">
+                        <div
+                          className="meta"
+                          style={{ fontSize: "0.85em" }}
+                        >
+                          {c.name}
+                        </div>
+                        <div
+                          className="description"
+                          style={{ marginTop: "0.5em" }}
+                        >
+                          {isSingleton
+                            ? "Singleton Content"
+                            : "Collection of entries"}
+                        </div>
+                      </div>
+                      <div className="extra content">
+                        <span className="right floated">
                           <button
                             type="button"
                             className="ui icon button basic mini"
@@ -287,14 +195,28 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                           >
                             <i className="cog icon"></i>
                           </button>
-                        }
-                        onClick={() => onSelect(c)}
-                        status={status}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+                        </span>
+                        <span>
+                          {status.hasDraft && (
+                            <StatusBadge
+                              status="draft"
+                              count={status.draftCount}
+                              style={{ marginRight: "4px" }}
+                            />
+                          )}
+                          {status.hasPr && (
+                            <StatusBadge
+                              status="pr_open"
+                              prNumber={status.prNumber}
+                              count={status.prCount}
+                            />
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </>
           )}
       </div>

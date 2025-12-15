@@ -1,7 +1,7 @@
 import React from "react";
 import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
-import { ContentListItem } from "./ContentListItem.tsx";
+
 import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import { FileItem } from "@/shared/types.ts";
@@ -19,7 +19,6 @@ export interface ArticleListViewProps {
   error: Error | null;
 
   // UI State
-  viewMode: "card" | "list";
   searchQuery: string;
   newArticleName: string;
   deleteTarget: FileItem | null;
@@ -27,7 +26,6 @@ export interface ArticleListViewProps {
   totalPages: number;
 
   // Actions
-  onViewModeChange: (mode: "card" | "list") => void;
   onSearchChange: (query: string) => void;
   onNewArticleNameChange: (name: string) => void;
   onCreate: () => void;
@@ -48,13 +46,11 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   files,
   loading,
   error,
-  viewMode,
   searchQuery,
   newArticleName,
   deleteTarget,
   page,
   totalPages,
-  onViewModeChange,
   onSearchChange,
   onNewArticleNameChange,
   onCreate,
@@ -143,28 +139,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
             alignItems: "center",
           }}
         >
-          {/* 1. View Mode Switcher */}
-          <div style={{ flexShrink: 0 }}>
-            <div className="ui icon buttons basic">
-              <button
-                type="button"
-                className={`ui button ${viewMode === "card" ? "active" : ""}`}
-                onClick={() => onViewModeChange("card")}
-                title="Card View"
-              >
-                <i className="th icon"></i>
-              </button>
-              <button
-                type="button"
-                className={`ui button ${viewMode === "list" ? "active" : ""}`}
-                onClick={() => onViewModeChange("list")}
-                title="List View"
-              >
-                <i className="list icon"></i>
-              </button>
-            </div>
-          </div>
-
           {/* 2. Search */}
           <div style={{ flex: 1, minWidth: "200px" }}>
             <div className="ui icon input fluid">
@@ -244,7 +218,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
           )
           : (
             <>
-              {viewMode === "card" && (
+              <>
                 <div className="ui three stackable cards">
                   {files.map((file) => {
                     // Construct status check key that matches ContentEditor's save format (collectionName/fileName)
@@ -300,35 +274,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                     );
                   })}
                 </div>
-              )}
-
-              {viewMode === "list" && (
-                <div className="ui relaxed divided list">
-                  {files.map((file) => {
-                    const statusCheckKey = collectionName
-                      ? `${collectionName}/${file.name}`
-                      : (file.path || "");
-
-                    const status = getContentStatus(
-                      owner || "",
-                      repo || "",
-                      branch,
-                      statusCheckKey,
-                      false,
-                    );
-                    return (
-                      <ContentListItem
-                        key={file.path}
-                        icon={<i className="large file outline icon" />}
-                        primaryText={file.name}
-                        secondaryText={file.path}
-                        status={status}
-                        onClick={() => onSelect(file.path || "")}
-                      />
-                    );
-                  })}
-                </div>
-              )}
+              </>
 
               {totalPages > 1 && (
                 <div style={{ marginTop: "1em", textAlign: "center" }}>
