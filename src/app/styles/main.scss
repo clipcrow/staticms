@@ -269,10 +269,14 @@ a {
   }
 
   .header-text {
-    font-size: 1.1rem; // Slightly smaller to match GitHub
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 1.3rem; // Slightly larger for impact
+    font-weight: 900; // Black weight
+    line-height: 1;
     color: var(--header-text);
+    letter-spacing: 0.05em; // Wide stance
+    font-family: "Kanit", sans-serif; // Cool, wide, bold font
+    transform: none; // No fake stretching needed
+    font-style: italic; // Dynamic look
   }
 
   .sub-header-text {
