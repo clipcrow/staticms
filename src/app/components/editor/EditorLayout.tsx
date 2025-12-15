@@ -107,6 +107,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
                         currentContent={currentContent}
                         height={600}
                         onImageUpload={onImageUpload}
+                        pendingImages={draft.pendingImages}
                       />
                     </div>
                   )}

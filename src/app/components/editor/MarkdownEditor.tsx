@@ -8,8 +8,7 @@ const MDEditor = React.lazy(() =>
 );
 import rehypeHighlight from "rehype-highlight";
 
-import { Content } from "@/shared/types.ts";
-import { getDraft } from "./utils.ts";
+import { Content, FileItem } from "@/shared/types.ts";
 
 interface MarkdownEditorProps {
   body: string;
@@ -18,6 +17,7 @@ interface MarkdownEditorProps {
   currentContent: Content;
   height?: number;
   onImageUpload?: (file: File) => Promise<string | null> | null;
+  pendingImages?: FileItem[];
 }
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -27,6 +27,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   currentContent,
   height = 600,
   onImageUpload,
+  pendingImages = [],
 }) => {
   const insertTextAtCursor = (text: string, target: HTMLTextAreaElement) => {
     const start = target.selectionStart;
@@ -35,7 +36,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const newValue = value.substring(0, start) + text + value.substring(end);
     setBody(newValue);
   };
-
   const handlePaste = async (
     event: React.ClipboardEvent<HTMLTextAreaElement>,
   ) => {
@@ -57,21 +57,6 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   };
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
-    // Check for plain text drop first (e.g. from nearby images list)
-    const textData = event.dataTransfer.getData("text/plain");
-    if (textData) {
-      event.preventDefault();
-      event.stopPropagation();
-      const textarea = event.currentTarget.querySelector("textarea");
-      if (textarea) {
-        insertTextAtCursor(textData, textarea);
-      } else {
-        // deno-lint-ignore no-explicit-any
-        (setBody as any)((prev: string) => prev + textData);
-      }
-      return;
-    }
-
     if (!onImageUpload) return;
     const files = event.dataTransfer.files;
     let hasImage = false;
@@ -103,18 +88,14 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       }
     }
   };
-
   const resolveImageSrc = (src: string) => {
     if (!src || src.startsWith("http") || src.startsWith("data:")) {
       return src;
     }
 
-    const draft = getDraft(currentContent);
-    if (draft && draft.pendingImages) {
+    if (pendingImages && pendingImages.length > 0) {
       const filename = src.split("/").pop();
-      const pendingImage = draft.pendingImages.find((img) =>
-        img.name === filename
-      );
+      const pendingImage = pendingImages.find((img) => img.name === filename);
       if (pendingImage && pendingImage.content) {
         return `data:image/png;base64,${pendingImage.content}`;
       }
