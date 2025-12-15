@@ -54,9 +54,16 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
   };
 
   return (
-    <div className="ui card fluid" style={{ boxShadow: "none" }}>
-      <div className="content header-segment">
-        <div className="header">Images</div>
+    <div className="ui fluid" style={{ boxShadow: "none", border: "none" }}>
+      <div
+        className="content header-segment"
+        style={{
+          background: "transparent",
+          borderBottom: "none",
+          paddingLeft: 0,
+        }}
+      >
+        <div className="header" style={{ fontSize: "1em" }}>Images Nearby</div>
       </div>
 
       <div className="content" style={{ padding: 0 }}>
@@ -81,7 +88,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
                 style={{
                   cursor: "pointer",
                   padding: "0.75em 1em",
-                  borderBottom: "1px solid var(--color-border-muted)",
+                  borderBottom: "none",
                 }}
               >
                 <i className="image icon"></i>
@@ -131,7 +138,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
                 <i className="image icon orange"></i>
                 <div className="content">
                   <div className="header" style={{ fontSize: "0.9em" }}>
-                    {file.name} (Pending)
+                    {file.name}
                   </div>
                 </div>
               </div>
@@ -155,7 +162,10 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
       {/* Upload Section */}
       <div
         className="extra content"
-        style={{ borderTop: "1px solid var(--color-border-default)" }}
+        style={{
+          borderTop: "none",
+          paddingTop: "1rem",
+        }}
       >
         <div
           className="ui placeholder segment"
