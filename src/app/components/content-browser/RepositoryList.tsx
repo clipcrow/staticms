@@ -91,7 +91,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
                 onClick={() => onFilterTypeChange("all")}
                 title="All Types"
               >
-                <i className="list icon"></i>
+                <i className="cubes icon"></i>
               </button>
               <button
                 type="button"
