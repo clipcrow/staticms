@@ -94,44 +94,59 @@ router.get("/api/events", async (ctx) => {
 app.use(router.routes());
 app.use(router.allowedMethods());
 
-// On-demand Assets (for Deno Deploy)
+// Static Files, On-demand Assets & SPA Fallback
 app.use(async (ctx, next) => {
-  if (ctx.request.url.pathname === "/js/bundle.js") {
-    ctx.response.headers.set("Content-Type", "application/javascript");
-    ctx.response.body = await buildJs();
-    return;
-  }
-  if (ctx.request.url.pathname === "/styles/main.css") {
-    ctx.response.headers.set("Content-Type", "text/css");
-    ctx.response.body = buildCss();
-    return;
-  }
-  await next();
-});
-
-// Static Files & SPA Fallback
-app.use(async (ctx, next) => {
+  // 1. Try serving static files from public/
   try {
     await ctx.send({
       root: `${Deno.cwd()}/public`,
       index: "index.html",
     });
+    return;
   } catch {
-    // SPA Fallback: If static file not found, serve index.html for non-asset routes
-    if (
-      !ctx.request.url.pathname.startsWith("/api") &&
-      !ctx.request.url.pathname.match(/\.(js|css|png|jpg|ico)$/)
-    ) {
-      try {
-        await ctx.send({
-          root: `${Deno.cwd()}/public`,
-          path: "index.html",
-        });
-      } catch {
-        await next();
-      }
-    } else {
+    // Continue if file not found
+  }
+
+  // 2. On-demand Assets (Fallback for Deno Deploy where static files might be missing)
+  if (ctx.request.url.pathname === "/js/bundle.js") {
+    try {
+      ctx.response.headers.set("Content-Type", "application/javascript");
+      ctx.response.body = await buildJs();
+      return;
+    } catch (e) {
+      console.error("On-demand JS build failed:", e);
+      ctx.response.status = 500;
+      return;
+    }
+  }
+  if (ctx.request.url.pathname === "/styles/main.css") {
+    try {
+      ctx.response.headers.set("Content-Type", "text/css");
+      ctx.response.body = buildCss();
+      return;
+    } catch (e) {
+      console.error("On-demand CSS build failed:", e);
+      ctx.response.status = 500;
+      return;
+    }
+  }
+
+  // 3. SPA Fallback: If static file not found, serve index.html for non-asset routes
+  if (
+    !ctx.request.url.pathname.startsWith("/api") &&
+    !ctx.request.url.pathname.match(/\.(js|css|png|jpg|ico)$/)
+  ) {
+    try {
+      await ctx.send({
+        root: `${Deno.cwd()}/public`,
+        path: "index.html",
+      });
+      return;
+    } catch {
+      // index.html missing?
       await next();
     }
+  } else {
+    await next();
   }
 });

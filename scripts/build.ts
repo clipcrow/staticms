@@ -1,31 +1,18 @@
-import * as esbuild from "esbuild";
-import { denoPlugins } from "deno_esbuild";
+import { buildJs } from "@/server/build_assets.ts";
+import { ensureDir } from "@std/fs";
+import { dirname } from "@std/path";
+
+const OUT_FILE = "./public/js/bundle.js";
 
 try {
-  console.log("Building...");
-  await esbuild.build({
-    plugins: [
-      ...denoPlugins({
-        configPath: new URL("../deno.json", import.meta.url).pathname,
-      }),
-    ],
-    entryPoints: ["./src/app/main.tsx"],
-    outfile: "./public/js/bundle.js",
-    bundle: true,
-    format: "esm",
-    platform: "browser",
-    jsx: "automatic",
-    logLevel: "warning", // infoだと余計なログが出るかもなので
-  });
-  console.log("Build success");
+  console.log("Building JS...");
+  const content = await buildJs();
+
+  await ensureDir(dirname(OUT_FILE));
+  await Deno.writeFile(OUT_FILE, content);
+
+  console.log(`JS Build success: ${OUT_FILE}`);
 } catch (e) {
-  console.error("Build failed:", e);
-  // deno-lint-ignore no-explicit-any
-  if ((e as any).errors) {
-    // deno-lint-ignore no-explicit-any
-    (e as any).errors.forEach((err: any) => console.error(err));
-  }
+  console.error("JS Build failed:", e);
   Deno.exit(1);
-} finally {
-  esbuild.stop();
 }

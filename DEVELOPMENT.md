@@ -103,13 +103,20 @@ Staticms v2 は `deno task` でライフサイクルを管理します。
 
 #### 開発モード (Development Mode)
 
-ファイル変更を監視し、オンデマンドでバンドルを行う開発用サーバーを起動します。
+開発サーバーを起動し、ファイルの変更を監視します（ホットリロード）。
 
 ```bash
 deno task dev
 ```
 
-サーバーは `http://localhost:8000` で起動します。
+本番環境相当（Deno
+Deploy）の動作を確認したい場合は、以下を実行します（Watcherなし、オンデマンドビルド）。
+
+```bash
+deno task start
+```
+
+テストサーバーは `http://localhost:8000` で起動します。
 
 #### 本番ビルド (Production Build)
 
@@ -144,12 +151,6 @@ deno run -A src/server/main.ts
 
 ## トラブルシューティング
 
-- **Webhook 自動設定が失敗する**:
-  - サーバーログを確認してください。`[GitHubApp] Failed to ensure webhook`
-    というエラーが出ている場合、`GITHUB_APP_ID` または `GITHUB_APP_PRIVATE_KEY`
-    が正しいか確認してください。
-  - `STATICMS_PUBLIC_URL` が現在の ngrok URL と一致しているか確認してください。
-- **認証エラー (401)**:
 - **Webhook 自動設定が失敗する**:
   - サーバーログを確認してください。`[GitHubApp] Failed to ensure webhook`
     というエラーが出ている場合、`GITHUB_APP_ID` または `GITHUB_APP_PRIVATE_KEY`

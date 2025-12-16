@@ -1,22 +1,18 @@
-import * as sass from "sass";
+import { buildCss } from "@/server/build_assets.ts";
 import { ensureDir } from "@std/fs";
+import { dirname } from "@std/path";
 
-const SCSS_ENTRY = "./src/app/styles/main.scss";
-const CSS_OUT = "./public/styles/main.css";
+const OUT_FILE = "./public/styles/main.css";
 
 try {
-  console.log(`Compiling SCSS from ${SCSS_ENTRY}...`);
+  console.log("Building CSS...");
+  const css = buildCss();
 
-  const result = sass.compile(SCSS_ENTRY, {
-    style: "expanded", // "compressed" for production
-    sourceMap: false,
-  });
+  await ensureDir(dirname(OUT_FILE));
+  await Deno.writeTextFile(OUT_FILE, css);
 
-  await ensureDir("./public/styles");
-  await Deno.writeTextFile(CSS_OUT, result.css);
-
-  console.log(`CSS compiled to ${CSS_OUT}`);
+  console.log(`CSS Build success: ${OUT_FILE}`);
 } catch (error) {
-  console.error("SCSS Compilation failed:", error);
+  console.error("CSS Build failed:", error);
   Deno.exit(1);
 }

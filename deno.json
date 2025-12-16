@@ -8,9 +8,8 @@
   },
   "tasks": {
     "dev": "ENABLE_DEBUG=true deno run -A scripts/dev.ts",
+    "start": "deno run -A --unstable-kv src/server/main.ts",
     "build": "deno run -A scripts/build.ts && deno run -A scripts/build_css.ts",
-    "build:js": "deno run -A scripts/build.ts",
-    "build:css": "deno run -A scripts/build_css.ts",
     "test": "DENO_KV_PATH=:memory: deno test -A --unstable-kv --import-map=src/testing/import_map_test.json src/"
   },
   "compilerOptions": {
