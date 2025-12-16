@@ -1018,3 +1018,234 @@ a {
   gap: 1rem;
   box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
 }
+
+// -----------------------------------------------------------------------------
+// RepoBreadcrumb
+// -----------------------------------------------------------------------------
+.staticms-breadcrumb-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5em !important;
+}
+
+.staticms-breadcrumb-branch {
+  font-weight: normal !important;
+  margin: 0 !important;
+}
+
+// -----------------------------------------------------------------------------
+// ConfigLayout
+// -----------------------------------------------------------------------------
+.staticms-config-layout-container {
+  margin-top: 2rem !important;
+}
+
+// -----------------------------------------------------------------------------
+// CollectionList
+// -----------------------------------------------------------------------------
+.staticms-collection-list-search-container {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.staticms-collection-list-toolbar {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+
+  .search-wrapper {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .add-btn-wrapper {
+    flex-shrink: 0;
+  }
+}
+
+.staticms-collection-list-grid {
+  margin-top: 2rem !important;
+}
+
+.staticms-collection-card-icon {
+  margin-top: -0.2em !important;
+  margin-right: 0 !important;
+  opacity: 0.5 !important;
+}
+
+.staticms-collection-card-header {
+  word-break: break-all !important;
+}
+
+.staticms-collection-card-meta {
+  font-size: 0.85em !important;
+}
+
+.staticms-collection-card-desc {
+  margin-top: 0.5em !important;
+}
+
+.staticms-badge-spacer-right {
+  margin-right: 4px !important;
+}
+
+// -----------------------------------------------------------------------------
+// ContentListItem
+// -----------------------------------------------------------------------------
+.staticms-content-list-item {
+  // Base item styles if needed
+}
+
+.staticms-content-list-clickable {
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+
+  &.disabled {
+    cursor: default !important;
+    opacity: 0.5 !important;
+  }
+}
+
+.staticms-content-list-loader {
+  // Loader styles
+}
+
+.staticms-content-list-icon {
+  // Icon wrapper styles if needed
+}
+
+.staticms-content-list-header {
+  display: flex !important;
+  align-items: baseline !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.staticms-content-list-primary-text {
+  font-weight: bold !important;
+  margin-right: 0.5em !important;
+  white-space: nowrap !important;
+}
+
+.staticms-content-list-secondary-text {
+  font-weight: normal !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.staticms-content-list-labels {
+  // Labels wrapper
+}
+
+.staticms-badge-spacer-left {
+  margin-left: 0.5em !important;
+}
+
+.staticms-content-list-actions {
+  padding-left: 0.5em !important;
+}
+
+// -----------------------------------------------------------------------------
+// FrontMatterItemPanel
+// -----------------------------------------------------------------------------
+.staticms-frontmatter-panel {
+  margin-bottom: 1em !important;
+
+  &.dragging {
+    opacity: 0.5 !important;
+  }
+
+  &.draggable {
+    cursor: grab !important;
+  }
+
+  &.static {
+    cursor: default !important;
+  }
+}
+
+.staticms-frontmatter-row {
+  padding-bottom: 0.5em !important;
+  padding-top: 0.5em !important;
+}
+
+.staticms-required-star {
+  color: red !important;
+}
+
+.staticms-frontmatter-action-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.staticms-frontmatter-input-wrapper {
+  flex: 1 !important;
+}
+
+// -----------------------------------------------------------------------------
+// ArticleListView (Supplemental)
+// -----------------------------------------------------------------------------
+.staticms-frontmatter-delete-btn {
+  margin-left: 0.5em !important;
+  box-shadow: none !important;
+}
+
+.staticms-article-list-status-container {
+  margin-top: 2rem !important;
+}
+
+.staticms-delete-modal-override {
+  display: block !important;
+  margin-top: 100px !important;
+}
+
+// -----------------------------------------------------------------------------
+// ConfigForm (Supplemental)
+// -----------------------------------------------------------------------------
+.staticms-field-schema-area {
+  margin-bottom: 2rem !important;
+}
+
+.staticms-archetype-section {
+  margin-bottom: 2rem !important;
+}
+
+.staticms-archetype-header {
+  font-size: 0.93rem !important;
+  font-weight: 700 !important;
+}
+
+.staticms-archetype-editor-wrapper {
+  margin-top: 1rem !important;
+}
+
+.staticms-archetype-helper-text {
+  display: block !important;
+  margin-top: 0.5rem !important;
+}
+
+.staticms-config-form-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-canvas-default, #fff);
+  border-top: 1px solid var(--color-border-muted, #d0d7de);
+  padding: 1rem 2rem;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between; // Key difference from branch management
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.staticms-config-form-footer-left {
+  display: flex !important;
+  gap: 1rem !important;
+}

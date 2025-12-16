@@ -13,15 +13,10 @@ export const RepoBreadcrumbLabel = (
   const showBranch = branch && (!defaultBranch || branch !== defaultBranch);
 
   return (
-    <span
-      style={{ display: "inline-flex", alignItems: "center", gap: "0.5em" }}
-    >
+    <span className="staticms-breadcrumb-label">
       <span>{owner}/{repo}</span>
       {showBranch && (
-        <span
-          className="ui label tiny basic"
-          style={{ fontWeight: "normal", margin: 0 }}
-        >
+        <span className="ui label tiny basic staticms-breadcrumb-branch">
           <i className="code branch icon"></i>
           {branch}
         </span>

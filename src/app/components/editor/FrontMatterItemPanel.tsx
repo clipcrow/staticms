@@ -83,12 +83,9 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
 
   return (
     <div
-      className="ui segment"
-      style={{
-        opacity: draggedItemIndex === itemIndex ? 0.5 : 1,
-        cursor: isDraggable ? "grab" : "default",
-        marginBottom: "1em",
-      }}
+      className={`ui segment staticms-frontmatter-panel ${
+        draggedItemIndex === itemIndex ? "dragging" : ""
+      } ${isDraggable ? "draggable" : "static"}`}
       draggable={isDraggable}
       onDragStart={() => onDragStart && onDragStart(itemIndex)}
       onDragOver={(e) => {
@@ -121,16 +118,12 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
           return (
             <div
               key={`configured-${itemIndex}-${index}`}
-              className="row"
-              style={{
-                paddingBottom: "0.5em",
-                paddingTop: "0.5em",
-              }}
+              className="row staticms-frontmatter-row"
             >
               <div className="four wide column">
                 <strong>{configField.label || configField.name}</strong>
                 {configField.required && (
-                  <span style={{ color: "red" }}>*</span>
+                  <span className="staticms-required-star">*</span>
                 )}
               </div>
               <div className="twelve wide column">
@@ -144,11 +137,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
         {unconfiguredFields.map((field) => (
           <div
             key={`unconfigured-${itemIndex}-${field.name}`}
-            className="row"
-            style={{
-              paddingBottom: "0.5em",
-              paddingTop: "0.5em",
-            }}
+            className="row staticms-frontmatter-row"
           >
             <div className="four wide column">
               {editableKeys
@@ -166,17 +155,11 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                 : <strong>{field.name}</strong>}
             </div>
             <div className="twelve wide column">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
+              <div className="staticms-frontmatter-action-wrapper">
                 <div
-                  className={`ui input fluid ${
+                  className={`ui input fluid staticms-frontmatter-input-wrapper ${
                     disableValues ? "disabled" : ""
                   }`}
-                  style={{ flex: 1 }}
                 >
                   <input
                     type="text"
@@ -192,11 +175,10 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
                 </div>
                 <button
                   type="button"
-                  className="ui icon button mini basic"
+                  className="ui icon button mini basic staticms-frontmatter-delete-btn"
                   onClick={() => !isPrLocked && handleDeleteField(field.name)}
                   disabled={isPrLocked}
                   title="Delete Field"
-                  style={{ marginLeft: "0.5em", boxShadow: "none" }}
                 >
                   <i className="trash icon red"></i>
                 </button>
@@ -206,13 +188,7 @@ export const FrontMatterItemPanel: React.FC<FrontMatterItemPanelProps> = ({
         ))}
 
         {/* Add New Field & Delete Item */}
-        <div
-          className="row"
-          style={{
-            paddingBottom: "0.5em",
-            paddingTop: "0.5em",
-          }}
-        >
+        <div className="row staticms-frontmatter-row">
           <div className="four wide column">
             <div className="ui input fluid">
               <input

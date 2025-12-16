@@ -35,16 +35,10 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
       style={style}
     >
       <div
-        className="content staticms-content-list-clickable"
+        className={`content staticms-content-list-clickable ${
+          disabled ? "disabled" : ""
+        }`}
         onClick={!disabled ? onClick : undefined}
-        style={{
-          cursor: disabled ? "default" : "pointer",
-          opacity: disabled ? 0.5 : 1,
-          display: "flex",
-          alignItems: "center",
-          flex: 1,
-          minWidth: 0,
-        }}
       >
         {loading
           ? (
@@ -58,34 +52,12 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
               </span>
             )
           )}
-        <div
-          className="header staticms-content-list-header"
-          style={{
-            display: "flex",
-            alignItems: "baseline",
-            flex: 1,
-            minWidth: 0,
-          }}
-        >
-          <span
-            style={{
-              fontWeight: "bold",
-              marginRight: "0.5em",
-              whiteSpace: "nowrap",
-            }}
-          >
+        <div className="header staticms-content-list-header">
+          <span className="staticms-content-list-primary-text">
             {primaryText}
           </span>
           {secondaryText && (
-            <span
-              className="staticms-content-list-secondary-text"
-              style={{
-                fontWeight: "normal",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
+            <span className="staticms-content-list-secondary-text">
               {secondaryText}
             </span>
           )}
@@ -97,7 +69,7 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
                 <StatusBadge
                   status="draft"
                   count={status.draftCount}
-                  style={{ marginLeft: "0.5em" }}
+                  className="staticms-badge-spacer-left"
                 />
               )}
               {status.hasPr && (
@@ -105,7 +77,7 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
                   status="pr_open"
                   prNumber={status.prNumber}
                   count={status.prCount}
-                  style={{ marginLeft: "0.5em" }}
+                  className="staticms-badge-spacer-left"
                 />
               )}
             </>
@@ -114,7 +86,7 @@ export const ContentListItem: React.FC<ContentListItemProps> = ({
         </div>
       </div>
       {actions && (
-        <div className="content" style={{ paddingLeft: "0.5em" }}>
+        <div className="content staticms-content-list-actions">
           {actions}
         </div>
       )}

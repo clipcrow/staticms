@@ -49,7 +49,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
 
   if (!collections || collections.length === 0) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-collection-list-grid">
         <div className="ui placeholder segment">
           <div className="ui icon header">
             <i className="file alternate outline icon"></i>
@@ -81,20 +81,10 @@ export const CollectionList: React.FC<CollectionListProps> = ({
 
   return (
     <>
-      <div
-        className="ui container"
-        style={{ marginTop: "1rem", marginBottom: "1rem" }}
-      >
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
+      <div className="ui container staticms-collection-list-search-container">
+        <div className="staticms-collection-list-toolbar">
           {/* 2. Search Input */}
-          <div style={{ flex: 1, minWidth: "200px" }}>
+          <div className="search-wrapper">
             <div className="ui icon input fluid">
               <input
                 type="text"
@@ -107,7 +97,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
           </div>
 
           {/* 3. Add Content Button */}
-          <div style={{ flexShrink: 0 }}>
+          <div className="add-btn-wrapper">
             <button
               type="button"
               className="ui primary button icon"
@@ -119,7 +109,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
         </div>
       </div>
 
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-collection-list-grid">
         {/* List Content */}
         {filteredCollections.length === 0
           ? <div className="ui message">No collections match your search.</div>
@@ -149,34 +139,20 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                     >
                       <div className="content header-segment">
                         <i
-                          className={`right floated icon ${
+                          className={`right floated icon staticms-collection-card-icon ${
                             isSingleton ? "file outline" : "folder outline"
                           }`}
-                          style={{
-                            marginTop: "-0.2em",
-                            marginRight: 0,
-                            opacity: 0.5,
-                          }}
                         >
                         </i>
-                        <div
-                          className="header"
-                          style={{ wordBreak: "break-all" }}
-                        >
+                        <div className="header staticms-collection-card-header">
                           {getDisplayName(c)}
                         </div>
                       </div>
                       <div className="content">
-                        <div
-                          className="meta"
-                          style={{ fontSize: "0.85em" }}
-                        >
+                        <div className="meta staticms-collection-card-meta">
                           {c.name}
                         </div>
-                        <div
-                          className="description"
-                          style={{ marginTop: "0.5em" }}
-                        >
+                        <div className="description staticms-collection-card-desc">
                           {isSingleton
                             ? "Singleton Content"
                             : "Collection of entries"}
@@ -201,7 +177,7 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                             <StatusBadge
                               status="draft"
                               count={status.draftCount}
-                              style={{ marginRight: "4px" }}
+                              className="staticms-badge-spacer-right"
                             />
                           )}
                           {status.hasPr && (

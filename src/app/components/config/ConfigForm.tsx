@@ -183,7 +183,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
           {/* Field Schema Editor */}
           {/* Field Schema Editor */}
-          <div className="ui form" style={{ marginBottom: "2rem" }}>
+          <div className="ui form staticms-field-schema-area">
             <div className="field">
               <label>Field Schema</label>
               <FieldList
@@ -197,14 +197,11 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
           {/* Archetype (Collection Only) */}
           {isCollection && (
-            <div style={{ marginBottom: "2rem" }}>
-              <h4
-                className="ui dividing header"
-                style={{ fontSize: "0.93rem", fontWeight: 700 }}
-              >
+            <div className="staticms-archetype-section">
+              <h4 className="ui dividing header staticms-archetype-header">
                 Archetype Template
               </h4>
-              <div style={{ marginTop: "1rem" }}>
+              <div className="staticms-archetype-editor-wrapper">
                 <MarkdownEditor
                   body={formData.archetype || ""}
                   setBody={(val) => handleChange("archetype", val)}
@@ -213,10 +210,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                   height={400}
                 />
               </div>
-              <small
-                className="helper-text"
-                style={{ display: "block", marginTop: "0.5rem" }}
-              >
+              <small className="helper-text staticms-archetype-helper-text">
                 Default markdown body content for new articles.
               </small>
             </div>
@@ -225,25 +219,9 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
       </div>
 
       {/* Fixed Footer Actions */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          backgroundColor: "var(--color-canvas-default, #fff)",
-          borderTop: "1px solid var(--color-border-muted, #d0d7de)",
-          padding: "1rem 2rem",
-          zIndex: 100,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
-        }}
-      >
+      <div className="staticms-config-form-footer">
         {/* Left Actions (Cancel, Save) */}
-        <div style={{ display: "flex", gap: "1rem" }}>
+        <div className="staticms-config-form-footer-left">
           <button
             type="button"
             onClick={onCancel}

@@ -22,7 +22,7 @@ export const ConfigLayout: React.FC<ConfigLayoutProps> = ({
     return (
       <>
         <Header breadcrumbs={breadcrumbs} />
-        <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui container staticms-config-layout-container">
           <div className="ui active centered inline loader"></div>
         </div>
       </>
@@ -33,7 +33,7 @@ export const ConfigLayout: React.FC<ConfigLayoutProps> = ({
     return (
       <>
         <Header breadcrumbs={breadcrumbs} />
-        <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui container staticms-config-layout-container">
           <div className="ui negative message">
             <div className="header">Error loading configuration</div>
             <p>{error.message || "Configuration not found"}</p>
@@ -47,7 +47,7 @@ export const ConfigLayout: React.FC<ConfigLayoutProps> = ({
     return (
       <>
         <Header breadcrumbs={breadcrumbs} />
-        <div className="ui container" style={{ marginTop: "2rem" }}>
+        <div className="ui container staticms-config-layout-container">
           <div className="ui warning message">
             {notFoundMessage || "Content not found."}
           </div>

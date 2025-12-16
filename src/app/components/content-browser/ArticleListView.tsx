@@ -95,7 +95,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   if (loading) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-article-list-status-container">
         <div className="ui placeholder segment">
           <div className="ui active inverted dimmer">
             <div className="ui loader"></div>
@@ -107,7 +107,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   if (error) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-article-list-status-container">
         <div className="ui negative message">
           Error: {error.message}
         </div>
@@ -117,7 +117,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   if (!collectionDef) {
     return (
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-article-list-status-container">
         <div className="ui warning message">
           Collection "{collectionName}" not found.
         </div>
@@ -295,10 +295,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
         {/* Delete Confirmation Modal */}
         {deleteTarget && (
           <div className="ui dimmer modals page visible active">
-            <div
-              className="ui standard test modal transition visible active"
-              style={{ display: "block !important", marginTop: "100px" }}
-            >
+            <div className="ui standard test modal transition visible active staticms-delete-modal-override">
               <div className="header">
                 Delete Article
               </div>
