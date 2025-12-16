@@ -94,24 +94,17 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
 
   return (
     <>
-      <div className="ui fluid" style={{ boxShadow: "none", border: "none" }}>
-        <div
-          className="content header-segment"
-          style={{
-            background: "transparent",
-            borderBottom: "none",
-            paddingLeft: 0,
-          }}
-        >
-          <div className="header" style={{ fontSize: "1em" }}>
+      <div className="ui fluid staticms-images-container">
+        <div className="content header-segment staticms-images-header-segment">
+          <div className="header staticms-images-header-title">
             Images Nearby
           </div>
         </div>
 
-        <div className="content" style={{ padding: 0 }}>
+        <div className="content staticms-images-content">
           {/* Nearby Images Section */}
           {(loading || error || images.length > 0) && (
-            <div className="ui list selection" style={{ margin: 0 }}>
+            <div className="ui list selection staticms-images-list">
               {loading && (
                 <div className="item">
                   <div className="ui active centered inline loader mini"></div>
@@ -125,20 +118,14 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
               {images.map((file) => (
                 <div
                   key={file.path}
-                  className="item"
+                  className="item staticms-images-item"
                   onClick={() => handleImageClick(file.name)}
                   draggable
-                  onDragStart={(e) =>
-                    handleDragStart(e, file.name)}
-                  style={{
-                    cursor: "grab",
-                    padding: "0.75em 1em",
-                    borderBottom: "none",
-                  }}
+                  onDragStart={(e) => handleDragStart(e, file.name)}
                 >
                   <i className="image icon"></i>
                   <div className="content">
-                    <div className="header" style={{ fontSize: "0.9em" }}>
+                    <div className="header staticms-images-item-name">
                       {file.name}
                     </div>
                   </div>
@@ -150,9 +137,8 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
           {/* Pending Images Section */}
           {pendingImages.length > 0 && (
             <div
-              className="ui list selection"
+              className="ui list selection staticms-images-pending-list"
               style={{
-                margin: 0,
                 borderTop: images.length > 0
                   ? "1px solid var(--color-border-default)"
                   : "none",
@@ -161,16 +147,10 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
               {pendingImages.map((file) => (
                 <div
                   key={file.name}
-                  className="item"
+                  className="item staticms-images-pending-item"
                   onClick={() => handlePendingImageClick(file)}
                   draggable
                   onDragStart={(e) => handleDragStart(e, file.name)}
-                  style={{
-                    cursor: "grab",
-                    padding: "0.75em 1em",
-                    borderBottom: "1px solid var(--color-border-muted)",
-                    backgroundColor: "#fff8c5",
-                  }}
                 >
                   <div className="right floated content">
                     <i
@@ -184,7 +164,7 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
                   </div>
                   <i className="image icon orange"></i>
                   <div className="content">
-                    <div className="header" style={{ fontSize: "0.9em" }}>
+                    <div className="header staticms-images-item-name">
                       {file.name}
                     </div>
                   </div>
@@ -194,49 +174,25 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
           )}
 
           {!loading && images.length === 0 && pendingImages.length === 0 && (
-            <div
-              style={{
-                padding: "2em 1em",
-                textAlign: "center",
-                color: "var(--color-fg-muted)",
-              }}
-            >
+            <div className="staticms-images-empty">
               No images found.
             </div>
           )}
         </div>
 
         {/* Upload Section */}
-        <div
-          className="extra content"
-          style={{
-            borderTop: "none",
-            paddingTop: "1rem",
-          }}
-        >
+        <div className="extra content staticms-images-upload-section">
           <div
-            className="ui placeholder segment"
+            className="ui placeholder segment staticms-images-dropzone"
             onDragOver={handleDragOver}
             onDrop={handleDrop}
-            style={{
-              minHeight: "80px",
-              margin: 0,
-              boxShadow: "none",
-              border: "1px dashed var(--color-border-default)",
-            }}
           >
-            <div
-              className="ui icon header"
-              style={{ fontSize: "0.85rem", margin: 0 }}
-            >
-              <i
-                className="upload icon"
-                style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}
-              >
+            <div className="ui icon header staticms-images-dropzone-header">
+              <i className="upload icon">
               </i>
               Drop images here
             </div>
-            <div style={{ marginTop: "0.5rem" }}>
+            <div className="staticms-images-dropzone-input-wrapper">
               <label
                 htmlFor="file-upload"
                 className="ui tiny button basic primary"
@@ -259,37 +215,19 @@ export const ContentImages: React.FC<ContentImagesProps> = ({
       {/* Preview Modal */}
       {previewFile && (
         <div
-          className="ui dimmer modals page transition visible active"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="ui dimmer modals page transition visible active staticms-images-preview-modal"
           onClick={handleClosePreview}
         >
           <div
             className="ui modal transition visible active"
-            style={{
-              top: "auto",
-              left: "auto",
-              position: "relative",
-              width: "auto",
-              maxWidth: "60vw",
-              maxHeight: "90vh",
-              margin: "auto",
-            }}
             onClick={(e) => e.stopPropagation()}
           >
             <i className="close icon" onClick={handleClosePreview}></i>
             <div className="header">{previewFile.name}</div>
-            <div
-              className="image content"
-              style={{ justifyContent: "center", overflow: "hidden" }}
-            >
+            <div className="image content">
               <img
                 src={previewFile.url}
                 className="ui image fluid"
-                style={{ maxHeight: "60vh", objectFit: "contain" }}
                 alt={previewFile.name}
               />
             </div>

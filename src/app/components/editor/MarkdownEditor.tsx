@@ -153,7 +153,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
                   src={src ? resolveImageSrc(src) : undefined}
                   alt={alt}
                   {...props}
-                  style={{ maxWidth: "100%" }}
+                  className="staticms-markdown-image-preview"
                 />
               ),
             },

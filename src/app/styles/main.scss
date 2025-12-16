@@ -853,3 +853,116 @@ a {
 .staticms-repo-settings-btn {
   margin: 0 !important;
 }
+
+// -----------------------------------------------------------------------------
+// ContentImages
+// -----------------------------------------------------------------------------
+.staticms-images-container {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.staticms-images-header-segment {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding-left: 0 !important;
+}
+
+.staticms-images-header-title {
+  font-size: 1em !important;
+}
+
+.staticms-images-content {
+  padding: 0 !important;
+}
+
+.staticms-images-list {
+  margin: 0 !important;
+}
+
+.staticms-images-item {
+  cursor: grab;
+  padding: 0.75em 1em !important;
+  border-bottom: none !important;
+}
+
+.staticms-images-item-name {
+  font-size: 0.9em !important;
+}
+
+.staticms-images-pending-list {
+  margin: 0 !important;
+  // border-top handled dynamically if needed, or moved to class logic
+}
+
+.staticms-images-pending-item {
+  cursor: grab;
+  padding: 0.75em 1em !important;
+  border-bottom: 1px solid var(--color-border-muted) !important;
+  background-color: #fff8c5 !important;
+}
+
+.staticms-images-empty {
+  padding: 2em 1em !important;
+  text-align: center !important;
+  color: var(--color-fg-muted) !important;
+}
+
+.staticms-images-upload-section {
+  border-top: none !important;
+  padding-top: 1rem !important;
+}
+
+.staticms-images-dropzone {
+  min-height: 80px;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: 1px dashed var(--color-border-default) !important;
+}
+
+.staticms-images-dropzone-header {
+  font-size: 0.85rem !important;
+  margin: 0 !important;
+
+  i.icon {
+    font-size: 1.2rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+.staticms-images-dropzone-input-wrapper {
+  margin-top: 0.5rem !important;
+}
+
+.staticms-images-preview-modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  .ui.modal {
+    top: auto !important;
+    left: auto !important;
+    position: relative !important;
+    width: auto !important;
+    max-width: 60vw !important;
+    max-height: 90vh !important;
+    margin: auto !important;
+  }
+
+  .image.content {
+    justify-content: center !important;
+    overflow: hidden !important;
+
+    img {
+      max-height: 60vh !important;
+      object-fit: contain !important;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MarkdownEditor
+// -----------------------------------------------------------------------------
+.staticms-markdown-image-preview {
+  max-width: 100% !important;
+}
