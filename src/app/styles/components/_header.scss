@@ -1,0 +1,130 @@
+// -----------------------------------------------------------------------------
+// Header Styles (Light Mode like GitHub)
+// -----------------------------------------------------------------------------
+.staticms-header-container {
+  background-color: var(--header-bg);
+  border-bottom: 1px solid
+    var(--color-border-muted); // Use standard border color
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-wrap: nowrap; // FIX: Prevent stacking
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  // Ensure header text colors are correct for light theme
+  color: var(--header-text);
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.staticms-header-start,
+.staticms-header-end {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1rem;
+}
+
+.staticms-header-title {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--header-text);
+
+  &:hover {
+    color: var(--color-accent-fg); // Link blue on hover
+    text-decoration: none;
+  }
+
+  // Logo Icon
+  svg path {
+    fill: var(--header-logo);
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.75rem;
+  }
+
+  .header-text {
+    font-size: 1.3rem; // Slightly larger for impact
+    font-weight: 900; // Black weight
+    line-height: 1;
+    color: var(--header-text);
+    letter-spacing: 0.05em; // Wide stance
+    font-family: "Kanit", sans-serif; // Cool, wide, bold font
+    transform: none; // No fake stretching needed
+    font-style: italic; // Dynamic look
+  }
+
+  .sub-header-text {
+    font-size: 0.75rem;
+    color: var(--color-fg-muted); // Use variable instead of white
+    margin-top: 0.1rem;
+    font-weight: normal;
+  }
+}
+
+.staticms-header-breadcrumb {
+  margin: 0 !important;
+  font-size: 0.95rem !important;
+  align-self: flex-end;
+  margin-bottom: 0.2rem !important;
+  color: var(--color-fg-muted) !important; // Use muted text
+
+  .divider {
+    color: var(--color-fg-subtle) !important;
+  }
+
+  // Navigation Links & Clickable Items
+  a.section, .section.clickable {
+    color: var(--color-accent-fg) !important; // Make navigable items blue
+    font-weight: 400 !important;
+
+    &:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
+
+  // Non-clickable sections (like current page or non-link root)
+  .section {
+    font-weight: 400 !important;
+    color: var(--color-fg-muted) !important;
+  }
+
+  .active.section {
+    color: var(--color-fg-default) !important; // Current page is dark
+    font-weight: 400 !important;
+    text-decoration: none !important;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Header Specifics (Title/Logo)
+// -----------------------------------------------------------------------------
+.staticms-header-logo-img {
+  height: 32px;
+  vertical-align: middle;
+}
+
+.staticms-header-breadcrumb-container {
+  display: flex;
+  align-items: center;
+}
+
+.staticms-header-breadcrumb-title {
+  font-weight: 900;
+  font-size: 1.5rem;
+  margin-left: 0.8rem;
+  color: #1f2328;
+  line-height: 1.25;
+}
+
+.staticms-clickable-text {
+  cursor: pointer;
+}

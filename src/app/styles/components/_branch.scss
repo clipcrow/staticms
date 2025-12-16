@@ -1,0 +1,47 @@
+// -----------------------------------------------------------------------------
+// BranchManagementForm
+// -----------------------------------------------------------------------------
+.staticms-branch-management-container {
+  margin-top: 2rem !important;
+  padding-bottom: 100px !important;
+}
+
+.staticms-branch-management-form-wrapper {
+  margin-bottom: 2rem !important;
+}
+
+.staticms-branch-input-wrapper {
+  width: 400px !important;
+  max-width: 100%;
+}
+
+.staticms-branch-helper-text {
+  display: block;
+  margin-top: 0.5rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.staticms-unmerged-section {
+  margin-top: 2rem !important;
+}
+
+.staticms-pr-creation-area {
+  margin-top: 1.5rem !important;
+  border-top: 1px solid rgba(34, 36, 38, 0.15) !important;
+  padding-top: 1rem !important;
+}
+
+.staticms-branch-management-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-canvas-default, #fff);
+  border-top: 1px solid var(--color-border-muted, #d0d7de);
+  padding: 1rem 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}

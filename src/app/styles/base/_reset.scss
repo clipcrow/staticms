@@ -1,0 +1,189 @@
+@use "sass:color";
+@use "../variables" as *;
+
+// -----------------------------------------------------------------------------
+// Base Reset & Typography
+// -----------------------------------------------------------------------------
+body {
+  font-family: var(--font-stack-system) !important;
+  background-color: var(--color-canvas-default);
+  color: var(--color-fg-default);
+  -webkit-font-smoothing: antialiased;
+}
+
+// Override Semantic UI defaults
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-stack-system) !important;
+  color: var(--color-fg-default) !important;
+}
+
+a {
+  color: var(--color-accent-fg);
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Component Overrides (GitHub Style)
+// -----------------------------------------------------------------------------
+
+// Buttons
+.ui.button {
+  font-family: var(--font-stack-system) !important;
+  font-weight: 500 !important;
+  border-radius: var(--border-radius) !important;
+  transition: 0.2s cubic-bezier(0.3, 0, 0.5, 1) !important;
+  transition-property: color, background-color, border-color !important;
+
+  // Default Button (Standard)
+  & {
+    background-color: #f6f8fa !important;
+    color: var(--color-fg-default) !important;
+    border: 1px solid rgba(27, 31, 36, 0.15) !important;
+    box-shadow: 0 1px 0 rgba(27, 31, 36, 0.04) !important;
+
+    &:hover {
+      background-color: #f3f4f6 !important;
+      border-color: rgba(27, 31, 36, 0.15) !important;
+    }
+
+    &.active, &:active {
+      background-color: #ebecf0 !important; // Darker for active state
+      border-color: rgba(27, 31, 36, 0.15) !important;
+      box-shadow: inset 0 1px 0 rgba(27, 31, 36, 0.04) !important;
+    }
+  }
+
+  // Basic Button (Transparent / Ghost)
+  // FIX: Restore transparency so icons are visible, only show background on hover
+  &.basic, &.basic:not(:hover) {
+    background-color: transparent !important;
+    background: transparent !important;
+    color: var(--color-fg-default) !important;
+    border: 1px solid transparent
+      !important; // Only show border if needed or on hover
+    box-shadow: none !important;
+
+    &:hover {
+      background-color: var(--color-canvas-subtle) !important;
+      border: 1px solid var(--color-border-default)
+        !important; // Show border on hover
+    }
+
+    // If it's an icon button, ensure icon color is correct
+    i.icon {
+      color: inherit !important;
+    }
+
+    // Colored Basic Buttons
+    &.red, &.negative {
+      color: var(--color-danger-fg) !important;
+      &:hover {
+        background-color: rgba(207, 34, 46, 0.1) !important;
+        border-color: var(--color-danger-fg) !important;
+      }
+    }
+
+    &.blue, &.primary {
+      color: var(--color-accent-fg) !important;
+      &:hover {
+        background-color: rgba(9, 105, 218, 0.1) !important;
+        border-color: var(--color-accent-fg) !important;
+      }
+    }
+  }
+
+  // Primary Button
+  &.primary {
+    color: #ffffff !important;
+    background-color: #1f883d !important; // GitHub Green (Primary Action)
+    border-color: rgba(27, 31, 36, 0.15) !important;
+    box-shadow: 0 1px 0 rgba(27, 31, 36, 0.1) !important;
+
+    &:hover {
+      background-color: #1a7f37 !important;
+    }
+  }
+
+  // Blue Button (Accent)
+  &.blue {
+    background-color: var(--color-accent-emphasis) !important;
+    &:hover {
+      background-color: color.adjust(#0969da, $lightness: -5%) !important;
+    }
+  }
+
+  // Red/Negative Button
+  &.negative, &.red {
+    background-color: #cf222e !important;
+    color: #fff !important;
+    &:hover {
+      background-color: #a40e26 !important;
+    }
+  }
+}
+
+// Forced Black Button for specialized actions (Best Practice approach)
+.ui.button.action-black {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  background-image: none !important;
+
+  &:hover {
+    background-color: #333333 !important;
+  }
+}
+
+// Fix for grouped buttons (Semantic UI style) conflicting with global overrides
+.ui.buttons {
+  .button {
+    border-radius: 0 !important;
+    margin-right: -1px
+      !important; // Overlap borders to prevent double thickness
+
+    &:first-child {
+      border-top-left-radius: var(--border-radius) !important;
+      border-bottom-left-radius: var(--border-radius) !important;
+    }
+
+    &:last-child {
+      border-top-right-radius: var(--border-radius) !important;
+      border-bottom-right-radius: var(--border-radius) !important;
+      margin-right: 0 !important;
+    }
+
+    // Ensure active/focus button is on top
+    &:hover, &.active, &:focus {
+      z-index: 10 !important;
+    }
+  }
+}
+
+// Inputs
+.ui.input input,
+.ui.form input:not([type]),
+.ui.form input[type="text"],
+.ui.form input[type="email"],
+.ui.form input[type="password"] {
+  font-family: var(--font-stack-system) !important;
+  border-radius: var(--border-radius) !important;
+  border: 1px solid var(--color-border-default) !important;
+  box-shadow: inset 0 1px 2px rgba(27, 31, 36, 0.075) !important;
+  background-color: var(--color-canvas-default) !important;
+
+  &:focus {
+    border-color: var(--color-accent-fg) !important;
+    box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3)
+      !important; // Outline style focus ring
+  }
+}
+
+// Segments / Cards (The "Box" look)
+.ui.segment, .ui.card, .ui.cards > .card {
+  box-shadow: none !important;
+  border: 1px solid var(--color-border-default) !important;
+  border-radius: var(--border-radius) !important;
+  background: var(--color-canvas-default);
+}

@@ -1,0 +1,247 @@
+// -----------------------------------------------------------------------------
+// ArticleListView
+// -----------------------------------------------------------------------------
+.staticms-article-list-container {
+  margin-top: 2rem !important;
+}
+
+.staticms-search-create-bar {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+
+  .inner-wrapper {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .search-box {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .create-box {
+    flex: 1;
+    min-width: 300px;
+  }
+}
+
+.staticms-article-card-header {
+  word-break: break-all;
+}
+
+.staticms-pagination-wrapper {
+  margin-top: 1em;
+  text-align: center;
+
+  .current-page-info {
+    color: black !important;
+    opacity: 1 !important;
+  }
+}
+
+.staticms-article-list-status-container {
+  margin-top: 2rem !important;
+}
+
+.staticms-delete-modal-override {
+  display: block !important;
+  margin-top: 100px !important;
+}
+
+// -----------------------------------------------------------------------------
+// RepositoryList
+// -----------------------------------------------------------------------------
+.staticms-repo-list-container {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.staticms-repo-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .search-wrapper {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .filter-wrapper {
+    flex-shrink: 0;
+  }
+
+  .connect-wrapper {
+    flex-shrink: 0;
+  }
+}
+
+.staticms-repo-grid-container {
+  margin-top: 2rem !important;
+}
+
+.staticms-repo-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5em;
+
+  .repo-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    i.icon {
+      opacity: 0.5;
+      margin: 0;
+      line-height: 1;
+      height: auto;
+    }
+
+    .repo-name {
+      word-break: break-all;
+      font-weight: bold;
+      font-size: 1.1em;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  .repo-star-wrapper {
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    flex-shrink: 0;
+    margin-left: 0.5em;
+
+    i.icon {
+      margin: 0;
+      line-height: 1;
+      height: auto;
+    }
+
+    span {
+      line-height: 1;
+    }
+  }
+}
+
+.staticms-repo-card-desc {
+  margin-top: 0.5em;
+
+  .branch-label {
+    margin-bottom: 0.5em;
+  }
+}
+
+.staticms-repo-card-meta {
+  margin-top: 1em;
+  font-size: 0.9em;
+}
+
+.staticms-repo-card-extra-badges {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+.staticms-repo-settings-btn {
+  margin: 0 !important;
+}
+
+// -----------------------------------------------------------------------------
+// CollectionList
+// -----------------------------------------------------------------------------
+.staticms-collection-list-search-container {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.staticms-collection-list-toolbar {
+  display: flex !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+
+  .search-wrapper {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .add-btn-wrapper {
+    flex-shrink: 0;
+  }
+}
+
+.staticms-collection-list-grid {
+  margin-top: 2rem !important;
+}
+
+.staticms-collection-card-icon {
+  margin-top: -0.2em !important;
+  margin-right: 0 !important;
+  opacity: 0.5 !important;
+}
+
+.staticms-collection-card-header {
+  word-break: break-all !important;
+}
+
+.staticms-collection-card-meta {
+  font-size: 0.85em !important;
+}
+
+.staticms-collection-card-desc {
+  margin-top: 0.5em !important;
+}
+
+.staticms-badge-spacer-right {
+  margin-right: 4px !important;
+}
+
+// -----------------------------------------------------------------------------
+// ContentListItem
+// -----------------------------------------------------------------------------
+.staticms-content-list-clickable {
+  cursor: pointer;
+  display: flex !important;
+  align-items: center !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+
+  &.disabled {
+    cursor: default !important;
+    opacity: 0.5 !important;
+  }
+}
+
+.staticms-content-list-header {
+  display: flex !important;
+  align-items: baseline !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.staticms-content-list-primary-text {
+  font-weight: bold !important;
+  margin-right: 0.5em !important;
+  white-space: nowrap !important;
+}
+
+.staticms-content-list-secondary-text {
+  font-weight: normal !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.staticms-badge-spacer-left {
+  margin-left: 0.5em !important;
+}
+
+.staticms-content-list-actions {
+  padding-left: 0.5em !important;
+}

@@ -1,0 +1,262 @@
+// -----------------------------------------------------------------------------
+// Markdown Editor Override (w-md-editor)
+// -----------------------------------------------------------------------------
+.w-md-editor-toolbar li > button {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 16px !important; // Keep font size for text based buttons if any
+}
+
+.w-md-editor-toolbar li > button svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+// -----------------------------------------------------------------------------
+// Editor Layout
+// -----------------------------------------------------------------------------
+.staticms-editor-container {
+  margin-top: 2rem !important;
+  padding-bottom: 80px !important;
+}
+
+.staticms-editor-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-canvas-default, #fff);
+  border-top: 1px solid var(--color-border-muted, #d0d7de);
+  padding: 1rem 2rem;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+
+  .actions-left {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .commit-message-wrapper {
+    width: 400px;
+  }
+}
+
+.staticms-markdown-editor-wrapper {
+  margin-top: 1rem;
+}
+
+// -----------------------------------------------------------------------------
+// YamlListEditor
+// -----------------------------------------------------------------------------
+.staticms-yaml-list-editor {
+  .add-button-top {
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .list-item {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+    align-items: stretch;
+    // opacity and cursor are handled dynamically
+  }
+
+  .item-content {
+    flex: 1;
+    cursor: default;
+  }
+
+  .item-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    flex-shrink: 0;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .item-index {
+    font-weight: bold;
+    color: #999;
+    font-size: 1em;
+  }
+
+  .delete-button {
+    margin-top: auto;
+    margin-bottom: auto;
+    box-shadow: none !important;
+  }
+
+  .add-button-bottom {
+    margin-top: 1rem;
+    text-align: center;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// ContentImages
+// -----------------------------------------------------------------------------
+.staticms-images-container {
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.staticms-images-header-segment {
+  background: transparent !important;
+  border-bottom: none !important;
+  padding-left: 0 !important;
+}
+
+.staticms-images-header-title {
+  font-size: 1em !important;
+}
+
+.staticms-images-content {
+  padding: 0 !important;
+}
+
+.staticms-images-list {
+  margin: 0 !important;
+}
+
+.staticms-images-item {
+  cursor: grab;
+  padding: 0.75em 1em !important;
+  border-bottom: none !important;
+}
+
+.staticms-images-item-name {
+  font-size: 0.9em !important;
+}
+
+.staticms-images-pending-list {
+  margin: 0 !important;
+  // border-top handled dynamically if needed, or moved to class logic
+}
+
+.staticms-images-pending-item {
+  cursor: grab;
+  padding: 0.75em 1em !important;
+  border-bottom: 1px solid var(--color-border-muted) !important;
+  background-color: #fff8c5 !important;
+}
+
+.staticms-images-empty {
+  padding: 2em 1em !important;
+  text-align: center !important;
+  color: var(--color-fg-muted) !important;
+}
+
+.staticms-images-upload-section {
+  border-top: none !important;
+  padding-top: 1rem !important;
+}
+
+.staticms-images-dropzone {
+  min-height: 80px;
+  margin: 0 !important;
+  box-shadow: none !important;
+  border: 1px dashed var(--color-border-default) !important;
+}
+
+.staticms-images-dropzone-header {
+  font-size: 0.85rem !important;
+  margin: 0 !important;
+
+  i.icon {
+    font-size: 1.2rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+.staticms-images-dropzone-input-wrapper {
+  margin-top: 0.5rem !important;
+}
+
+.staticms-images-preview-modal {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  .ui.modal {
+    top: auto !important;
+    left: auto !important;
+    position: relative !important;
+    width: auto !important;
+    max-width: 60vw !important;
+    max-height: 90vh !important;
+    margin: auto !important;
+  }
+
+  .image.content {
+    justify-content: center !important;
+    overflow: hidden !important;
+
+    img {
+      max-height: 60vh !important;
+      object-fit: contain !important;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// MarkdownEditor
+// -----------------------------------------------------------------------------
+.staticms-markdown-image-preview {
+  max-width: 100% !important;
+}
+
+// -----------------------------------------------------------------------------
+// FrontMatterItemPanel
+// -----------------------------------------------------------------------------
+.staticms-frontmatter-panel {
+  margin-bottom: 1em !important;
+
+  &.dragging {
+    opacity: 0.5 !important;
+  }
+
+  &.draggable {
+    cursor: grab !important;
+  }
+
+  &.static {
+    cursor: default !important;
+  }
+}
+
+.staticms-frontmatter-row {
+  padding-bottom: 0.5em !important;
+  padding-top: 0.5em !important;
+}
+
+.staticms-required-star {
+  color: red !important;
+}
+
+.staticms-frontmatter-action-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.staticms-frontmatter-input-wrapper {
+  flex: 1 !important;
+}
+
+.staticms-frontmatter-delete-btn {
+  margin-left: 0.5em !important;
+  box-shadow: none !important;
+}
