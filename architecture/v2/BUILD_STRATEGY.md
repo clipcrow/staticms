@@ -1,7 +1,7 @@
 # Build & Deployment Strategy
 
 Staticms v2
-では、Denoエコシステムの標準的なツールを活用し、シンプルで堅牢なビルドパイプラインを構築します。
+では、DDenoエコシステムの標準的なツールを活用し、シンプルで堅牢なビルドパイプラインを構築します。
 
 ## 1. Frontend Build (Bundling)
 
@@ -17,34 +17,20 @@ Deno エコシステムで広く使われている **`deno_esbuild`**
 ### 1.2 Build Logic (`src/server/build_assets.ts`)
 
 ビルドロジックはサーバーコード (`src/server/build_assets.ts`)
-に集約し、オンデマンドビルドと静的ファイル生成 (`scripts/build.ts`)
-の両方から参照可能にします。
-
-### 1.3 On-demand Build Policy (Deno Deploy)
-
-Deno Deploy
-は書き込み可能なファイルシステムを持たないため、本番環境ではサーバー起動時（またはリクエスト時）にメモリ上でアセットをビルドして配信する
-**On-demand Build** 戦略を採用します。
-
-- **実装**: `src/server/app.ts` のミドルウェアで `/js/bundle.js`
-  等へのリクエストを捕捉し、ビルド関数を実行してレスポンスを返します。
-- **優先順位**: 静的ファイル (`public/`)
-  が存在する場合はそちらを優先し、存在しない場合（Deno Deploy
-  環境）のみオンデマンドビルドを実行します。
+に集約し、静的ファイル生成 (`scripts/build.ts`) から参照可能にします。
 
 ## 2. Server Runtime
 
 サーバーサイド (`src/server/`) はバンドルせず、Deno ランタイムで直接実行します。
 
 - **Execution**: `deno run --unstable-kv --allow-net ... src/server/main.ts`
-- **Assets Serving**:
-  静的ファイルが存在すればそれを配信し、なければオンデマンドビルドした結果を配信します。
+- **Assets Serving**: 静的ファイル (`public/`) を配信します。
 
 ## 3. CSS Handling
 
 Semantic UI の言語的なクラス名設計 (`ui icon button` 等)
-を最大限活用するため、TSX 側でのインラインスタイル定義は **非推奨** とします。
-代わりに、アプリケーション固有のスタイルは **Sass (SCSS)**
+を最大限活用するため、TSX 側でのインラインスタイル定義は **非推奨**
+とします。代わりに、アプリケーション固有のスタイルは **Sass (SCSS)**
 で記述し、ビルドプロセスで CSS にコンパイルして読み込みます。
 
 ### 3.1 Style Strategy
@@ -101,40 +87,29 @@ try {
 <!-- Compiled from SCSS -->
 ```
 
-### 3.4 CSS Imports in JS (Known Issue)
-
-一部のライブラリ（例: `react-md-editor`）の JS ファイル内部で `.css` を import
-している場合があります。 `esbuild` で `write: false` (オンデマンドビルド)
-を使用する場合、これらが出力先を決定できずエラーになることがあります。
-
-**対策**: `esbuild` のオプションに `loader: { ".css": "empty" }` を設定し、JS
-バンドル内の CSS import を無視（空モジュールとして解決）します。必要なスタイルは
-`main.scss`
-などで別途読み込むか、ライブラリが適切にスタイルを提供していることを確認します。
-
 ## 4. Deployment Strategy
 
 ### 4.1 Production Build (Deno Deploy)
 
-Deno Deploy の **Automatic Deployment** (Git Push -> Deploy) を利用します。
-ビルドステップはサーバーランタイム内で完結しているため、GitHub Actions
-による事前ビルドは不要です。
+Deno Deploy はデプロイ時に `deno task build` (項目 `deno.json` > `tasks` >
+`build`)
+を自動的に実行することができます。このタスク内でJSバンドルとCSSコンパイルを行い、`public/`
+ディレクトリに生成物を配置する戦略をとります。
 
 ### 4.2 Local Execution
 
-ユーザーが手元で本番モードで動かす場合。 (Watcherなし、オンデマンドビルド確認)
+ローカル環境でも同様に `deno task build`
+を実行してからサーバーを起動するか、`deno task dev` (開発用スクリプト)
+を使用します。
 
 ```bash
+deno task build
 deno task start
 ```
 
-deno task start # Runs server without watching
-
-```
 ## 5. Configuration Management
 
 環境変数 (`.env`) と `deno.json` を活用します。
 ビルド時に埋め込むべき変数（もしあれば `process.env`
 置換）と、ランタイムでサーバーが読み込むべき秘密鍵（`GITHUB_CLIENT_SECRET`
 等）を明確に区別します。フロントエンドには原則として機密情報を持たせません。
-```
