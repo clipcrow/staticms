@@ -10,6 +10,7 @@ staticms2/
 ├── .vscode/               # VS Code 設定
 ├── architecture/          # 仕様書・設計書 (v1, v2...)
 ├── public/                # 静的アセット (build output, images, styles)
+├── scripts/               # ビルド・メンテナンス用スクリプト
 ├── src/                   # ソースコード
 │   ├── app/               # フロントエンド (React)
 │   ├── server/            # バックエンド (Deno / Oak)
@@ -30,47 +31,61 @@ staticms2/
 src/app/
 ├── components/            # UIコンポーネント (Presenters)
 │   ├── common/            # 汎用 UI (NotFound, Toast...)
-│   ├── editor/            # エディタ画面固有のUIパーツ (MarkdownEditor, Preview...)
-│   └── layout/            # レイアウト (Header, Sidebar...)
+│   ├── editor/            # エディタ画面固有のUIパーツ
+│   └── content-browser/   # 一覧画面用UI
 ├── features/              # 機能ごとのコンテナ (Containers / Business Logic)
-│   ├── auth/              # 認証フロー制御 (RequireAuth.tsx)
-│   ├── config/            # 設定管理 (ContentConfigEditor.tsx)
-│   ├── content-browser/   # リポジトリ・コンテンツ一覧・検索機能
-│   └── editor/            # 記事編集・ドラフト管理・保存フロー
-├── hooks/                 # 汎用カスタムフック (useLocalStorage, useAuth...)
-├── contexts/              # React Context (AuthContext...)
-├── routes/                # ルーティング定義 (AppRoutes.tsx)
-├── styles/                # グローバルスタイル・テーマ設定
-├── main.tsx               # エントリーポイント (DOM マウント)
-└── App.tsx                # アプリケーションルート (Providers設定)
+│   ├── auth/              # 認証フロー制御
+│   ├── config/            # 設定管理
+│   ├── content-browser/   # リポジトリ・コンテンツ一覧
+│   ├── editor/            # エディタ・コミットフロー
+│   └── debug/             # デバッグ用ツール
+├── hooks/                 # 汎用カスタムフック
+├── contexts/              # React Context
+├── routes/                # ルーティング定義
+├── styles/                # グローバルスタイル (SCSS / The 7-1 Pattern)
+│   ├── base/              # Reset, Typography
+│   ├── components/        # Component-specific styles
+│   ├── _variables.scss    # CSS Variables
+│   └── main.scss          # Entry point
+├── utils/                 # ユーティリティ関数
+├── main.tsx               # エントリーポイント
+└── App.tsx                # アプリケーションルート
 ```
 
 - **Components (Presenters)**:
   - 外部データ取得や複雑な状態管理を持たせない。Propsを受け取って描画することに専念する。
   - Semantic UI のクラス名は主にここで隠蔽する。
-  - **テスト**: ビジュアルな検証、イベント発火の確認 (`testing-library` +
-    `HappyDOM`)。
 - **Features (Containers)**:
   - データ取得 (`fetch` / Hooks)、状態管理、ルーター制御を行う。
   - Componentsを組み合わせて画面機能を実現する。
-  - **テスト**: ロジック中心のインテグレーションテスト。
 
 ### 2.2 Backend (`src/server/`)
 
+Backendはフラットな構造を採用し、機能ごとのモジュール分割を行っています。
+
 ```
 src/server/
-├── api/                   # API ハンドラ (Oak Routes)
-│   ├── auth.ts            # GitHub OAuth 認証
-│   ├── content.ts         # コンテンツ操作
+├── api/                   # API Routes (Oak Router Handlers)
+│   ├── branches.ts        # ブランチ操作
+│   ├── commits.ts         # コミット作成
+│   ├── config.ts          # 設定取得・保存
+│   ├── content.ts         # コンテンツCRUD
+│   ├── pulls.ts           # PR操作
 │   ├── repositories.ts    # リポジトリ一覧
-│   ├── pr.ts              # PR作成・状態確認
-│   └── webhooks.ts        # Webhook 受信
-├── services/              # ビジネスロジック (APIハンドラから分離)
-│   ├── github.ts          # GitHub API Client (User/App)
-│   └── kv.ts              # Deno KV 操作
-├── middleware/            # Oak Middleware (Auth guards, Error handling)
-└── main.ts                # サーバーエントリーポイント
+│   ├── webhooks.ts        # Webhook Handler
+│   └── ...
+├── services/              # 外部サービス連携など
+│   └── github_resilient.ts  # GitHub API Resiliency Wrapper
+├── auth.ts                # GitHub App 認証ロジック
+├── github.ts              # GitHub API Client (Core Logic)
+├── sse.ts                 # Server-Sent Events (Realtime)
+├── build_assets.ts        # フロントエンドビルドロジック
+├── app.ts                 # Server Setup & Middleware
+└── main.ts                # Entry Point
 ```
+
+_Note: 以前の `middleware/` ディレクトリ等は廃止または `app.ts`
+等に統合されました。_
 
 ## 3. Testing Strategy & Placement
 
@@ -116,8 +131,19 @@ Deno v2.4+ の `deno bundle` (または `deno_esbuild`)
 - **Production**: `deno task build`
   - `src/app/main.tsx` をエントリーポイントとして `public/js/bundle.js` を生成。
   - React 19, Semantic UI を適切にバンドルに含める。
+  - **CSS Build**: `deno task build` (または `scripts/build_css.ts`)
+    により、SCSS をコンパイルして `public/styles/main.css` を生成。
 
-## 5. Coding Standards & Best Practices
+## 5. Deployment
+
+Staticms v2 は **Deno Deploy** に最適化されています。
+
+- **GitHub Integration**:
+  - Deno Deploy の GitHub App 連携機能を使用し、`main`
+    ブランチへのプッシュ時に自動的にデプロイされます。
+  - **GitHub Actions (`.github/workflows/deploy.yml`) は使用しません。**
+
+## 6. Coding Standards & Best Practices
 
 Staticms v2 プロジェクトにおける開発の掟です。
 
