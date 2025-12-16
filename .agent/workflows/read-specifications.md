@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+description: すべての読むべき仕様書を読んで、Staticmsのアーキテクチャと機能の仕様を把握する。
 ---
 
 ## アーキテクチャと仕様の把握
