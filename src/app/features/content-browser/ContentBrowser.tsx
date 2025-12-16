@@ -6,11 +6,17 @@ import {
   ErrorCallout,
   LoadingSpinner,
 } from "@/app/components/common/Feedback.tsx";
+import { useRepository } from "@/app/hooks/useRepositories.ts";
 
 export function ContentBrowser() {
   const { owner, repo } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { config, loading, error } = useContentConfig(owner, repo);
+  const { config, loading: configLoading, error: configError } =
+    useContentConfig(owner, repo);
+  const { repository, loading: repoLoading, error: repoError } = useRepository(
+    owner,
+    repo,
+  );
 
   if (!owner || !repo) return null;
 
@@ -29,7 +35,7 @@ export function ContentBrowser() {
   const isEditing = hasSettings;
   const mode = settingsValue ? "edit" : "add";
 
-  if (loading) {
+  if (configLoading || repoLoading) {
     return (
       <div className="ui container" style={{ marginTop: "2em" }}>
         <LoadingSpinner />
@@ -37,11 +43,14 @@ export function ContentBrowser() {
     );
   }
 
+  const error = configError || repoError;
   if (error) {
+    // deno-lint-ignore no-explicit-any
+    const msg = (error as any).message || String(error);
     return (
       <div className="ui container" style={{ marginTop: "2em" }}>
         <ErrorCallout title="Error loading configuration">
-          {error.message}
+          {msg}
         </ErrorCallout>
       </div>
     );
@@ -71,6 +80,7 @@ export function ContentBrowser() {
             owner={owner}
             repo={repo}
             branch={config.branch || "main"}
+            defaultBranch={repository?.default_branch}
           />
         )}
     </>

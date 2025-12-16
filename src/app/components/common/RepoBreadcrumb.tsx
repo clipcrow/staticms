@@ -7,10 +7,9 @@ export const RepoBreadcrumbLabel = (
   },
 ) => {
   // Check if we should show the branch label
-  // Show only if the effective branch differs from default
-  // If defaultBranch is not yet loaded (undefined), we still show the branch label to be safe (avoid hiding non-default branches).
-  // This prioritizes "showing user selection" over "hiding default".
-  const showBranch = branch && (!defaultBranch || branch !== defaultBranch);
+  // Show only if defaultBranch is loaded AND differs from current branch
+  // This prevents flashing "main" label during initial load
+  const showBranch = branch && defaultBranch && branch !== defaultBranch;
 
   return (
     <span className="staticms-breadcrumb-label">

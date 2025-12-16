@@ -2,20 +2,19 @@ import { useState } from "react";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
 import { useNavigate } from "react-router-dom";
 import { CollectionList } from "@/app/components/content-browser/CollectionList.tsx";
-import { useRepository } from "@/app/hooks/useRepositories.ts";
 
 interface ContentListProps {
   collections: Collection[];
   owner: string;
   repo: string;
   branch?: string;
+  defaultBranch?: string;
 }
 
 export function ContentList(
-  { collections, owner, repo, branch }: ContentListProps,
+  { collections, owner, repo, branch, defaultBranch }: ContentListProps,
 ) {
   const navigate = useNavigate();
-  const { repository } = useRepository(owner, repo);
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,7 +36,7 @@ export function ContentList(
       owner={owner}
       repo={repo}
       branch={branch}
-      defaultBranch={repository?.default_branch}
+      defaultBranch={defaultBranch}
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       onSelect={handleSelectContent}
