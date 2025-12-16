@@ -150,6 +150,61 @@ deno run -A src/server/main.ts
     が正しいか確認してください。
   - `STATICMS_PUBLIC_URL` が現在の ngrok URL と一致しているか確認してください。
 - **認証エラー (401)**:
+- **Webhook 自動設定が失敗する**:
+  - サーバーログを確認してください。`[GitHubApp] Failed to ensure webhook`
+    というエラーが出ている場合、`GITHUB_APP_ID` または `GITHUB_APP_PRIVATE_KEY`
+    が正しいか確認してください。
+  - `STATICMS_PUBLIC_URL` が現在の ngrok URL と一致しているか確認してください。
+- **認証エラー (401)**:
   - `GITHUB_CLIENT_ID` と `GITHUB_CLIENT_SECRET` を確認してください。
   - GitHub App 設定の Callback URL が `STATICMS_PUBLIC_URL` +
     `/api/auth/callback` と一致しているか確認してください。
+
+## 本番デプロイ (Deno Deploy)
+
+Staticms v2 は [Deno Deploy](https://deno.com/deploy)
+へのデプロイを推奨しています。
+サーバー起動時にアセット（JS/CSS）のオンデマンドビルドを行う機能が内蔵されているため、**GitHub
+連携による自動デプロイ**だけで動作します。
+
+### 1. Deno Deploy プロジェクトの作成
+
+1. [Deno Deploy ダッシュボード](https://console.deno.com/projects) で **New
+   Project** を作成します。
+2. **Repository** で対象の GitHub リポジトリ (`main` ブランチ)
+   を選択・リンクします。
+3. **Automatic deployment** を有効にします。
+4. **Entrypoint** に `src/server/main.ts`
+   を指定します（自動検出される場合もあります）。
+5. **Deploy Project** をクリックします。
+
+※ 初回のデプロイは環境変数未設定のため失敗する可能性があります。
+
+### 2. 環境変数の設定
+
+Deno Deploy のプロジェクト設定画面 (**Settings** > **Environment Variables**)
+で以下の変数を設定してください。
+これらはアプリケーションの動作に必要な設定です。
+
+| 変数名                   | 値の例 / 説明                                                                  |
+| :----------------------- | :----------------------------------------------------------------------------- |
+| `GITHUB_APP_ID`          | GitHub App ID                                                                  |
+| `GITHUB_CLIENT_ID`       | GitHub OAuth Client ID                                                         |
+| `GITHUB_CLIENT_SECRET`   | GitHub OAuth Client Secret                                                     |
+| `GITHUB_WEBHOOK_SECRET`  | Webhook Secret (開発環境と同じで可、または新規生成)                            |
+| `GITHUB_APP_PRIVATE_KEY` | 秘密鍵 (`.pem`) の中身を**改行コードも含めてそのまま**貼り付け                 |
+| `STATICMS_PUBLIC_URL`    | デプロイ先の URL (例: `https://staticms-v2-demo.deno.dev`) ※末尾スラッシュなし |
+
+### 3. GitHub App 設定の更新
+
+公開された URL に合わせて、GitHub App の設定（または本番用の別
+App）を更新します。
+
+1. **Homepage URL**: `https://staticms-v2-demo.deno.dev`
+2. **Callback URL**: `https://staticms-v2-demo.deno.dev/api/auth/callback`
+3. **Webhook URL**: `https://staticms-v2-demo.deno.dev/api/webhook`
+
+### 4. 完了確認
+
+1. 環境変数を保存すると自動的に再デプロイが行われます。
+2. デプロイ先の URL にアクセスし、ログインできるか確認します。

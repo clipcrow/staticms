@@ -15,6 +15,7 @@ import { createBranch, getBranch } from "@/server/api/branches.ts";
 import { dumpKvKeys } from "@/server/api/debug.ts";
 import { compareRouter } from "@/server/api/compare.ts";
 import { pullsRouter } from "@/server/api/pulls.ts";
+import { buildCss, buildJs } from "@/server/build_assets.ts";
 
 export const app = new Application();
 const router = new Router();
@@ -92,6 +93,21 @@ router.get("/api/events", async (ctx) => {
 
 app.use(router.routes());
 app.use(router.allowedMethods());
+
+// On-demand Assets (for Deno Deploy)
+app.use(async (ctx, next) => {
+  if (ctx.request.url.pathname === "/js/bundle.js") {
+    ctx.response.headers.set("Content-Type", "application/javascript");
+    ctx.response.body = await buildJs();
+    return;
+  }
+  if (ctx.request.url.pathname === "/styles/main.css") {
+    ctx.response.headers.set("Content-Type", "text/css");
+    ctx.response.body = buildCss();
+    return;
+  }
+  await next();
+});
 
 // Static Files & SPA Fallback
 app.use(async (ctx, next) => {
