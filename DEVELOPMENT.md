@@ -160,6 +160,13 @@ deno run -A src/server/main.ts
   - `GITHUB_CLIENT_ID` と `GITHUB_CLIENT_SECRET` を確認してください。
   - GitHub App 設定の Callback URL が `STATICMS_PUBLIC_URL` +
     `/api/auth/callback` と一致しているか確認してください。
+- **ビルドエラー (esbuild: Cannot import ... .css)**:
+  - ライブラリ内の CSS ファイルを JS
+    からインポートしようとしてエラーになる場合があります。
+  - `src/server/build_assets.ts` の `esbuild` 設定に
+    `loader: { ".css": "empty" }`
+    が含まれているか確認してください。これにより、JS バンドル時の CSS
+    インポートを無視してエラーを回避しています。
 
 ## 本番デプロイ (Deno Deploy)
 

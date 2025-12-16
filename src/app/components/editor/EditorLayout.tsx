@@ -62,10 +62,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 }) => {
   return (
     <>
-      <div
-        className="ui container content-editor"
-        style={{ marginTop: "2rem", paddingBottom: "80px" }}
-      >
+      <div className="ui container content-editor staticms-editor-container">
         <div className="ui stackable grid">
           <div className="twelve wide column">
             {isListMode
@@ -99,7 +96,7 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
 
                   {/* Markdown Editor */}
                   {!isYamlMode && (
-                    <div style={{ marginTop: "1rem" }}>
+                    <div className="staticms-markdown-editor-wrapper">
                       <MarkdownEditor
                         body={draft.body}
                         setBody={onBodyChange}
@@ -128,26 +125,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           </div>
         </div>
       </div>
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          backgroundColor: "var(--color-canvas-default, #fff)", // Use variable if available
-          borderTop: "1px solid var(--color-border-muted, #d0d7de)",
-          padding: "1rem 2rem",
-          zIndex: 100,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          gap: "1rem",
-          boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
-        }}
-        className="staticms-editor-footer"
-      >
+      <div className="staticms-editor-footer">
         {/* Actions (Left) */}
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div className="actions-left">
           <button
             type="button"
             className="ui button"
@@ -163,10 +143,9 @@ export const EditorLayout: React.FC<EditorLayoutProps> = ({
           {onCommitMessageChange !== undefined
             ? (
               <div
-                className={`ui action input ${
+                className={`ui action input commit-message-wrapper ${
                   commitMessage === "" ? "error" : ""
                 }`}
-                style={{ width: "400px" }}
               >
                 <input
                   type="text"

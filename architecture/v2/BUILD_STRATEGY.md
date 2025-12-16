@@ -14,56 +14,31 @@ Deno エコシステムで広く使われている **`deno_esbuild`**
 (`@luca/esbuild-deno-loader`) を使用して、Deno のモジュール解決と `esbuild`
 の高速なバンドル機能を組み合わせます。これにより、npmパッケージとDenoモジュールの混在が可能になります。
 
-### 1.2 Build Script (`scripts/build.ts`)
+### 1.2 Build Logic (`src/server/build_assets.ts`)
 
-`deno task build` で実行されるビルドスクリプトです。
+ビルドロジックはサーバーコード (`src/server/build_assets.ts`)
+に集約し、オンデマンドビルドと静的ファイル生成 (`scripts/build.ts`)
+の両方から参照可能にします。
 
-```typescript
-// scripts/build.ts
-import * as esbuild from "esbuild";
-import { denoPlugins } from "deno_esbuild";
+### 1.3 On-demand Build Policy (Deno Deploy)
 
-try {
-  console.log("Building...");
-  await esbuild.build({
-    plugins: [
-      ...denoPlugins({
-        configPath: new URL("../deno.json", import.meta.url).pathname,
-      }),
-    ],
-    entryPoints: ["./src/app/main.tsx"],
-    outfile: "./public/js/bundle.js",
-    bundle: true,
-    format: "esm",
-    platform: "browser",
-    jsx: "automatic",
-    logLevel: "info",
-  });
-  console.log("Build success");
-} catch (e) {
-  console.error("Build failed:", e);
-  Deno.exit(1);
-} finally {
-  esbuild.stop();
-}
-```
+Deno Deploy
+は書き込み可能なファイルシステムを持たないため、本番環境ではサーバー起動時（またはリクエスト時）にメモリ上でアセットをビルドして配信する
+**On-demand Build** 戦略を採用します。
 
-### 1.3 Development Watch Mode
-
-`deno task dev` (`scripts/dev.ts`) では、以下のプロセスを並行して管理します。
-
-1. **Frontend Bundle**: ソースコード変更検知時に `scripts/build.ts` を実行。
-2. **SCSS Build**: `scripts/build_css.ts` を実行。
-3. **Server**: バックエンドサーバーを起動 (`deno run --watch`)。
+- **実装**: `src/server/app.ts` のミドルウェアで `/js/bundle.js`
+  等へのリクエストを捕捉し、ビルド関数を実行してレスポンスを返します。
+- **優先順位**: 静的ファイル (`public/`)
+  が存在する場合はそちらを優先し、存在しない場合（Deno Deploy
+  環境）のみオンデマンドビルドを実行します。
 
 ## 2. Server Runtime
 
-サーバーサイド (`src/server/`) はバンドルせず、Deno
-ランタイムで直接実行します。これにより、デバッグが容易になり、ビルド時間が短縮されます。
+サーバーサイド (`src/server/`) はバンドルせず、Deno ランタイムで直接実行します。
 
 - **Execution**: `deno run --unstable-kv --allow-net ... src/server/main.ts`
-- **Assets Serving**: `oak` の `send` ミドルウェアを使用し、`public/`
-  ディレクトリ（ビルド済み JS や CSS）を配信します。
+- **Assets Serving**:
+  静的ファイルが存在すればそれを配信し、なければオンデマンドビルドした結果を配信します。
 
 ## 3. CSS Handling
 
@@ -126,29 +101,40 @@ try {
 <!-- Compiled from SCSS -->
 ```
 
+### 3.4 CSS Imports in JS (Known Issue)
+
+一部のライブラリ（例: `react-md-editor`）の JS ファイル内部で `.css` を import
+している場合があります。 `esbuild` で `write: false` (オンデマンドビルド)
+を使用する場合、これらが出力先を決定できずエラーになることがあります。
+
+**対策**: `esbuild` のオプションに `loader: { ".css": "empty" }` を設定し、JS
+バンドル内の CSS import を無視（空モジュールとして解決）します。必要なスタイルは
+`main.scss`
+などで別途読み込むか、ライブラリが適切にスタイルを提供していることを確認します。
+
 ## 4. Deployment Strategy
 
-### 4.1 Production Build
+### 4.1 Production Build (Deno Deploy)
 
-GitHub Actions 等の CI 環境で以下を実行します。
+Deno Deploy の **Automatic Deployment** (Git Push -> Deploy) を利用します。
+ビルドステップはサーバーランタイム内で完結しているため、GitHub Actions
+による事前ビルドは不要です。
 
-1. `deno task test` (Unit & Integration)
-2. `deno task build` (Generate `public/js/bundle.js`)
-3. 成果物（`src/server`,
-   `public`）をDockerイメージ化、またはデプロイ対象サーバーへ転送。
+### 4.2 Local Execution
 
-### 4.2 Local Execution (Production Mode)
-
-ユーザーが手元で本番モードで動かす場合。
+ユーザーが手元で本番モードで動かす場合。 (Watcherなし、オンデマンドビルド確認)
 
 ```bash
-deno task build
-deno task start # Runs server without watching
+deno task start
 ```
 
+deno task start # Runs server without watching
+
+```
 ## 5. Configuration Management
 
 環境変数 (`.env`) と `deno.json` を活用します。
 ビルド時に埋め込むべき変数（もしあれば `process.env`
 置換）と、ランタイムでサーバーが読み込むべき秘密鍵（`GITHUB_CLIENT_SECRET`
 等）を明確に区別します。フロントエンドには原則として機密情報を持たせません。
+```

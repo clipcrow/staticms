@@ -127,20 +127,10 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   return (
     <>
-      <div
-        className="ui container"
-        style={{ marginTop: "1rem", marginBottom: "1rem" }}
-      >
-        <div
-          style={{
-            display: "flex",
-            gap: "10px",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
+      <div className="ui container staticms-article-list-container staticms-search-create-bar">
+        <div className="inner-wrapper">
           {/* 2. Search */}
-          <div style={{ flex: 1, minWidth: "200px" }}>
+          <div className="search-box">
             <div className="ui icon input fluid">
               <input
                 type="text"
@@ -153,7 +143,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
           </div>
 
           {/* 3. Create New (Combined Input & Button) */}
-          <div style={{ flex: 1, minWidth: "300px" }}>
+          <div className="create-box">
             <div
               className={`ui action input fluid ${
                 files.some((f) =>
@@ -199,7 +189,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
         </div>
       </div>
 
-      <div className="ui container" style={{ marginTop: "2rem" }}>
+      <div className="ui container staticms-article-list-container">
         {files.length === 0
           ? (
             <div className="ui placeholder segment">
@@ -241,10 +231,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
                         onClick={() => onSelect(file.path || "")}
                       >
                         <div className="content">
-                          <div
-                            className="header"
-                            style={{ wordBreak: "break-all" }}
-                          >
+                          <div className="header staticms-article-card-header">
                             {file.name}
                           </div>
                           <div className="meta">
@@ -277,20 +264,16 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
               </>
 
               {totalPages > 1 && (
-                <div style={{ marginTop: "1em", textAlign: "center" }}>
+                <div className="staticms-pagination-wrapper">
                   <div className="ui pagination menu">
                     <button
                       type="button"
                       className={`item ${page === 1 ? "disabled" : ""}`}
-                      onClick={() =>
-                        onPageChange(Math.max(1, page - 1))}
+                      onClick={() => onPageChange(Math.max(1, page - 1))}
                     >
                       &lt;
                     </button>
-                    <div
-                      className="item disabled"
-                      style={{ color: "black", opacity: 1 }}
-                    >
+                    <div className="item disabled current-page-info">
                       Page {page} of {totalPages}
                     </div>
                     <button

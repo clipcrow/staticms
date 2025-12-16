@@ -22,6 +22,8 @@ export async function buildJs(): Promise<Uint8Array> {
       platform: "browser",
       jsx: "automatic",
       write: false,
+      outfile: "bundle.js",
+      loader: { ".css": "empty" },
     });
 
     if (result.outputFiles && result.outputFiles.length > 0) {

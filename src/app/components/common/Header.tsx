@@ -27,7 +27,7 @@ export const Header = ({
       <img
         src="/logo.svg"
         alt="Staticms"
-        style={{ height: "32px", verticalAlign: "middle" }}
+        className="staticms-header-logo-img"
       />
       <div className="content">
         <div className="header-text">Staticms</div>
@@ -55,10 +55,7 @@ export const Header = ({
           )}
 
         {(breadcrumbs || title) && (
-          <div
-            className="ui breadcrumb staticms-header-breadcrumb"
-            style={{ display: "flex", alignItems: "center" }}
-          >
+          <div className="ui breadcrumb staticms-header-breadcrumb staticms-header-breadcrumb-container">
             {/* Root GitHub Icon */}
             {rootLink
               ? (
@@ -87,9 +84,8 @@ export const Header = ({
                   : item.onClick
                   ? (
                     <span
-                      className="section clickable"
+                      className="section clickable staticms-clickable-text"
                       onClick={item.onClick}
-                      style={{ cursor: "pointer" }}
                     >
                       {item.label}
                     </span>
@@ -99,16 +95,7 @@ export const Header = ({
             ))}
 
             {title && (
-              <div
-                className="section"
-                style={{
-                  fontWeight: "900",
-                  fontSize: "1.5rem",
-                  marginLeft: "0.8rem",
-                  color: "#1F2328",
-                  lineHeight: "1.25",
-                }}
-              >
+              <div className="section staticms-header-breadcrumb-title">
                 {title}
               </div>
             )}

@@ -78,9 +78,9 @@ export function YamlListEditor({
   };
 
   return (
-    <div className="yaml-list-editor">
+    <div className="yaml-list-editor staticms-yaml-list-editor">
       {/* Top Add Button */}
-      <div style={{ marginBottom: "1rem", textAlign: "center" }}>
+      <div className="add-button-top">
         <button
           type="button"
           className="ui button basic dashed fluid"
@@ -91,10 +91,7 @@ export function YamlListEditor({
         </button>
       </div>
 
-      <div
-        className="ui list"
-        style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-      >
+      <div className="ui list list-container">
         {safeItems.map((item, index) => (
           <div
             key={index}
@@ -102,18 +99,15 @@ export function YamlListEditor({
             onDragStart={(e) => onDragStart(e, index)}
             onDragOver={(e) => onDragOver(e, index)}
             onDrop={(e) => onDrop(e, index)}
+            className="list-item"
             style={{
-              display: "flex",
-              gap: "0.5rem",
-              marginBottom: "0.25rem",
               opacity: draggedIndex === index ? 0.5 : 1,
               cursor: isLocked ? "default" : "move",
-              alignItems: "stretch", // Stretch to same height
             }}
           >
             {/* Content (Left) */}
             <div
-              style={{ flex: 1, cursor: "default" }}
+              className="item-content"
               onDragStart={(e) => e.stopPropagation()}
               draggable={false}
             >
@@ -141,36 +135,15 @@ export function YamlListEditor({
             </div>
 
             {/* Right Controls */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                width: "40px",
-                flexShrink: 0,
-                paddingTop: "0.5rem",
-                paddingBottom: "0.5rem",
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: "bold",
-                  color: "#999",
-                  fontSize: "1em",
-                }}
-              >
+            <div className="item-controls">
+              <div className="item-index">
                 #{index + 1}
               </div>
 
               {!isLocked && (
                 <button
                   type="button"
-                  className="ui icon button mini basic"
-                  style={{
-                    marginTop: "auto",
-                    marginBottom: "auto",
-                    boxShadow: "none",
-                  }}
+                  className="ui icon button mini basic delete-button"
                   onClick={() => handleRemoveItem(index)}
                   title="Remove Item"
                 >
@@ -183,7 +156,7 @@ export function YamlListEditor({
       </div>
 
       {/* Bottom Add Button */}
-      <div style={{ marginTop: "1rem", textAlign: "center" }}>
+      <div className="add-button-bottom">
         <button
           type="button"
           className="ui button basic dashed fluid"
