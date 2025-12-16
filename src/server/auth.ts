@@ -9,8 +9,19 @@ const GITHUB_CLIENT_ID = Deno.env.get("GITHUB_CLIENT_ID")?.trim();
 const GITHUB_CLIENT_SECRET = Deno.env.get("GITHUB_CLIENT_SECRET")?.trim();
 
 // Deno KV for session storage
-const kvPath = Deno.env.get("DENO_KV_PATH") || "./kv.db";
-export const kv = await Deno.openKv(kvPath);
+// Deno KV for session storage
+const isDeploy = !!Deno.env.get("DENO_DEPLOYMENT_ID");
+const kvPath = Deno.env.get("DENO_KV_PATH");
+
+let path: string | undefined;
+
+if (kvPath) {
+  path = kvPath;
+} else if (!isDeploy) {
+  path = "./kv.db"; // Local dev fallback
+}
+
+export const kv = await Deno.openKv(path);
 export const closeKv = () => kv.close();
 
 export const authRouter = new Router();
