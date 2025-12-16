@@ -265,3 +265,220 @@ export class GitHubUserClient {
     );
   }
 }
+
+// ==========================================
+// GitHub App Authentication Logic (from v1)
+// ==========================================
+
+import { create, getNumericDate } from "djwt";
+import { createPrivateKey } from "node:crypto";
+
+const GITHUB_APP_ID = Deno.env.get("GITHUB_APP_ID")?.trim();
+const GITHUB_APP_PRIVATE_KEY = Deno.env.get("GITHUB_APP_PRIVATE_KEY")?.trim();
+
+async function importPrivateKey(pem: string) {
+  let key = pem.trim();
+
+  // Remove surrounding quotes
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+
+  // Unescape newlines (handle \n literal)
+  key = key.replace(/\\n/g, "\n");
+
+  // Identify header and footer
+  const rsaHeader = "-----BEGIN RSA PRIVATE KEY-----";
+  const rsaFooter = "-----END RSA PRIVATE KEY-----";
+  const pkcs8Header = "-----BEGIN PRIVATE KEY-----";
+  const pkcs8Footer = "-----END PRIVATE KEY-----";
+
+  let header = "";
+  let footer = "";
+
+  if (key.includes(rsaHeader) && key.includes(rsaFooter)) {
+    header = rsaHeader;
+    footer = rsaFooter;
+  } else if (key.includes(pkcs8Header) && key.includes(pkcs8Footer)) {
+    header = pkcs8Header;
+    footer = pkcs8Footer;
+  }
+
+  if (header && footer) {
+    // Extract body, remove all whitespace, and re-chunk
+    const headerIdx = key.indexOf(header);
+    const footerIdx = key.indexOf(footer);
+    let body = key.substring(headerIdx + header.length, footerIdx).trim();
+    // Remove all whitespace (spaces, newlines, tabs)
+    body = body.replace(/\s/g, "");
+    // Chunk body into 64 chars
+    const chunkedBody = body.match(/.{1,64}/g)?.join("\n");
+    key = `${header}\n${chunkedBody}\n${footer}`;
+  }
+
+  try {
+    const keyObject = createPrivateKey(key);
+    const pkcs8Der = keyObject.export({
+      type: "pkcs8",
+      format: "der",
+    });
+
+    return await crypto.subtle.importKey(
+      "pkcs8",
+      // deno-lint-ignore no-explicit-any
+      pkcs8Der as any,
+      {
+        name: "RSASSA-PKCS1-v1_5",
+        hash: "SHA-256",
+      },
+      true,
+      ["sign"],
+    );
+  } catch (e) {
+    console.error("Failed to import private key:", e);
+    throw e;
+  }
+}
+
+async function generateAppJwt() {
+  if (!GITHUB_APP_ID || !GITHUB_APP_PRIVATE_KEY) {
+    throw new Error("GitHub App not configured (Missing ID or Private Key)");
+  }
+
+  const key = await importPrivateKey(GITHUB_APP_PRIVATE_KEY);
+  const jwt = await create(
+    { alg: "RS256", typ: "JWT" },
+    {
+      iat: getNumericDate(-60), // 60 seconds in the past
+      exp: getNumericDate(60 * 9), // 9 minutes
+      iss: GITHUB_APP_ID,
+    },
+    key,
+  );
+  return jwt;
+}
+
+export class GitHubAppClient {
+  async getInstallationToken(owner: string, repo: string) {
+    const jwt = await generateAppJwt();
+
+    // 1. Get installation ID for the repo
+    const installationRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/installation`,
+      {
+        headers: {
+          "Authorization": `Bearer ${jwt}`,
+          "Accept": "application/vnd.github.v3+json",
+        },
+      },
+    );
+
+    if (!installationRes.ok) {
+      throw new Error(
+        `Failed to get installation: ${installationRes.statusText}`,
+      );
+    }
+
+    const installation = await installationRes.json();
+
+    // 2. Get access token for the installation
+    const tokenRes = await fetch(
+      `https://api.github.com/app/installations/${installation.id}/access_tokens`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${jwt}`,
+          "Accept": "application/vnd.github.v3+json",
+        },
+      },
+    );
+
+    if (!tokenRes.ok) {
+      throw new Error(
+        `Failed to get installation token: ${tokenRes.statusText}`,
+      );
+    }
+
+    const data = await tokenRes.json();
+    return data.token;
+  }
+
+  async ensureWebhook(owner: string, repo: string, webhookUrl: string) {
+    try {
+      const token = await this.getInstallationToken(owner, repo);
+
+      const hooksResponse = await fetch(
+        `https://api.github.com/repos/${owner}/${repo}/hooks`,
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/vnd.github.v3+json",
+          },
+        },
+      );
+
+      if (!hooksResponse.ok) {
+        throw new Error(`Failed to fetch hooks: ${hooksResponse.statusText}`);
+      }
+
+      const hooks = await hooksResponse.json();
+
+      // deno-lint-ignore no-explicit-any
+      const exists = hooks.find((h: any) => h.config.url === webhookUrl);
+
+      if (!exists) {
+        await fetch(`https://api.github.com/repos/${owner}/${repo}/hooks`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Accept": "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: "web",
+            active: true,
+            events: ["push", "pull_request"],
+            config: {
+              url: webhookUrl,
+              content_type: "json",
+              secret: Deno.env.get("GITHUB_WEBHOOK_SECRET"),
+            },
+          }),
+        });
+        console.log(`[GitHubApp] Webhook created for ${owner}/${repo}`);
+      } else {
+        // Check if update needed
+        const currentEvents = exists.events || [];
+        if (
+          !currentEvents.includes("push") ||
+          !currentEvents.includes("pull_request")
+        ) {
+          await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/hooks/${exists.id}`,
+            {
+              method: "PATCH",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Accept": "application/vnd.github.v3+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                events: ["push", "pull_request"],
+              }),
+            },
+          );
+          console.log(`[GitHubApp] Webhook updated for ${owner}/${repo}`);
+        }
+      }
+    } catch (e) {
+      console.error(
+        `[GitHubApp] Failed to ensure webhook for ${owner}/${repo}:`,
+        e,
+      );
+      // Suppress error to avoid breaking the main config save flow
+    }
+  }
+}

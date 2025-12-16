@@ -1,6 +1,10 @@
 import { RouterContext } from "@oak/oak";
 import { getSessionToken, kv } from "@/server/auth.ts";
-import { GitHubAPIError, GitHubUserClient } from "@/server/github.ts";
+import {
+  GitHubAPIError,
+  GitHubAppClient,
+  GitHubUserClient,
+} from "@/server/github.ts";
 
 // GET /api/repo/:owner/:repo/config
 export const getRepoConfig = async (
@@ -108,6 +112,25 @@ export const saveRepoConfig = async (
 
     // Save to Deno KV
     await kv.set(["config", owner, repo], bodyText);
+
+    // Setup Webhook automatically (Fire and Forget)
+    const webhookUrlRoot = Deno.env.get("STATICMS_PUBLIC_URL");
+    if (webhookUrlRoot) {
+      try {
+        const appClient = new GitHubAppClient();
+        const webhookUrl = `${webhookUrlRoot}/api/webhook`;
+        // Don't await strictly to keep UI response fast?
+        // Or await to ensure it works?
+        // v1 used await inside setupWebhook, but here we are inside a request handler.
+        // Let's await it to be sure, or log error if it fails.
+        await appClient.ensureWebhook(owner, repo, webhookUrl);
+      } catch (e) {
+        console.error("Webhook setup warning:", e);
+        // Do not fail the request just because webhook setup failed
+      }
+    } else {
+      console.warn("STATICMS_PUBLIC_URL not set. Skipping WebHook setup.");
+    }
 
     ctx.response.body = {
       message: "Configuration saved successfully (KV)",
