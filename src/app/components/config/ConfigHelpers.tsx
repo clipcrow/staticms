@@ -21,9 +21,9 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
   };
 
   return (
-    <tr style={{ verticalAlign: "middle" }}>
+    <tr className="staticms-config-field-row">
       {/* Name (Key) */}
-      <td style={{ width: "35%", minWidth: "150px" }}>
+      <td className="staticms-config-name-cell">
         <div className="ui input fluid mini">
           <input
             type="text"
@@ -31,7 +31,6 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
             value={field.name}
             onChange={(e) => handleChange("name", e.target.value)}
             disabled={disabled}
-            style={{ height: "32px" }}
           />
         </div>
       </td>
@@ -40,14 +39,13 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       {isCollection
         ? (
           <td>
-            <div className="ui input fluid mini">
+            <div className="ui input fluid mini staticms-config-default-cell">
               <input
                 type="text"
                 placeholder="Optional"
                 value={String(field.default || "")}
                 onChange={(e) => handleChange("default", e.target.value)}
                 disabled={disabled}
-                style={{ height: "32px" }}
               />
             </div>
           </td>
@@ -55,10 +53,7 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
         : <td></td>}
 
       {/* Required */}
-      <td
-        className="center aligned"
-        style={{ width: "1%", whiteSpace: "nowrap" }}
-      >
+      <td className="center aligned staticms-config-action-cell">
         <div className="ui checkbox">
           <input
             type="checkbox"
@@ -71,17 +66,13 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       </td>
 
       {/* Delete Button */}
-      <td
-        className="center aligned"
-        style={{ width: "1%", whiteSpace: "nowrap" }}
-      >
+      <td className="center aligned staticms-config-action-cell">
         <button
           type="button"
-          className="ui icon button mini basic"
+          className="ui icon button mini basic delete-field-btn"
           onClick={disabled ? undefined : onDelete}
           disabled={disabled}
           title="Remove field"
-          style={{ margin: 0, boxShadow: "none" }}
         >
           <i className="trash icon red"></i>
         </button>
@@ -150,10 +141,9 @@ export const FieldList: React.FC<FieldListProps> = ({
 
       <button
         type="button"
-        className="ui button mini basic primary"
+        className="ui button mini basic primary staticms-add-field-btn"
         onClick={handleAddField}
         disabled={disabled}
-        style={{ marginTop: "10px" }}
       >
         <i className="plus icon"></i> Add Field
       </button>

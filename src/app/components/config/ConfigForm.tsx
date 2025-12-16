@@ -68,14 +68,11 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
 
   return (
     <>
-      <div
-        className="ui container"
-        style={{ marginTop: "2rem", paddingBottom: "100px" }}
-      >
+      <div className="ui container staticms-config-form-container">
         <form id="content-config-form" onSubmit={onSave}>
           {/* Basic Settings */}
-          <div style={{ marginBottom: "2rem" }}>
-            <div className="ui form" style={{ marginTop: "1rem" }}>
+          <div className="staticms-config-section">
+            <div className="ui form staticms-config-form-inner">
               {/* Content Name (Label) */}
               <div className="field">
                 <label>Content Name</label>
@@ -156,14 +153,7 @@ export const ConfigForm: React.FC<ConfigFormProps> = ({
                 </div>
               </div>
 
-              <small
-                className="helper-text"
-                style={{
-                  display: "block",
-                  marginTop: "-10px",
-                  marginBottom: "20px",
-                }}
-              >
+              <small className="helper-text staticms-helper-text-block">
                 {isCollection && binding === "file" &&
                   "Collection + File: Manages multiple Markdown files in the folder."}
                 {isCollection && binding === "directory" &&

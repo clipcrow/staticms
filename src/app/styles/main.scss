@@ -658,3 +658,198 @@ a {
     opacity: 1 !important;
   }
 }
+
+// -----------------------------------------------------------------------------
+// ConfigHelpers
+// -----------------------------------------------------------------------------
+.staticms-config-field-row {
+  vertical-align: middle !important;
+}
+
+.staticms-config-name-cell {
+  width: 35%;
+  min-width: 150px;
+
+  input {
+    height: 32px !important;
+  }
+}
+
+.staticms-config-default-cell {
+  input {
+    height: 32px !important;
+  }
+}
+
+.staticms-config-action-cell {
+  width: 1%;
+  white-space: nowrap;
+
+  .delete-field-btn {
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.staticms-add-field-btn {
+  margin-top: 10px !important;
+}
+
+// -----------------------------------------------------------------------------
+// ConfigForm
+// -----------------------------------------------------------------------------
+.staticms-config-form-container {
+  margin-top: 2rem !important;
+  padding-bottom: 100px !important;
+}
+
+.staticms-config-section {
+  margin-bottom: 2rem;
+}
+
+.staticms-config-form-inner {
+  margin-top: 1rem;
+}
+
+.staticms-helper-text-block {
+  display: block;
+  margin-top: -10px;
+  margin-bottom: 20px;
+}
+
+.staticms-archetype-header {
+  font-size: 0.93rem !important;
+  font-weight: 700 !important;
+}
+
+.staticms-archetype-editor-wrapper {
+  margin-top: 1rem;
+}
+
+.staticms-archetype-helper {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+.staticms-config-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-canvas-default, #fff);
+  border-top: 1px solid var(--color-border-muted, #d0d7de);
+  padding: 1rem 2rem;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+
+  .actions-left {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RepositoryList
+// -----------------------------------------------------------------------------
+.staticms-repo-list-container {
+  margin-top: 1rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.staticms-repo-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .search-wrapper {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .filter-wrapper {
+    flex-shrink: 0;
+  }
+
+  .connect-wrapper {
+    flex-shrink: 0;
+  }
+}
+
+.staticms-repo-grid-container {
+  margin-top: 2rem !important;
+}
+
+.staticms-repo-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5em;
+
+  .repo-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    i.icon {
+      opacity: 0.5;
+      margin: 0;
+      line-height: 1;
+      height: auto;
+    }
+
+    .repo-name {
+      word-break: break-all;
+      font-weight: bold;
+      font-size: 1.1em;
+      line-height: 1;
+      color: rgba(0, 0, 0, 0.85);
+    }
+  }
+
+  .repo-star-wrapper {
+    color: #666;
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    flex-shrink: 0;
+    margin-left: 0.5em;
+
+    i.icon {
+      margin: 0;
+      line-height: 1;
+      height: auto;
+    }
+
+    span {
+      line-height: 1;
+    }
+  }
+}
+
+.staticms-repo-card-desc {
+  margin-top: 0.5em;
+
+  .branch-label {
+    margin-bottom: 0.5em;
+  }
+}
+
+.staticms-repo-card-meta {
+  margin-top: 1em;
+  font-size: 0.9em;
+}
+
+.staticms-repo-card-extra-badges {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+
+.staticms-repo-settings-btn {
+  margin: 0 !important;
+}
