@@ -51,16 +51,13 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
 
   return (
     <>
-      <div
-        className="ui container"
-        style={{ marginTop: "2rem", paddingBottom: "100px" }}
-      >
-        <div className="ui form" style={{ marginBottom: "2rem" }}>
+      <div className="ui container staticms-branch-management-container">
+        <div className="ui form staticms-branch-management-form-wrapper">
           <h4 className="ui header">Branch Management</h4>
 
           <div className="field">
             <label htmlFor="repo-config-branch">Target Branch</label>
-            <div className="ui action input" style={{ width: "400px" }}>
+            <div className="ui action input staticms-branch-input-wrapper">
               <input
                 id="repo-config-branch"
                 type="text"
@@ -83,21 +80,14 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
                 Switch
               </button>
             </div>
-            <small
-              className="helper-text"
-              style={{
-                display: "block",
-                marginTop: "0.5rem",
-                color: "rgba(0,0,0,0.6)",
-              }}
-            >
+            <small className="helper-text staticms-branch-helper-text">
               The branch where content changes will be committed. If empty,
               defaults to the repository's default branch.
             </small>
           </div>
 
           {/* Unmerged Commits Section */}
-          <div style={{ marginTop: "2rem" }}>
+          <div className="staticms-unmerged-section">
             <h4 className="ui header">
               Unmerged Commits
             </h4>
@@ -136,17 +126,11 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
               )}
 
             {/* PR Creation Area */}
-            <div
-              style={{
-                marginTop: "1.5rem",
-                borderTop: "1px solid rgba(34,36,38,.15)",
-                paddingTop: "1rem",
-              }}
-            >
-              <div style={{ marginBottom: "0.5rem", fontWeight: "bold" }}>
+            <div className="staticms-pr-creation-area">
+              <div className="staticms-pr-creation-title">
                 Create Merge Pull Request for Default Branch
               </div>
-              <div className="ui action input" style={{ width: "400px" }}>
+              <div className="ui action input staticms-branch-input-wrapper">
                 <input
                   type="text"
                   placeholder="Pull Request Title"
@@ -172,22 +156,7 @@ export const BranchManagementForm: React.FC<BranchManagementFormProps> = ({
       </div>
 
       {/* Footer with Modify/Cancel Actions */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          backgroundColor: "var(--color-canvas-default, #fff)",
-          borderTop: "1px solid var(--color-border-muted, #d0d7de)",
-          padding: "1rem 2rem",
-          zIndex: 100,
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          boxShadow: "0 -1px 3px rgba(0,0,0,0.05)",
-        }}
-      >
+      <div className="staticms-branch-management-footer">
         <button
           type="button"
           onClick={onCancel}
