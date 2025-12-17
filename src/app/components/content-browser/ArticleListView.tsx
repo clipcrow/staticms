@@ -15,6 +15,7 @@ export interface ArticleListViewProps {
   collectionName: string;
   collectionDef?: Collection;
   files: FileItem[];
+  loading: boolean;
   error: Error | null;
 
   // UI State
@@ -43,6 +44,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   collectionName,
   collectionDef,
   files,
+  loading,
   error,
   searchQuery,
   newArticleName,
@@ -172,19 +174,25 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
       <div className="ui container staticms-article-list-container">
         {files.length === 0
           ? (
-            <div className="ui placeholder segment">
-              <div className="ui icon header">
-                <i className="file outline icon"></i>
-                No articles found
+            loading ? null : (
+              <div className="ui placeholder segment">
+                <div className="ui icon header">
+                  <i className="file outline icon"></i>
+                  No articles found
+                </div>
+                {searchQuery
+                  ? (
+                    <div className="inline">
+                      Your search returned no results.
+                    </div>
+                  )
+                  : (
+                    <div className="inline">
+                      Create a new article above to get started!
+                    </div>
+                  )}
               </div>
-              {searchQuery
-                ? <div className="inline">Your search returned no results.</div>
-                : (
-                  <div className="inline">
-                    Create a new article above to get started!
-                  </div>
-                )}
-            </div>
+            )
           )
           : (
             <>

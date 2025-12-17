@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 
 export interface GitHubFile {
@@ -17,16 +17,17 @@ export function useRepoContent(
   branch: string = "main",
 ) {
   const [files, setFiles] = useState<GitHubFile[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!(owner && repo && path));
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!owner || !repo || !path) return;
 
     const controller = new AbortController();
     const signal = controller.signal;
 
     setLoading(true);
+    setFiles([]); // Clear old content
     // Use the catch-all content API
     fetchWithAuth(
       `/api/repo/${owner}/${repo}/contents/${path}?branch=${

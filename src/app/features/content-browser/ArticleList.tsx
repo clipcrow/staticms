@@ -269,6 +269,7 @@ export function ArticleList() {
       collectionName={content!}
       collectionDef={collectionDef}
       files={paginatedFiles}
+      loading={isLoading}
       error={combinedError}
       searchQuery={searchQuery}
       newArticleName={newArticleName}
