@@ -54,6 +54,9 @@ ngrok http 8000
 5. **Subscribe to events** で以下を選択します：
    - `Push`
    - `Pull request`
+   - `Repository` (リポジトリの作成・削除などの検知に必要)
+   - `Installation` (Appのインストール・削除の検知に必要)
+   - `Installation repositories` (インストールの対象リポジトリ変更の検知に必要)
 6. **Where can this GitHub App be installed?** は "Any account" または "Only on
    this account" を選択し、**Create GitHub App** をクリックします。
 

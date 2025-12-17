@@ -3,11 +3,20 @@ import { useEffect, useRef, useState } from "react";
 import { useRepositories } from "@/app/hooks/useRepositories.ts";
 import { RepositoryList } from "@/app/components/content-browser/RepositoryList.tsx";
 import { BranchManagementPage } from "@/app/features/config/BranchManagementPage.tsx";
+import { useEventSource } from "@/app/hooks/useEventSource.ts";
 
 export function RepositorySelector() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { repos, loading, error, refresh } = useRepositories();
+
+  // Subscribe to realtime repository updates
+  useEventSource("/api/events", (event) => {
+    if (event.type === "repository_update") {
+      console.log("Received repository update event, refreshing list...");
+      refresh();
+    }
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<

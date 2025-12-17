@@ -62,15 +62,16 @@ SSE 経由で送信されるメッセージは JSON 文字列です。`type`
 }
 ```
 
-### `repository_update` (計画中)
+### `repository_update`
 
 ユーザーが新しいリポジトリに GitHub App
-をインストールしたときにトリガーされます。
+をインストールした時、またはリポジトリが作成・削除された時にトリガーされます。
 
 ```json
 {
   "type": "repository_update",
-  "action": "added"
+  "event": "installation", // or "repository", "installation_repositories"
+  "action": "created" // or "deleted", "added", "removed", etc.
 }
 ```
 

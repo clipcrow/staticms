@@ -8,4 +8,5 @@ trigger: always_on
 
 - チャットの会話は日本語で行う。
 - コミットメッセージは必ず日本語で記述する。
-- 計画や結果報告もすべて日本語で示す。
+- 実装計画(Implementation
+  Plan)、タスク(Task)や結果報告(Walkthrough)もすべて日本語で示す。

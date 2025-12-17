@@ -68,6 +68,20 @@ export const webhookHandler = async (ctx: RouterContext<string>) => {
         prNumber,
         status,
       });
+    } else if (
+      eventType === "installation" ||
+      eventType === "installation_repositories" ||
+      eventType === "repository"
+    ) {
+      const { action } = payload;
+      console.log(`Webhook received: ${eventType} ${action}`);
+
+      // Broadcast generic repository update to trigger refresh
+      broadcastMessage({
+        type: "repository_update",
+        event: eventType,
+        action,
+      });
     }
 
     ctx.response.status = 200;
