@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { LinearLoadingIndicator } from "@/app/components/common/LinearLoadingIndicator.tsx";
 
 export interface BreadcrumbItem {
   label: React.ReactNode;
@@ -14,6 +15,7 @@ interface HeaderProps {
   title?: React.ReactNode;
   rightContent?: React.ReactNode;
   rootLink?: boolean;
+  loading?: boolean;
 }
 
 export const Header = ({
@@ -21,6 +23,7 @@ export const Header = ({
   title,
   rightContent,
   rootLink = true,
+  loading,
 }: HeaderProps) => {
   const TitleContent = () => (
     <>
@@ -105,6 +108,7 @@ export const Header = ({
       <div className="staticms-header-end">
         {rightContent}
       </div>
+      {loading && <LinearLoadingIndicator />}
     </div>
   );
 };

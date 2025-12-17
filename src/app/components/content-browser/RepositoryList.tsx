@@ -6,7 +6,6 @@ import type { Repository } from "@/app/hooks/useRepositories.ts";
 
 export interface RepositoryListProps {
   repos: Repository[];
-  loading: boolean;
   error: string | null;
   searchQuery: string;
   filterType: "all" | "public" | "private" | "fork";
@@ -18,7 +17,6 @@ export interface RepositoryListProps {
 
 export const RepositoryList: React.FC<RepositoryListProps> = ({
   repos,
-  loading,
   error,
   searchQuery,
   filterType,
@@ -114,17 +112,9 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
       </div>
 
       <div className="ui container" style={{ marginTop: "2rem" }}>
-        {loading && (
-          <div className="ui placeholder segment">
-            <div className="ui active inverted dimmer">
-              <div className="ui loader"></div>
-            </div>
-          </div>
-        )}
-
         {error && <div className="ui message error">{error}</div>}
 
-        {!loading && !error && repos.length > 0 &&
+        {!error && repos.length > 0 &&
           repos.filter((repo) => {
               const matchesSearch = repo.full_name.toLowerCase().includes(
                 searchQuery.toLowerCase(),
@@ -158,7 +148,7 @@ export const RepositoryList: React.FC<RepositoryListProps> = ({
           )}
 
         {/* Card View */}
-        {!loading && !error && (
+        {!error && (
           <div className="ui three stackable cards">
             {repos.filter((repo) => {
               const matchesSearch = repo.full_name.toLowerCase().includes(

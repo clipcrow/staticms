@@ -1,20 +1,19 @@
 import { RouterContext } from "@oak/oak";
 import { broadcastMessage } from "@/server/sse.ts";
 
-const WEBHOOK_SECRET = Deno.env.get("GITHUB_WEBHOOK_SECRET");
-
 async function verifySignature(
   headers: Headers,
   bodyText: string,
 ): Promise<boolean> {
-  if (!WEBHOOK_SECRET) return true; // Skip verification if no secret (Dev mode?)
+  const secret = Deno.env.get("GITHUB_WEBHOOK_SECRET");
+  if (!secret) return true; // Skip verification if no secret (Dev mode?)
 
   const signature = headers.get("x-hub-signature-256");
   if (!signature) return false;
 
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(WEBHOOK_SECRET),
+    new TextEncoder().encode(secret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["verify"],

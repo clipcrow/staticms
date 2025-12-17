@@ -15,7 +15,6 @@ export interface ArticleListViewProps {
   collectionName: string;
   collectionDef?: Collection;
   files: FileItem[];
-  loading: boolean;
   error: Error | null;
 
   // UI State
@@ -44,7 +43,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   collectionName,
   collectionDef,
   files,
-  loading,
   error,
   searchQuery,
   newArticleName,
@@ -83,27 +81,9 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
   const displayTitle = collectionDef?.label || collectionDef?.path ||
     collectionName || "Articles";
 
-  const titleNode = loading && !collectionDef
-    ? (
-      <>
-        {collectionName || "Articles"} <small>({branch})</small>
-      </>
-    )
-    : displayTitle;
+  const titleNode = displayTitle;
 
   useSetHeader(breadcrumbs, titleNode);
-
-  if (loading) {
-    return (
-      <div className="ui container staticms-article-list-status-container">
-        <div className="ui placeholder segment">
-          <div className="ui active inverted dimmer">
-            <div className="ui loader"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (error) {
     return (

@@ -4,6 +4,7 @@ import { useRepositories } from "@/app/hooks/useRepositories.ts";
 import { RepositoryList } from "@/app/components/content-browser/RepositoryList.tsx";
 import { BranchManagementPage } from "@/app/features/config/BranchManagementPage.tsx";
 import { useEventSource } from "@/app/hooks/useEventSource.ts";
+import { useLoading } from "@/app/contexts/HeaderContext.tsx";
 
 export function RepositorySelector() {
   const navigate = useNavigate();
@@ -17,6 +18,8 @@ export function RepositorySelector() {
       refresh();
     }
   });
+
+  useLoading(loading);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<
@@ -53,7 +56,6 @@ export function RepositorySelector() {
   return (
     <RepositoryList
       repos={repos}
-      loading={loading}
       error={error}
       searchQuery={searchQuery}
       filterType={filterType}

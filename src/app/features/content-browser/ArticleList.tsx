@@ -5,6 +5,7 @@ import {
   type Collection,
   useContentConfig,
 } from "@/app/hooks/useContentConfig.ts";
+import { useLoading } from "@/app/contexts/HeaderContext.tsx";
 import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/shared/types.ts";
 import { ArticleListView } from "@/app/components/content-browser/ArticleListView.tsx";
@@ -105,6 +106,9 @@ export function ArticleList() {
   // Ideally handled better, but for now:
   const isLoading = configLoading || !branchReady ||
     (!!folder && contentLoading);
+
+  useLoading(isLoading);
+
   const combinedError = configError || contentError;
 
   // Filter and map files based on binding
@@ -265,7 +269,6 @@ export function ArticleList() {
       collectionName={content!}
       collectionDef={collectionDef}
       files={paginatedFiles}
-      loading={isLoading}
       error={combinedError}
       searchQuery={searchQuery}
       newArticleName={newArticleName}

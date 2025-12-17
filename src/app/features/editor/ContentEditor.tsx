@@ -9,7 +9,7 @@ import yaml from "js-yaml";
 import { useContentSync } from "@/app/hooks/useContentSync.ts";
 import { useEventSource } from "@/app/hooks/useEventSource.ts";
 import { fetchWithAuth } from "@/app/utils/fetcher.ts";
-import { useSetHeader } from "@/app/contexts/HeaderContext.tsx";
+import { useLoading, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 
 // Presenter
 import { EditorLayout } from "@/app/components/editor/EditorLayout.tsx";
@@ -631,9 +631,10 @@ export function ContentEditor(
 
   useSetHeader(breadcrumbs, title, rightContent);
 
-  if ((!collection && !contentName) || !config || !branchReady) {
-    return <div className="ui active centered inline loader"></div>;
-  }
+  const isLoading = (!collection && !contentName) || !config || !branchReady;
+  useLoading(isLoading);
+
+  if (isLoading) return null;
 
   // Adapter: Convert v2 collection/config to v1 Content interface
   const v1Fields: V1Field[] = collection!.fields?.map((f) => ({

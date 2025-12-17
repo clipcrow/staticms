@@ -4,18 +4,18 @@ import { ArticleList } from "@/app/features/content-browser/ArticleList.tsx";
 import { ContentEditor } from "@/app/features/editor/ContentEditor.tsx";
 import {
   ErrorCallout,
-  LoadingSpinner,
   WarningCallout,
 } from "@/app/components/common/Feedback.tsx";
+import { useLoading } from "@/app/contexts/HeaderContext.tsx";
 
 export function ContentRoute() {
   const { owner, repo, content } = useParams();
   // Assume content corresponds to collectionName or singletonName based on config
   const { config, loading, error } = useContentConfig(owner, repo);
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  useLoading(loading);
+
+  if (loading) return null;
 
   if (error) {
     return (

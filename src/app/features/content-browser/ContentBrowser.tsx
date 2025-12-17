@@ -2,11 +2,9 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { ContentList } from "./ContentList.tsx";
 import { ContentConfigEditor } from "@/app/features/config/ContentConfigEditor.tsx";
-import {
-  ErrorCallout,
-  LoadingSpinner,
-} from "@/app/components/common/Feedback.tsx";
+import { ErrorCallout } from "@/app/components/common/Feedback.tsx";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
+import { useLoading } from "@/app/contexts/HeaderContext.tsx";
 
 export function ContentBrowser() {
   const { owner, repo } = useParams();
@@ -17,6 +15,8 @@ export function ContentBrowser() {
     owner,
     repo,
   );
+
+  const error = configError || repoError;
 
   if (!owner || !repo) return null;
 
@@ -35,15 +35,6 @@ export function ContentBrowser() {
   const isEditing = hasSettings;
   const mode = settingsValue ? "edit" : "add";
 
-  if (configLoading || repoLoading) {
-    return (
-      <div className="ui container" style={{ marginTop: "2em" }}>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  const error = configError || repoError;
   if (error) {
     // deno-lint-ignore no-explicit-any
     const msg = (error as any).message || String(error);
@@ -55,6 +46,10 @@ export function ContentBrowser() {
       </div>
     );
   }
+
+  useLoading(configLoading || repoLoading);
+
+  if (configLoading || repoLoading) return null;
 
   if (!config) return null;
 

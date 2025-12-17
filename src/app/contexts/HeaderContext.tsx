@@ -16,6 +16,7 @@ export interface HeaderState {
   title?: ReactNode;
   rightContent?: ReactNode;
   disableRootLink?: boolean;
+  isLoading?: boolean;
 }
 
 const HeaderStateContext = createContext<HeaderState | null>(null);
@@ -55,7 +56,14 @@ export function useSetHeader(
   }
 
   useEffect(() => {
-    setHeader({ breadcrumbs, title, rightContent, disableRootLink });
+    // Preserve isLoading when setting header content
+    setHeader((prev) => ({
+      ...prev,
+      breadcrumbs,
+      title,
+      rightContent,
+      disableRootLink,
+    }));
   }, [
     setHeader,
     title,
@@ -64,4 +72,18 @@ export function useSetHeader(
     breadcrumbs.length,
     ...breadcrumbs.map((b) => b.to),
   ]);
+}
+
+export function useLoading(loading: boolean) {
+  const setHeader = useContext(HeaderDispatchContext);
+  if (!setHeader) {
+    throw new Error("useLoading must be used within HeaderProvider");
+  }
+
+  useEffect(() => {
+    setHeader((prev) => {
+      if (prev.isLoading === loading) return prev;
+      return { ...prev, isLoading: loading };
+    });
+  }, [setHeader, loading]);
 }
