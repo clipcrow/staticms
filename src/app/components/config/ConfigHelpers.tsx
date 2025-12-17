@@ -38,8 +38,8 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
       {/* Default Value (Collection Only) */}
       {isCollection
         ? (
-          <td>
-            <div className="ui input fluid mini staticms-config-default-cell">
+          <td className="staticms-config-default-cell">
+            <div className="ui input fluid mini">
               <input
                 type="text"
                 placeholder="Optional"
@@ -52,30 +52,31 @@ export const FieldEditor: React.FC<FieldEditorProps> = ({
         )
         : <td></td>}
 
-      {/* Required */}
+      {/* Actions (Required + Delete) */}
       <td className="center aligned staticms-config-action-cell">
-        <div className="ui checkbox">
-          <input
-            type="checkbox"
-            checked={field.required !== false} // Default is true usually
-            onChange={(e) => handleChange("required", e.target.checked)}
-            disabled={disabled}
-          />
-          <label></label>
-        </div>
-      </td>
-
-      {/* Delete Button */}
-      <td className="center aligned staticms-config-action-cell">
-        <button
-          type="button"
-          className="ui icon button mini basic delete-field-btn"
-          onClick={disabled ? undefined : onDelete}
-          disabled={disabled}
-          title="Remove field"
+        <div
+          style={{ display: "inline-flex", alignItems: "center", gap: "10px" }}
         >
-          <i className="trash icon red"></i>
-        </button>
+          <div className="ui checkbox" title="Required">
+            <input
+              type="checkbox"
+              checked={field.required !== false} // Default is true usually
+              onChange={(e) => handleChange("required", e.target.checked)}
+              disabled={disabled}
+            />
+            <label></label>
+          </div>
+
+          <button
+            type="button"
+            className="ui icon button mini basic delete-field-btn"
+            onClick={disabled ? undefined : onDelete}
+            disabled={disabled}
+            title="Remove field"
+          >
+            <i className="trash icon red"></i>
+          </button>
+        </div>
       </td>
     </tr>
   );
@@ -114,7 +115,7 @@ export const FieldList: React.FC<FieldListProps> = ({
 
   return (
     <div>
-      <table className="ui table">
+      <table className="ui unstackable table">
         <tbody>
           {fields.map((field, index) => (
             <FieldEditor
@@ -126,6 +127,7 @@ export const FieldList: React.FC<FieldListProps> = ({
               disabled={disabled}
             />
           ))}
+
           {fields.length === 0 && (
             <tr>
               <td

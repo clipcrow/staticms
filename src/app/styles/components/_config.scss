@@ -144,3 +144,48 @@
     opacity: 0.5;
   }
 }
+
+// -----------------------------------------------------------------------------
+// Responsive Table for Field Schema
+// -----------------------------------------------------------------------------
+@media only screen and (max-width: 768px) {
+  // Force table to stay unstacked (override Semantic UI responsive rules if needed)
+  .ui.unstackable.table tr {
+    display: table-row !important;
+  }
+  .ui.unstackable.table td {
+    display: table-cell !important;
+  }
+
+  // Config Name Cell - Fixed smaller width
+  .staticms-config-name-cell {
+    min-width: 60px !important;
+    width: 35% !important; // Give less space to Name
+  }
+
+  // Config Default Cell - Takes remaining space
+  .staticms-config-default-cell {
+    width: auto !important; // Expand to fill
+    min-width: 50px !important;
+
+    input {
+      min-width: 0 !important; // Allow input to shrink below default
+      padding-left: 0.5em !important;
+      padding-right: 0.5em !important;
+    }
+  }
+
+  // Action Cell (Combined) - Minimize width
+  .staticms-config-action-cell {
+    width: 1% !important; // Force minimum width
+    white-space: nowrap !important;
+    padding-left: 0.5em !important;
+    padding-right: 0.5em !important;
+  }
+
+  // Ensure inputs inside cells can shrink
+  .staticms-config-name-cell input,
+  .staticms-config-default-cell input {
+    min-width: 0 !important;
+  }
+}
