@@ -70,17 +70,35 @@
 
 #### 2. コンテンツ定義
 
-- **Type** (Required):
-  - `Singleton (File/One-off)`: 単一のファイルを管理。
-  - `Collection (Folder based)`: フォルダ内の複数ファイルを管理。
-- **Binding** (Required):
-  - `File`: ファイルそのものをコンテンツとする。
-  - `Directory`: ディレクトリ（フォルダ）単位でコンテンツとし、その中の
-    `index.md` を実体とする。
-- **Path**:
-  - コンテンツの格納場所（リポジトリルートからの相対パス）。
-  - Binding が `File` の場合: "Content File Path"
-  - Binding が `Directory` の場合: "Content Folder Path"
+`ui stackable grid` を使用した2列レイアウトで構成されます。
+
+- **左列 (`eight wide column`)**:
+  - **Content Type** (Required):
+    - `Singleton (File/One-off)`: 単一のファイルを管理。
+    - `Collection (Folder based)`: フォルダ内の複数ファイルを管理。
+  - **Binding** (Required):
+    - `File`: ファイルそのものをコンテンツとする。
+    - `Directory`: ディレクトリ（フォルダ）単位でコンテンツとし、その中の
+      `index.md` を実体とする。
+  - **Content Name (Label)**:
+    - UI 上での表示名。
+    - 入力がない場合、Path が代わりに使用されます。
+
+- **右列 (`eight wide column`)**:
+  - **Path Selection**:
+    - **Path Label**: Binding に応じて "Content File Path" または "Content
+      Folder Path" と表示。
+    - **Current Path Display**: 選択されたパスと、Binding
+      に応じたアイコン（`folder open` / `file`）を表示。
+    - **File Tree Selector**:
+      - GitHub ライクなファイルブラウザコンポーネント。
+      - リポジトリのファイル構造を表示し、クリックしてパスを選択可能。
+      - **Directory Mode**: Binding が Directory
+        の場合、ディレクトリのみ選択可能。
+      - **File Mode**: Binding が File
+        の場合、ファイルのみ選択可能（拡張子フィルタリングあり）。
+      - **Auto Expand**:
+        初期表示時、選択済みのパスが含まれるフォルダを自動的に展開して表示。
 
 #### 組み合わせの挙動定義:
 

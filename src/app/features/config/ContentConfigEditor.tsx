@@ -229,6 +229,7 @@ export function ContentConfigEditor({
       loading={saving}
       breadcrumbs={breadcrumbs}
       title={title}
+      defaultBranch={config.branch}
     />
   );
 }

@@ -1,0 +1,95 @@
+// -----------------------------------------------------------------------------
+// FileTreeSelector Styles
+// -----------------------------------------------------------------------------
+
+.staticms-file-tree-container {
+  margin-top: 0.5em !important;
+  border: 1px solid #e1e4e8 !important;
+  border-radius: 6px !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+
+  .ui.segment {
+    height: 300px !important;
+    overflow-y: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: #fff !important;
+  }
+}
+
+.staticms-file-tree-root {
+  font-family: system-ui, sans-serif !important;
+  font-size: 13px !important;
+  color: #24292e !important;
+}
+
+.staticms-file-tree-loader,
+.staticms-file-tree-message {
+  margin: 1em !important;
+}
+
+.staticms-file-tree-row {
+  display: flex !important;
+  align-items: center !important;
+  // Use specific padding to avoid overriding inline padding-left
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  padding-right: 8px !important;
+  // padding-left is handled by inline style for indentation
+
+  border-bottom: 1px solid #f1f1f1 !important;
+  transition: background-color 0.1s ease !important;
+
+  // Selected state
+  &.selected {
+    background-color: #f0f9ff !important;
+    font-weight: bold !important;
+  }
+
+  // Hover state handled via React logic currently,
+  // but could be CSS: &:hover:not(.selected) { background-color: #f6f8fa; }
+  // We'll keep the JS hover for now as it was in the code, or move to CSS.
+  // Actually, pure CSS hover is better but the original code had !isSelected logic.
+  // CSS:
+  &:hover:not(.selected) {
+    background-color: #f6f8fa !important;
+  }
+}
+
+.staticms-file-tree-chevron {
+  width: 20px !important;
+  display: flex !important;
+  justify-content: center !important;
+  margin-right: 4px !important;
+  cursor: pointer !important;
+
+  i.icon {
+    margin: 0 !important;
+    font-size: 0.8em !important;
+    width: auto !important;
+    height: auto !important;
+  }
+}
+
+.staticms-file-tree-icon {
+  margin-right: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+
+  i.icon {
+    margin: 0 !important;
+  }
+}
+
+.staticms-file-tree-text {
+  flex: 1 !important;
+
+  &.selectable {
+    color: #0366d6 !important;
+  }
+
+  &.default {
+    color: inherit !important;
+  }
+}

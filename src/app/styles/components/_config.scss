@@ -105,3 +105,42 @@
   display: flex !important;
   gap: 1rem !important;
 }
+
+// -----------------------------------------------------------------------------
+// ConfigForm - Helper Classes derived from inline styles
+// -----------------------------------------------------------------------------
+
+.staticms-config-binding-field {
+  margin-top: 1rem !important;
+}
+
+.staticms-config-name-field {
+  margin-top: 1rem !important;
+}
+
+.staticms-file-tree-wrapper {
+  margin-bottom: 1rem !important;
+}
+
+.staticms-path-display-wrapper {
+  margin-bottom: 0.5rem !important;
+}
+
+.staticms-path-display-inner {
+  padding: 0.5rem 0 !important;
+  display: flex !important;
+  align-items: center !important;
+
+  .icon {
+    margin-right: 0.5rem !important;
+  }
+}
+
+.staticms-path-text {
+  font-family: monospace !important;
+  font-size: 1.1em !important;
+
+  .placeholder {
+    opacity: 0.5;
+  }
+}

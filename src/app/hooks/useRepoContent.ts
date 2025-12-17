@@ -17,11 +17,13 @@ export function useRepoContent(
   branch: string = "main",
 ) {
   const [files, setFiles] = useState<GitHubFile[]>([]);
-  const [loading, setLoading] = useState(!!(owner && repo && path));
+  // Allow empty string as valid path (root)
+  const isReady = owner && repo && path !== undefined;
+  const [loading, setLoading] = useState(!!isReady);
   const [error, setError] = useState<Error | null>(null);
 
   useLayoutEffect(() => {
-    if (!owner || !repo || !path) return;
+    if (!owner || !repo || path === undefined) return;
 
     const controller = new AbortController();
     const signal = controller.signal;
@@ -29,15 +31,21 @@ export function useRepoContent(
     setLoading(true);
     setFiles([]); // Clear old content
     // Use the catch-all content API
-    fetchWithAuth(
-      `/api/repo/${owner}/${repo}/contents/${path}?branch=${
+    const endpoint = path
+      ? `/api/repo/${owner}/${repo}/contents/${path}?branch=${
         encodeURIComponent(branch)
-      }`,
+      }`
+      : `/api/repo/${owner}/${repo}/contents?branch=${
+        encodeURIComponent(branch)
+      }`;
+
+    fetchWithAuth(
+      endpoint,
       { signal },
     )
       .then(async (res) => {
         if (res.status === 404) {
-          return []; // Treat 404 as empty directory/no files, suppressing error for new content
+          return []; // Treat 404 as empty directory/no files
         }
         if (!res.ok) {
           throw new Error(
@@ -47,6 +55,7 @@ export function useRepoContent(
 
         const contentType = res.headers.get("content-type");
         if (contentType && !contentType.includes("application/json")) {
+          // It might be a file content if path points to file, but we usually list dirs here
           console.warn(
             `[useRepoContent] Expected JSON but got ${contentType} for path '${path}'`,
           );
@@ -57,7 +66,16 @@ export function useRepoContent(
       })
       .then((data) => {
         if (!signal.aborted) {
-          setFiles(data);
+          // If it's a single file, the API returns an object, not array.
+          // We need array.
+          if (!Array.isArray(data)) {
+            // If we fetched a specific file, wrap it?
+            // But for Tree, we usually fetch directories.
+            // If path is a file, we might get object.
+            setFiles([data]);
+          } else {
+            setFiles(data);
+          }
           setLoading(false);
         }
       })

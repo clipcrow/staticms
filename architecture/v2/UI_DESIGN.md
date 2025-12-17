@@ -190,3 +190,23 @@ graph TD
   </div>
 </>
 ```
+
+### SCSS Modularization & Component Styling
+
+スタイルシートの保守性を高めるため、以下のガイドラインに従います。
+
+- **No Inline Styles**:
+  - 原則として、`style={{ ... }}`
+    によるインラインスタイルの使用は避けてください（動的な値を除く）。
+  - 特に、コンポーネントの構造やレイアウトに関わるスタイルは必ずクラス化します。
+
+- **Component-Specific SCSS**:
+  - 特定のコンポーネントに紐づくスタイルは
+    `src/app/styles/components/_<component_name>.scss` に定義します。
+  - 例: `FileTreeSelector` -> `_file_tree.scss`
+  - 定義したパーシャルは `main.scss` で `@use` して読み込みます。
+
+- **Naming Convention**:
+  - クラス名にはプレフィックス `staticms-` を付与し、他のスタイル（Semantic
+    UI等）との衝突を防ぎます。
+  - 例: `.staticms-file-tree-container`, `.staticms-config-form-footer`

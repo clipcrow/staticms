@@ -23,7 +23,7 @@ const MOCK_CONFIG: Config = {
 Deno.test({
   name: "ContentConfigEditor: Renders form with initial data",
   fn: () => {
-    const { getByDisplayValue } = render(
+    const { getByDisplayValue, getByText } = render(
       <HeaderProvider>
         <MemoryRouter>
           <ContentConfigEditor
@@ -40,7 +40,9 @@ Deno.test({
     );
 
     assertExists(getByDisplayValue("Existing Collection"));
-    assertExists(getByDisplayValue("content/existing"));
+    assertExists(getByDisplayValue("Existing Collection"));
+    // Path is now a text display, not an input
+    assertExists(getByText("content/existing"));
     cleanup();
   },
 });

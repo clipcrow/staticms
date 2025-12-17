@@ -68,6 +68,7 @@ router.get("/api/user/repos", listRepositories); // v1 compatibility
 router.get("/api/repo/:owner/:repo", getRepository);
 router.get("/api/repo/:owner/:repo/config", getRepoConfig);
 router.post("/api/repo/:owner/:repo/config", saveRepoConfig);
+router.get("/api/repo/:owner/:repo/contents", getContent);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 router.delete("/api/repo/:owner/:repo/contents/(.*)", deleteContent);
 router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
