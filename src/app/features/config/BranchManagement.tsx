@@ -1,17 +1,25 @@
 import { useEffect, useState } from "react";
-import yaml from "js-yaml";
 import { Config } from "@/app/hooks/useContentConfig.ts";
 import { BranchManagementForm } from "@/app/components/config/BranchManagementForm.tsx";
-import { fetchWithAuth } from "@/app/utils/fetcher.ts";
 import { useRepository } from "@/app/hooks/useRepositories.ts";
 import { useEventSource } from "@/app/hooks/useEventSource.ts";
+import {
+  BranchServices,
+  Commit,
+  useBranchServices,
+} from "@/app/hooks/useBranchServices.ts";
 
-interface BranchManagementProps {
+export interface BranchManagementProps {
   owner: string;
   repo: string;
   initialConfig: Config;
   onCancel: () => void;
   onSave: () => void;
+  // DI Props
+  useRepositoryHook?: typeof useRepository;
+  useEventSourceHook?: typeof useEventSource;
+  useServicesHook?: () => BranchServices;
+  ViewComponent?: typeof BranchManagementForm;
 }
 
 export function BranchManagement({
@@ -19,16 +27,22 @@ export function BranchManagement({
   repo,
   initialConfig,
   onCancel,
-  onSave: _onSave,
+  // DI Defaults
+  useRepositoryHook = useRepository,
+  useEventSourceHook = useEventSource,
+  useServicesHook = useBranchServices,
+  ViewComponent = BranchManagementForm,
 }: BranchManagementProps) {
   const [config, setConfig] = useState<Config>(
     JSON.parse(JSON.stringify(initialConfig)),
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { repository } = useRepository(owner, repo);
-  // deno-lint-ignore no-explicit-any
-  const [unmergedCommits, setUnmergedCommits] = useState<any[]>([]);
+
+  const { repository } = useRepositoryHook(owner, repo);
+  const services = useServicesHook();
+
+  const [unmergedCommits, setUnmergedCommits] = useState<Commit[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const [prTitle, setPrTitle] = useState("");
@@ -44,21 +58,18 @@ export function BranchManagement({
       return;
     }
 
-    fetchWithAuth(
-      `/api/repo/${owner}/${repo}/compare?base=${defaultBranch}&head=${targetBranch}`,
+    // Default branch is guaranteed string here
+    services.getUnmergedCommits(
+      owner,
+      repo,
+      defaultBranch,
+      targetBranch as string,
     )
-      .then((res) => {
-        if (res.ok) return res.json();
-        return { commits: [] };
-      })
-      .then((data) => {
-        setUnmergedCommits(data.commits || []);
-      })
-      .catch(console.error);
-  }, [repository, owner, repo, refreshKey]);
+      .then(setUnmergedCommits);
+  }, [repository, owner, repo, refreshKey, config.branch, services]);
 
   // Real-time updates: Refresh unmerged commits when a PR is updated (e.g. merged)
-  useEventSource("/api/events", (data) => {
+  useEventSourceHook("/api/events", (data) => {
     if (data.type === "pr_update") {
       // Optimistically refresh for any PR update, as it might affect the branch diff
       // Ideally we should check if data.owner/repo matches, but payloads might be minimal.
@@ -77,28 +88,18 @@ export function BranchManagement({
       // 0. Check Branch Existence if updated
       const branchName = config.branch?.trim();
       if (branchName && branchName !== initialConfig.branch) {
-        const checkRes = await fetchWithAuth(
-          `/api/repo/${owner}/${repo}/branches/${branchName}`,
+        const exists = await services.checkBranchExists(
+          owner,
+          repo,
+          branchName,
         );
-        if (checkRes.status === 404) {
+        if (!exists) {
           if (
-            confirm(
+            services.confirm(
               `Branch '${branchName}' does not exist. Do you want to create it?`,
             )
           ) {
-            const createRes = await fetchWithAuth(
-              `/api/repo/${owner}/${repo}/branches`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ branchName }),
-              },
-            );
-
-            if (!createRes.ok) {
-              const err = await createRes.json();
-              throw new Error(err.error || "Failed to create branch");
-            }
+            await services.createBranch(owner, repo, branchName);
           } else {
             setSaving(false);
             return;
@@ -112,24 +113,14 @@ export function BranchManagement({
       // Ensure collections exists
       if (!newConfig.collections) newConfig.collections = [];
 
-      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/yaml",
-        },
-        body: yaml.dump(newConfig),
-      });
+      await services.saveConfig(owner, repo, newConfig);
 
-      if (!res.ok) {
-        throw new Error("Failed to save repository config");
-      }
-
-      alert("Target branch switched successfully.");
+      services.alert("Target branch switched successfully.");
       setRefreshKey((prev) => prev + 1);
     } catch (e) {
       console.error(e);
       setError((e as Error).message);
-      alert((e as Error).message);
+      services.alert((e as Error).message);
     } finally {
       setSaving(false);
     }
@@ -142,30 +133,21 @@ export function BranchManagement({
       const defaultBranch = repository.default_branch;
       if (!defaultBranch) throw new Error("Default branch not found");
 
-      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/pulls`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: prTitle,
-          head: config.branch,
-          base: defaultBranch,
-          body: "Created from Staticms Branch Management",
-        }),
-      });
+      const pr = await services.createPr(
+        owner,
+        repo,
+        prTitle,
+        config.branch,
+        defaultBranch,
+      );
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to create PR");
-      }
-
-      const pr = await res.json();
-      alert(`Pull Request created successfully!\n${pr.html_url}`);
-      globalThis.open(pr.html_url, "_blank");
+      services.alert(`Pull Request created successfully!\n${pr.html_url}`);
+      services.open(pr.html_url);
 
       setPrTitle("");
     } catch (e) {
       console.error(e);
-      alert((e as Error).message);
+      services.alert((e as Error).message);
     } finally {
       setCreatingPr(false);
     }
@@ -174,7 +156,7 @@ export function BranchManagement({
   return (
     <div className="repo-config-editor">
       {error && <div className="error-message">{error}</div>}
-      <BranchManagementForm
+      <ViewComponent
         config={config}
         setConfig={setConfig}
         onSave={handleSubmit}

@@ -1,29 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAuthServices } from "@/app/hooks/useAuthServices.ts";
 
-export const useAuth = () => {
+export const useAuth = (useServicesHook = useAuthServices) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [username, setUsername] = useState<string | null>(null);
 
+  const services = useServicesHook();
+
   // Expose checkAuth for manual calls
   const checkAuth = useCallback(async () => {
     try {
-      const userRes = await fetch("/api/user");
-      if (userRes.ok) {
-        const data = await userRes.json();
+      const result = await services.checkAuth();
+      if (result.ok && result.user) {
         setIsAuthenticated(true);
-        const login = data.login || data.username || "";
+        const login = result.user.login || result.user.username || "";
         setUsername(login);
         if (login) {
-          localStorage.setItem("staticms_user", login);
+          services.storage.setItem("staticms_user", login);
         }
       } else {
         console.warn(
           "[useAuth] Auth check failed with status:",
-          userRes.status,
+          result.status,
         );
-        if (userRes.status === 401 || userRes.status === 403) {
-          localStorage.removeItem("staticms_user");
+        if (result.status === 401 || result.status === 403) {
+          services.storage.removeItem("staticms_user");
           setIsAuthenticated(false);
         }
       }
@@ -33,23 +35,15 @@ export const useAuth = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [services]);
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
   const login = useCallback((returnTo?: string, forceLogin = false) => {
-    // Use a small timeout to allow UI to update before redirecting
-    setTimeout(() => {
-      const params = new URLSearchParams();
-      if (returnTo) params.set("returnTo", returnTo);
-      if (forceLogin) params.set("prompt", "login");
-
-      const url = `/api/auth/login?${params.toString()}`;
-      globalThis.location.href = url;
-    }, 10);
-  }, []);
+    services.redirectToLogin(returnTo, forceLogin);
+  }, [services]);
 
   return {
     isAuthenticated,

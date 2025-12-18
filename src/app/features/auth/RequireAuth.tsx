@@ -1,8 +1,15 @@
 import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/app/hooks/useAuth.ts";
 
-export function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated, loading, login } = useAuth();
+export interface RequireAuthProps {
+  children: ReactNode;
+  useAuthHook?: typeof useAuth;
+}
+
+export function RequireAuth(
+  { children, useAuthHook = useAuth }: RequireAuthProps,
+) {
+  const { isAuthenticated, loading, login } = useAuthHook();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {

@@ -1,102 +1,79 @@
 import "@/testing/setup_dom.ts";
-import { render, waitFor } from "@testing-library/react";
-import { stub } from "@std/testing/mock";
-import { assertEquals } from "@std/assert";
+import { render } from "@testing-library/react";
+import { assertSpyCalls, spy } from "@std/testing/mock";
 import { RequireAuth } from "./RequireAuth.tsx";
+import { useAuth } from "@/app/hooks/useAuth.ts";
 
 Deno.test({
-  name: "RequireAuth",
+  name: "RequireAuth Container Logic",
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async (t) => {
-    await t.step("Renders children when authenticated", async () => {
-      const fetchStub = stub(
-        globalThis,
-        "fetch",
-        () =>
-          Promise.resolve(
-            new Response(JSON.stringify({ login: "user" }), { status: 200 }),
-          ),
-      );
+    const createMockAuthHook = (
+      state: { isAuthenticated: boolean; loading: boolean },
+      loginSpy: () => void = () => {},
+    ) => {
+      // Return a hook function
+      return () =>
+        ({
+          ...state,
+          login: loginSpy,
+          username: "test",
+        }) as ReturnType<typeof useAuth>;
+    };
 
-      try {
-        const { findByText } = render(
-          <RequireAuth>
-            <div data-testid="child">Protected Content</div>
-          </RequireAuth>,
-        );
-
-        await findByText("Protected Content");
-      } finally {
-        fetchStub.restore();
-      }
-    });
-
-    await t.step("Redirects to login when not authenticated", async () => {
-      const fetchStub = stub(
-        globalThis,
-        "fetch",
-        () => Promise.resolve(new Response(null, { status: 401 })),
-      );
-
-      const originalHref = globalThis.location.href;
-
-      try {
-        render(
-          <RequireAuth>
-            <div>Protected</div>
-          </RequireAuth>,
-        );
-
-        // Should verify redirect
-        await waitFor(() => {
-          const href = globalThis.location.href;
-          assertEquals(
-            href.includes("/api/auth/login"),
-            true,
-            `Expected login url, got ${href}`,
-          );
-        });
-      } finally {
-        fetchStub.restore();
-        // Reset href
-        globalThis.location.href = originalHref;
-      }
-    });
-
-    await t.step("Shows loading state initially", async () => {
-      // Create a controlled promise to simulate loading delay
-      let resolveFetch: (val: Response) => void;
-      const fetchPromise = new Promise<Response>((resolve) => {
-        resolveFetch = resolve;
+    await t.step("Shows loader when loading", () => {
+      const mockHook = createMockAuthHook({
+        isAuthenticated: false,
+        loading: true,
       });
-
-      const fetchStub = stub(
-        globalThis,
-        "fetch",
-        () => fetchPromise,
+      const { getByText, queryByTestId } = render(
+        <RequireAuth useAuthHook={mockHook}>
+          <div data-testid="content">Protected Content</div>
+        </RequireAuth>,
       );
 
-      try {
-        const { getByText, findByText } = render(
-          <RequireAuth>
-            <div>Protected</div>
-          </RequireAuth>,
-        );
+      const loader = getByText("Loading...");
+      if (!loader) throw new Error("Loader not found");
+      // Content should not be visible
+      const content = queryByTestId("content");
+      if (content) throw new Error("Content should not be visible loading");
+    });
 
-        // Initial render should show loading
-        getByText("Loading...");
+    await t.step("Calls login when not authenticated and not loading", () => {
+      const loginSpy = spy();
+      const mockHook = createMockAuthHook(
+        { isAuthenticated: false, loading: false },
+        loginSpy,
+      );
 
-        // Resolve fetch
-        resolveFetch!(
-          new Response(JSON.stringify({ login: "user" }), { status: 200 }),
-        );
+      const { queryByTestId } = render(
+        <RequireAuth useAuthHook={mockHook}>
+          <div data-testid="content">Protected Content</div>
+        </RequireAuth>,
+      );
 
-        // Should eventually show content
-        await findByText("Protected");
-      } finally {
-        fetchStub.restore();
-      }
+      assertSpyCalls(loginSpy, 1);
+      // Content should not be visible (return null)
+      const content = queryByTestId("content");
+      if (content) throw new Error("Content should not be visible when unauth");
+    });
+
+    await t.step("Renders children when authenticated", () => {
+      const loginSpy = spy();
+      const mockHook = createMockAuthHook(
+        { isAuthenticated: true, loading: false },
+        loginSpy,
+      );
+
+      const { getByTestId } = render(
+        <RequireAuth useAuthHook={mockHook}>
+          <div data-testid="content">Protected Content</div>
+        </RequireAuth>,
+      );
+
+      assertSpyCalls(loginSpy, 0);
+      getByTestId("content"); // Should throw if not found
     });
   },
 });
