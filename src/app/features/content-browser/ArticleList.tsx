@@ -9,14 +9,32 @@ import { useLoading } from "@/app/contexts/HeaderContext.tsx";
 import { type GitHubFile, useRepoContent } from "@/app/hooks/useRepoContent.ts";
 import { FileItem } from "@/shared/types.ts";
 import { ArticleListView } from "@/app/components/content-browser/ArticleListView.tsx";
+import { useArticleListServices } from "@/app/hooks/useArticleListServices.ts";
 
-export function ArticleList() {
+interface ArticleListProps {
+  useRepositoryHook?: typeof useRepository;
+  useContentConfigHook?: typeof useContentConfig;
+  useRepoContentHook?: typeof useRepoContent;
+  useServicesHook?: typeof useArticleListServices;
+  // deno-lint-ignore no-explicit-any
+  ViewComponent?: React.ComponentType<any>;
+}
+
+export function ArticleList({
+  useRepositoryHook = useRepository,
+  useContentConfigHook = useContentConfig,
+  useRepoContentHook = useRepoContent,
+  useServicesHook = useArticleListServices,
+  ViewComponent = ArticleListView,
+}: ArticleListProps = {}) {
   const { owner, repo, content } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const services = useServicesHook();
+
   const { config, loading: configLoading, error: configError } =
-    useContentConfig(owner, repo);
-  const { repository, loading: repoLoading } = useRepository(owner, repo);
+    useContentConfigHook(owner!, repo!);
+  const { repository, loading: repoLoading } = useRepositoryHook(owner!, repo!);
 
   const branchConfigured = !!config?.branch;
   const branchReady = !configLoading && (branchConfigured || !repoLoading);
@@ -38,7 +56,7 @@ export function ArticleList() {
   const binding = collectionDef?.binding || "file";
 
   const { files, loading: contentLoading, error: contentError } =
-    useRepoContent(
+    useRepoContentHook(
       branchReady ? owner : undefined,
       branchReady ? repo : undefined,
       folder,
@@ -54,45 +72,17 @@ export function ArticleList() {
   useEffect(() => {
     if (!content) return;
     const user = localStorage.getItem("staticms_user") || "anonymous";
-    const draftPrefix =
-      `staticms_draft_${user}|${owner}|${repo}|${branch}|${content}/`;
-
-    const found: FileItem[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(draftPrefix)) {
-        const articleName = key.substring(draftPrefix.length);
-        if (!articleName || articleName === "__new__") continue;
-
-        // Construct path based on binding
-        let path = "";
-        if (binding === "directory") {
-          path = folder
-            ? `${folder}/${articleName}/index.md`
-            : `${articleName}/index.md`;
-        } else {
-          // Check if extension is already present (ContentEditor saves with extension for file binding)
-          const fileName = articleName.toLowerCase().endsWith(".md")
-            ? articleName
-            : `${articleName}.md`;
-          path = folder ? `${folder}/${fileName}` : fileName;
-        }
-        path = path.replace("//", "/");
-        if (path.startsWith("/")) {
-          path = path.substring(1);
-        }
-
-        found.push({
-          name: articleName,
-          path: path,
-          type: binding === "directory" ? "dir" : "file",
-          sha: "draft",
-          content: undefined,
-        });
-      }
-    }
+    const found = services.getDrafts(
+      user,
+      owner!,
+      repo!,
+      branch,
+      content,
+      binding,
+      folder,
+    );
     setLocalDrafts(found);
-  }, [owner, repo, branch, content, binding, folder]);
+  }, [owner, repo, branch, content, binding, folder, services]);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -154,12 +144,6 @@ export function ArticleList() {
 
     // 1. Normalize name and create slug
     let slug = newArticleName.trim();
-    // For file binding, ensure extension or leave as is?
-    // ContentEditor usually works with the filename.
-    // If user typed "hello", we treat it as slug "hello".
-    // If they typed "hello.md", we treat "hello.md".
-    // Let's rely on ContentEditor-like logic here or just pass the slug.
-    // Actually, to make a draft, we need a key.
 
     // Normalize slug similar to ContentEditor saves (remove illegal chars?)
     // Basic normalization:
@@ -198,7 +182,7 @@ export function ArticleList() {
       updatedAt: Date.now(),
     };
 
-    localStorage.setItem(draftKey, JSON.stringify(initialDraft));
+    services.createDraft(draftKey, initialDraft);
 
     // 4. Navigate directly to edit page
     navigate(`/${owner}/${repo}/${content}/${fileName}`, {
@@ -232,26 +216,17 @@ export function ArticleList() {
     }
 
     try {
-      const res = await fetch(
-        `/api/repo/${owner}/${repo}/contents/${deleteTarget.path}`,
-        {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            message: `Delete ${deleteTarget.name}`,
-            sha: deleteTarget.sha,
-            branch,
-          }),
-        },
+      await services.deleteFile(
+        owner!,
+        repo!,
+        deleteTarget.path,
+        deleteTarget.sha,
+        branch,
+        `Delete ${deleteTarget.name}`,
       );
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Delete failed");
-      }
-
       // Reload to reflect changes
-      globalThis.location.reload();
+      services.reloadPage();
     } catch (e) {
       console.error(e);
       alert((e as Error).message);
@@ -261,7 +236,7 @@ export function ArticleList() {
   };
 
   return (
-    <ArticleListView
+    <ViewComponent
       owner={owner!}
       repo={repo!}
       branch={branch}
