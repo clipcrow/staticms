@@ -2,9 +2,24 @@
 trigger: always_on
 ---
 
-## Commit rules
+## コミットとプッシュの運用ルール (Commit & Push Rules)
 
-- After completing a feature implementation or modification, be sure to ask the
-  user for confirmation and **obtain user approval** before committing.
-- After confirming the functionality through manual browser operations, the user
-  explicitly gives additional instructions or permission to commit.
+機能の実装や修正が完了したら、必ずユーザーの承認を得てからコミットしてください。
+
+### 1. コミットメッセージの形式（厳守）
+
+コミットメッセージは、**例外なく日本語** で記述してください。英語のPrefix（feat:, fix: 等）は使用して構いませんが、説明部分は日本語である必要があります。
+
+- **良い例 (OK)**:
+  - feat: ユーザーログイン機能を追加
+  - fix(editor): 英語入力時のバグを修正
+  - chore: 不要なログ出力を削除
+- **悪い例 (NG)**:
+  - feat: Add user login function (英語禁止)
+  - Update README.md (詳細不足かつ英語)
+
+### 2. プロセス
+
+1. **手動検証**: ブラウザ等で動作を確認する。
+2. **承認確認**: ユーザーに実装完了を報告し、コミットの許可を得る。
+3. **実行**: 承認後、日本語メッセージでコミットし、プッシュを行う。

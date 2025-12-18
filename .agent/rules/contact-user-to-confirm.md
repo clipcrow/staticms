@@ -1,14 +1,26 @@
 ---
 trigger: always_on
-description: Always contact user if you have any questions about the instructions or specifications.
+description: 仕様や指示に不明点がある場合は、勝手な判断をせず必ずユーザーに確認する
 ---
 
-Always contact user if you have any questions about the instructions or
-specifications.
+## ユーザー確認・質問のガイドライン (Always Confirm with User)
 
-- Don't make assumptions and make assumptions about things you don't know.
-- Instructions from users are often vague, and it is best to assume that the
-  specifications still have many flaws.
-- It is encouraged to ask questions about the instructions and specifications.
-  Users are willing to provide answers and explanations. I want you to feel
-  safe.
+指示や仕様に少しでも不明確な点がある場合は、**独自の仮定で進めず、必ずユーザーに質問**してください。
+
+### 1. 禁止事項
+
+- **「多分こうだろう」という推測に基づく実装**。
+- **不明点を残したままのコード変更**。
+- **ユーザーの指示が曖昧な場合に、勝手に仕様を決定すること**。
+
+### 2. 推奨される行動
+
+- ユーザーの指示は「意図が省略されている」「背景説明が不足している」可能性があると常に疑ってください。
+- 質問することは推奨されています。ユーザーは喜んで回答します。安心して質問してください。
+- 複数の解釈ができる場合は、選択肢を提示して判断を仰いでください。
+
+### 3. マインドセット
+
+> "Don't make assumptions."
+
+わからないことは恥ではありません。誤った仮定で進んで手戻りが発生することこそが避けるべき事態です。
