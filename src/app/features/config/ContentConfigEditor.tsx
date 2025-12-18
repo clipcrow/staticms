@@ -1,9 +1,8 @@
 import { useState } from "react";
-import yaml from "js-yaml";
 import { Collection, Config, Field } from "@/app/hooks/useContentConfig.ts";
 import { ConfigForm } from "@/app/components/config/ConfigForm.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
-import { fetchWithAuth } from "@/app/utils/fetcher.ts";
+import { useContentConfigApi } from "@/app/hooks/useContentConfigApi.ts";
 
 interface ContentConfigEditorProps {
   owner: string;
@@ -13,6 +12,10 @@ interface ContentConfigEditorProps {
   mode: "add" | "edit";
   onCancel: () => void;
   onSave: () => void;
+  // DI
+  useApiHook?: typeof useContentConfigApi;
+  // deno-lint-ignore no-explicit-any
+  ViewComponent?: React.ComponentType<any>;
 }
 
 export function ContentConfigEditor({
@@ -23,7 +26,11 @@ export function ContentConfigEditor({
   mode,
   onCancel,
   onSave,
+  useApiHook = useContentConfigApi,
+  ViewComponent = ConfigForm,
 }: ContentConfigEditorProps) {
+  const api = useApiHook();
+
   const defaultCollection: Collection = {
     name: "",
     label: "",
@@ -88,10 +95,6 @@ export function ContentConfigEditor({
       }
 
       // 3. Path Existence Check
-      const branchParam = config.branch
-        ? `?branch=${encodeURIComponent(config.branch)}`
-        : "";
-
       let validatePath = sanitizedCollection.path;
       if (
         sanitizedCollection.type === "singleton" &&
@@ -100,27 +103,15 @@ export function ContentConfigEditor({
         validatePath = `${validatePath}/index.md`.replace(/\/+/g, "/");
       }
 
-      const valRes = await fetchWithAuth(
-        `/api/repo/${owner}/${repo}/contents/${validatePath}${branchParam}`,
+      const { exists, isDirectory } = await api.validatePath(
+        owner,
+        repo,
+        validatePath,
+        config.branch,
       );
 
-      if (valRes.status === 404) {
+      if (!exists) {
         throw new Error(`Path does not exist in repository: ${validatePath}`);
-      }
-      if (!valRes.ok) {
-        throw new Error(`Failed to validate path: ${validatePath}`);
-      }
-
-      const contentType = valRes.headers.get("content-type") || "";
-      let isDirectory = false;
-
-      if (contentType.includes("application/json")) {
-        const valData = await valRes.json();
-        if (Array.isArray(valData)) {
-          isDirectory = true;
-        }
-      } else {
-        await valRes.text(); // Consume body
       }
 
       if (sanitizedCollection.type === "collection") {
@@ -154,17 +145,7 @@ export function ContentConfigEditor({
       }
 
       // 4. Save
-      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/yaml",
-        },
-        body: yaml.dump(newConfig),
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to save config");
-      }
+      await api.saveConfig(owner, repo, newConfig);
 
       onSave();
     } catch (e) {
@@ -187,13 +168,8 @@ export function ContentConfigEditor({
         c.name !== initialData?.name
       );
 
-      const res = await fetchWithAuth(`/api/repo/${owner}/${repo}/config`, {
-        method: "POST",
-        headers: { "Content-Type": "text/yaml" },
-        body: yaml.dump(newConfig),
-      });
+      await api.saveConfig(owner, repo, newConfig);
 
-      if (!res.ok) throw new Error("Failed to delete");
       onSave();
     } catch (e) {
       console.error(e);
@@ -218,7 +194,7 @@ export function ContentConfigEditor({
   const title = mode === "add" ? "New Content" : "Content Settings";
 
   return (
-    <ConfigForm
+    <ViewComponent
       formData={formData}
       setFormData={setFormData}
       editingIndex={mode === "edit" ? 1 : null}
