@@ -1,5 +1,5 @@
 import "@/testing/setup_dom.ts";
-import { assert, assertEquals, assertRejects } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { renderHook } from "@testing-library/react";
 import { assertSpyCalls, stub } from "@std/testing/mock";
 import { useBranchServices } from "./useBranchServices.ts";
