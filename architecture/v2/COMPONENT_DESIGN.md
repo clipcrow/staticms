@@ -265,7 +265,58 @@ export function ContentEditor({
 これにより、テスト時にモックフックやモックレイアウトを注入し、ロジックのみを分離して検証（Container
 Testing）することが可能になります。
 
-## 5. CSS Strategy
+## 5. Service Abstraction & Testing Architecture
+
+システム全体のテスト容易性と保守性を高めるため、複雑なビジネスロジックは
+**Service Hook** として分離し、コンポーネントとは疎結合に保ちます。
+
+### 5.1 Service Pattern (Custom Hooks as Services)
+
+APIコール、`localStorage` 操作、`location`
+変更（リダイレクト）などの副作用を伴うロジックは、専用のカスタムフック
+(`src/app/hooks/use{Feature}Services.ts`) に集約します。
+
+```ts
+// src/app/hooks/useAuthServices.ts
+export function useAuthServices() {
+  const checkAuth = async () => {/* API Call */};
+  const login = (path: string) => {/* location.href = ... */};
+
+  return { checkAuth, login };
+}
+```
+
+### 5.2 Dependency Injection (DI) in Components
+
+コンポーネントは、具体的な実装（`import { useAuthServices } ...`）を直接使用せず、Props
+経由でサービスフックを受け取る（DI）ように設計するか、デフォルト引数として受け取ります。
+
+```tsx
+// Feature Component
+interface Props {
+  useServices?: typeof useAuthServices; // DI Point
+}
+
+export function RequireAuth({ useServices = useAuthServices, ... }: Props) {
+  const { checkAuth } = useServices(); // Use injected service
+  // ...
+}
+```
+
+### 5.3 Testing Strategy
+
+このアーキテクチャにより、以下の2層のテストが可能になります。
+
+1. **Unit Tests (`use{Feature}Services.test.ts`)**:
+   - サービスフック単体を対象。
+   - `globalThis.fetch` や `localStorage` をモックし、ロジックの正当性を検証。
+2. **Container Tests (`{Feature}_Binding.test.tsx`)**:
+   - コンポーネントを対象。
+   - サービスフック全体をモック (`createMockServices`)
+     し、UIの状態遷移やイベントハンドリングを検証。
+   - 実際のAPIや副作用は実行されず、高速で安定したテストとなる。
+
+## 6. CSS Strategy
 
 ### Global Styles (`src/app/styles/index.css`)
 

@@ -190,6 +190,52 @@ export function ContentEditor(
     }
   });
 
+  // Polling for PR status (Fallback for missed webhooks)
+  useEffect(() => {
+    const prNumber = draft.pr?.number;
+    if (!prNumber || !isSynced || !owner || !repo) return;
+
+    const checkStatus = async () => {
+      try {
+        const res = await fetchWithAuth(
+          `/api/repo/${owner}/${repo}/pr/${prNumber}/status`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "merged" || data.status === "closed") {
+            if (data.status === "merged") {
+              setIsMerged(true);
+            } else if (data.status === "closed") {
+              setIsClosed(true);
+            }
+            showToast(
+              `PR #${prNumber} is ${data.status}. Unlocking editor...`,
+              "info",
+            );
+            // Remove PR info from draft
+            setDraft((prev) => {
+              const { pr: _pr, ...rest } = prev;
+              return rest;
+            });
+            triggerReload();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to check PR status", e);
+      }
+    };
+
+    checkStatus();
+  }, [
+    owner,
+    repo,
+    draft.pr?.number,
+    isSynced,
+    showToast,
+    triggerReload,
+    setDraft,
+  ]);
+
   const handleImageUpload = (file: File): Promise<string | null> => {
     return new Promise((resolve) => {
       const reader = new FileReader();
