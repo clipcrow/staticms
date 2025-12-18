@@ -88,11 +88,28 @@ Deno.test({
       value: configYaml,
     };
 
-    // Mock GitHub API to avoid branch creation errors
+    // Mock GitHub API
     const fetchStub = stub(
       globalThis,
       "fetch",
-      () => Promise.resolve(new Response("{}", { status: 200 })),
+      (input) => {
+        const url = input.toString();
+        // Hooks -> []
+        if (url.includes("/hooks")) {
+          return Promise.resolve(new Response("[]", { status: 200 }));
+        }
+        // Installation & Token -> { id: 1, token: "t" }
+        if (url.includes("/installation") || url.includes("/access_tokens")) {
+          return Promise.resolve(
+            new Response(
+              JSON.stringify({ id: 1, token: "mock-installation-token" }),
+              { status: 200 },
+            ),
+          );
+        }
+        // Default (Git operations) -> {}
+        return Promise.resolve(new Response("{}", { status: 200 }));
+      },
     );
 
     try {
