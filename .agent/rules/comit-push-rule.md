@@ -2,7 +2,9 @@
 trigger: always_on
 ---
 
-## コミットのルール
+## Commit rules
 
-- 機能実装や修正完了後、必ずユーザーに確認を依頼し、**ユーザーの承認を得てから**コミットする。
-- ユーザーは手動ブラウザ操作で機能を確認した後に、追加の指示もしくはコミットの許可を明示的に行う。
+- After completing a feature implementation or modification, be sure to ask the
+  user for confirmation and **obtain user approval** before committing.
+- After confirming the functionality through manual browser operations, the user
+  explicitly gives additional instructions or permission to commit.

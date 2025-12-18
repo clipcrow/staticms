@@ -1,10 +1,14 @@
 ---
-trigger: model_decision
-description: 指示や仕様に不明な点があったら常に問い合わせ確認すること
+trigger: always_on
+description: Always contact user if you have any questions about the instructions or specifications.
 ---
 
-ユーザーからの指示や仕様書の記述に不明な点があったら常に問い合わせ確認すること
+Always contact user if you have any questions about the instructions or
+specifications.
 
-- 不明なことを勝手に妄想して決めつけないこと
-- ユーザーからの指示は曖昧なことが多く、仕様書はまだまだ不備な点がおおいものと思っているぐらいが良い
-- 指示や仕様書の不明点について質問することは推奨される。ユーザーは回答や解説を厭わない
+- Don't make assumptions and make assumptions about things you don't know.
+- Instructions from users are often vague, and it is best to assume that the
+  specifications still have many flaws.
+- It is encouraged to ask questions about the instructions and specifications.
+  Users are willing to provide answers and explanations. I want you to feel
+  safe.
