@@ -136,7 +136,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 編集画面や設定画面において、保存やキャンセルなどの主要アクションを常にアクセス可能にするための画面下部固定領域。
 
 - **Styling**: `position: fixed; bottom: 0; width: 100%; z-index: 1000;`
-- **Content**: `ui container` を内包し、左右にアクションを配置 (`display: flex; justify-content: space-between;`)。`
+- **Content**: `ui container` を内包し、左右にアクションを配置 (`display: flex; justify-content: space-between;`)。
 
 ## 4. Container / Presenter 実装例
 
@@ -230,6 +230,40 @@ export function ContentConfigEditor({
   )
 }
 `````
+
+### 4.1 Container Design Pattern: Dependency Injection (DI)
+
+Container コンポーネントのテスト容易性と疎結合性を高めるため、外部依存（Custom
+Hooks, Sub-Components）をオプショナルな Props
+として注入可能にする設計パターンを採用します。
+
+```tsx
+// Feature Component Signature Example
+interface ContentEditorProps {
+   // Core Hooks
+   useDraftHook?: typeof useDraft;
+   useRepositoryHook?: typeof useRepository;
+   
+   // Sub-Components
+   LayoutComponent?: React.ComponentType<EditorLayoutProps>;
+}
+
+export function ContentEditor({
+  useDraftHook = useDraft, // Default to real implementation
+  LayoutComponent = EditorLayout,
+  ...props
+}: ContentEditorProps) {
+  // Use injected hooks
+  const { draft, setDraft } = useDraftHook();
+
+  return (
+    <LayoutComponent draft={draft} ... />
+  );
+}
+```
+
+これにより、テスト時にモックフックやモックレイアウトを注入し、ロジックのみを分離して検証（Container
+Testing）することが可能になります。
 
 ## 5. CSS Strategy
 

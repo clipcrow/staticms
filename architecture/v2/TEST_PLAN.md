@@ -46,19 +46,26 @@ Pull Request 作成時および `main` ブランチへのマージ時に自動�
 
 ### 3.1 Unit / Integration Tests (徹底)
 
-E2Eテスト廃止の代替として、ユニットテストでのロジック検証を徹底します。
+### 3. 単体テスト戦略 (Unit Testing Strategy)
 
-- **UI Components**:
-  - `render` した結果、正しいロール (`button`, `heading` 等)
-    とテキストが含まれているか。
-  - ユーザー操作 (`click`, `change`, `input`)
-    に対して、正しいコールバックが呼ばれ、ステートが期待通り遷移するか。
-  - エッジケース（空データ、エラー状態、ローディング状態）を網羅的にテストする。
-- **Hooks / Logic**:
-  - `renderHook` を使用して、複雑な状態遷移や副作用 (`useEffect`)
-    が正しく動作するか検証する。
-  - API呼び出し等は `globalThis.fetch`
-    のスタブを用いてモックし、ネットワーク依存を排除する。
+`ContentEditor` のような重要な UI コンポーネントに対しては、依存性の注入
+(Dependency Injection) を活用した **Container Testing** アプローチを採用します。
+
+- **依存性の注入 (Dependency Injection)**: コンポーネントは、Hooks
+  や主要なサブコンポーネント (Layout 等) をオプショナルな Props
+  として受け取ります。
+- **Props キャプチャ (Prop Capture)**: テストコード側でモックの Layout
+  コンポーネントを注入し、渡された Props をキャプチャします。
+- **直接呼び出しによる検証 (Direct Invocation)**: 不安定な DOM 操作
+  (`fireEvent`) を避け、キャプチャした Props を検査したり、コールバック
+  (`props.onSave()`) を直接呼び出すことでロジックを検証します。
+
+これにより、テストは以下のメリットを享受します：
+
+- **安定性 (Stable)**: DOM レンダリングの非同期性や癖に依存しない。
+- **高速 (Fast)**: 同期的に実行される。
+- **集中 (Focused)**: ビジネスロジック (Draft 状態管理、保存フロー)
+  の検証に特化できる。
 
 ### 3.2 Manual Verification (User Stories)
 

@@ -2,11 +2,61 @@
 trigger: always_on
 ---
 
-## Conversation Guidelines
+# Japanese Communication Guidelines (厳守)
 
-All communication will be done in **Japanese**.
+本プロジェクトにおけるコミュニケーションおよび成果物は、**例外なく日本語**で記述してください。
+「技術的な文脈だから英語のほうが自然である」という判断は**許可されません**。
 
-- Chat conversations are always conducted in Japanese.
-- Specifications are always written in Japanese.
-- Commit messages must be written in Japanese.
-- Implementation Plan, Tasks, and Walkthroughs are all written in Japanese.
+## 1. 適用範囲
+
+以下の全てにおいて、日本語を使用してください。
+
+1. **チャット対話**: ユーザーへの返答、質問、報告。
+2. **仕様書・ドキュメント**: 設計書 (`ARCHITECTURE.md` 等)、計画書、日報。
+3. **コミットメッセージ**: `feat: 機能追加` の形式を含め、説明部分は日本語。
+4. **コード内のコメント**: JSDoc、TODOコメント、解説コメント。
+
+## 2. 執筆ルール
+
+### A. 技術用語の扱い
+技術用語（ライブラリ名、パターン名、関数名など）は英語表記のままで構いませんが、**それを説明する文章の構造**は日本語でなければなりません。
+
+- **NG (English Structure)**:
+  > We adopt Container Testing pattern. It ensures stability.
+- **OK (Japanese Structure)**:
+  > **Container Testing** パターンを採用します。これにより、安定性が保証されます。
+
+### B. 見出しと箇条書き
+ドキュメントの見出しや箇条書きも日本語で記述してください。
+
+- **NG**:
+  > ## Unit Testing Strategy
+  > - Dependency Injection
+  > - Prop Capture
+- **OK**:
+  > ## 単体テスト戦略 (Unit Testing Strategy)
+  > - **依存性の注入 (Dependency Injection)**
+  > - **Props のキャプチャ (Prop Capture)**
+
+※ 英語の用語を補足として括弧書きすることは推奨されます。
+
+## 3. 自己修正チェックリスト (Self-Correction Checklist)
+
+テキストを出力する直前に、以下のチェックを脳内で実行してください。
+
+1. **「英語で書いたほうが専門的でかっこいい」と思っていないか？**
+   - その思考を捨ててください。可読性と母国語での理解が優先です。
+2. **見出しが英語のままになっていないか？**
+   - 日本語に翻訳し、必要なら元の英語を括弧書きにしてください。
+3. **箇条書きのリストが英語の名詞だけで構成されていないか？**
+   - それぞれの項目の意味や意図を日本語で補足してください。
+4. **仕様書をコピペした後、翻訳を忘れていないか？**
+   - 既存の英語ドキュメントを参考にする際、無意識にそのまま転記することを禁止します。
+
+## 4. 例外
+
+- コードブロック内の変数名、関数名、構文自体。
+- ログの出力内容の引用。
+- 英語の固有名詞（サービス名、ツール名）。
+
+このルールは、あなたの「AIとしてのデフォルトの振る舞い」よりも優先されます。

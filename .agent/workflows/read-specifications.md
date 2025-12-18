@@ -19,7 +19,6 @@ description: すべての読むべき仕様書を読んで、Staticmsのアー�
 - `architecture/v2/GITHUB_INTEGRATION.md`
 - `architecture/v2/REALTIME_ARCHITECTURE.md`
 - `architecture/v2/specs/CONFIG_SPEC.md`
-- `architecture/v2/specs/CONTENT_SPEC.md`
 - `architecture/v2/specs/EDITOR_SPEC.md`
 - `architecture/v2/specs/CONTENT_LIST_SPEC.md`
 - `architecture/v2/specs/BRANCH_FALLBACK_SPEC.md`

@@ -89,16 +89,60 @@ Deno.test("MyComponent", async (t) => {
   はタイマーを使用するため、Deno
   のリーク検知に引っかかることがあります。後述のトラブルシューティングを参照してください。
 
-```typescript
+````typescript
 const { result } = renderHook(() => useMyData());
 
 await waitFor(() => {
   assertFalse(result.current.loading);
 });
 assertEquals(result.current.data, "expected");
-```
+### 3.3 Container Testing (Dependency Injection)
 
-### 3.3 EventSource / Fetch Mocking
+**推奨される新戦略**です。非同期処理や外部依存を含む「Container コンポーネント」をテストする場合、Props 経由で依存を注入し、ロジックのみを検証します。
+
+**実装ステップ:**
+
+1. **Dependency Injection**: コンポーネントがフックやレイアウトを受け取れるようにする。
+2. **Prop Capture**: テストでモックレイアウトを渡し、Props をキャプチャする。
+3. **Direct Invocation**: キャプチャしたコールバックを直接実行してロジックを検証する。
+
+```typescript
+// コンポーネント側
+export function ContentEditor({ 
+  useDraftHook = defaultUseDraft, // DI point
+  LayoutComponent = EditorLayout, // DI point
+  ...props 
+}: ContentEditorProps) {
+  const draftState = useDraftHook();
+  // ...
+  return <LayoutComponent draft={draftState} onSave={handleSave} />;
+}
+
+// テスト側
+Deno.test("ContentEditor Logic", () => {
+  let capturedProps: any;
+  const MockLayout = (props: any) => {
+    capturedProps = props; // Propsをキャプチャ
+    return null;
+  };
+
+  render(<ContentEditor LayoutComponent={MockLayout} useDraftHook={mockHook} />);
+
+  // 検証: Draftの状態が正しく渡されているか
+  assertEquals(capturedProps.draft.title, "Expected Title");
+
+  // 操作: 保存ロジックを直接トリガー (DOMイベント不要！)
+  capturedProps.onSave();
+  
+  // 検証: APIが呼ばれたか (Mock Hook等の状態確認)
+  assertSpyCalls(saveSpy, 1);
+});
+````
+
+このアプローチにより、`act()` の警告や `waitFor`
+のタイミング問題を完全に回避できます。
+
+### 3.4 Integration / E2E (Historical)
 
 外部APIやSSEに依存するコードは、`globalThis` をスタブ化してテストします。
 
@@ -198,7 +242,12 @@ Reactコンポーネントのテスト（特にフォーム入力）では、`fi
 Updates）が完了する前に次のアサーションや操作が実行されてしまい、テストが失敗することがあります（例:
 入力値が反映される前に送信ボタンを押してしまう）。
 
-**対策**: `waitFor` を使用して、DOMが期待する状態になるまで待機します。
+**対策**:
+
+1. **Container Testingへの移行 (推奨)**:
+   そもそも`fireEvent`に頼らず、ロジックを分離してテストする戦略（3.3節参照）に切り替えることを強く推奨します。これが最も根本的な解決策です。
+2. `waitFor` の使用: どうしてもDOMイベントが必要な場合は、`waitFor`
+   を使用して、DOMが期待する状態になるまで待機します。
 
 ```typescript
 // 入力イベント
@@ -208,9 +257,6 @@ fireEvent.change(input, { target: { value: "new value" } });
 await waitFor(() => {
   assertEquals(input.value, "new value");
 });
-
-// その後で次のアクションを実行
-fireEvent.click(saveButton);
 ```
 
 ### 6.2 サーバーサイドAPIテスト (Oak Mocking)

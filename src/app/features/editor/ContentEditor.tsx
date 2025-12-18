@@ -24,15 +24,31 @@ import { BreadcrumbItem } from "@/app/components/common/Header.tsx";
 import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx";
 import { FrontMatterList, FrontMatterObject } from "@/shared/types.ts";
 
-export interface ContentEditorProps {
+export interface ContentEditorHooks {
+  useDraftHook?: typeof useDraft;
+  useContentConfigHook?: typeof useContentConfig;
+  useRepositoryHook?: typeof useRepository;
+  useContentSyncHook?: typeof useContentSync;
+  LayoutComponent?: typeof EditorLayout;
+}
+
+export interface ContentEditorProps extends ContentEditorHooks {
   mode?: "new" | "edit";
   collectionName?: string;
   articleName?: string;
 }
 
 export function ContentEditor(
-  { mode = "edit", collectionName: propColName, articleName: propArtName }:
-    ContentEditorProps,
+  {
+    mode = "edit",
+    collectionName: propColName,
+    articleName: propArtName,
+    useDraftHook = useDraft,
+    useContentConfigHook = useContentConfig,
+    useRepositoryHook = useRepository,
+    useContentSyncHook = useContentSync,
+    LayoutComponent = EditorLayout,
+  }: ContentEditorProps,
 ) {
   const params = useParams();
   const navigate = useNavigate();
@@ -41,10 +57,10 @@ export function ContentEditor(
   const repo = params.repo;
   const contentName = propColName || params.content;
   const articleName = propArtName || params.article;
-  const { config, loading: configLoading } = useContentConfig(owner, repo);
+  const { config, loading: configLoading } = useContentConfigHook(owner, repo);
   const { showToast } = useToast();
   const { username: _currentUser } = useAuth();
-  const { repository, loading: repoLoading } = useRepository(owner, repo);
+  const { repository, loading: repoLoading } = useRepositoryHook(owner, repo);
 
   const branchConfigured = !!config?.branch;
   const branchReady = !configLoading && (branchConfigured || !repoLoading);
@@ -107,7 +123,7 @@ export function ContentEditor(
     `staticms_draft_${user}|${owner}|${repo}|${branch}|${contentName}/${effectiveArticleName}`;
 
   const { draft, setDraft, loaded, fromStorage, clearDraft, isSynced } =
-    useDraft(
+    useDraftHook(
       draftKey,
       {
         frontMatter: {},
@@ -133,18 +149,19 @@ export function ContentEditor(
   }, [loaded, fromStorage, draft, collection, showToast]);
 
   // Use Content Sync Hook
-  const { fetching: _fetching, originalDraft, triggerReload } = useContentSync({
-    owner: owner || "",
-    repo: repo || "",
-    branch,
-    filePath,
-    mode,
-    loaded,
-    draft,
-    fromStorage: fromStorage || !isSynced,
-    setDraft,
-    showToast,
-  });
+  const { fetching: _fetching, originalDraft, triggerReload } =
+    useContentSyncHook({
+      owner: owner || "",
+      repo: repo || "",
+      branch,
+      filePath,
+      mode,
+      loaded,
+      draft,
+      fromStorage: fromStorage || !isSynced,
+      setDraft,
+      showToast,
+    });
 
   // SSE for PR updates
   // SSE for PR updates
@@ -665,7 +682,7 @@ export function ContentEditor(
   const isLocked = !!draft.pr && isSynced;
 
   return (
-    <EditorLayout
+    <LayoutComponent
       isLocked={isLocked}
       isSynced={isSynced}
       isSaving={saving}
