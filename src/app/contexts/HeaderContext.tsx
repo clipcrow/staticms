@@ -9,8 +9,13 @@ import {
 export interface BreadcrumbItem {
   label: ReactNode;
   to?: string;
+  onClick?: () => void;
+  // deno-lint-ignore no-explicit-any
+  state?: any;
+  key?: string;
 }
 
+// ... (HeaderState remains the same)
 export interface HeaderState {
   breadcrumbs: BreadcrumbItem[];
   title?: ReactNode;
@@ -41,8 +46,6 @@ export function useHeader() {
   if (!ctx) throw new Error("useHeader must be used within HeaderProvider");
   return ctx;
 }
-
-// Helper hook for pages to set header via effect
 // It uses HeaderDispatchContext so updating the header state won't trigger re-render of the component using this hook.
 export function useSetHeader(
   breadcrumbs: BreadcrumbItem[],
@@ -71,6 +74,7 @@ export function useSetHeader(
     disableRootLink,
     breadcrumbs.length,
     ...breadcrumbs.map((b) => b.to),
+    ...breadcrumbs.map((b) => b.key),
   ]);
 }
 

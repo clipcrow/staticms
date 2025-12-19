@@ -77,6 +77,7 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
         />
       ),
       to: `/${owner}/${repo}`,
+      key: `repo-${branch}-${defaultBranch ?? "loading"}`,
     },
   ];
 
