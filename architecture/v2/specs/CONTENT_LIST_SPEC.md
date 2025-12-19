@@ -36,7 +36,8 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 - **List View**:
   - 省スペースなテーブル表示。
   - Columns: `Type` (Icon), `Name`, `Identifier`, `Status`
-    (Collectionの場合は集計数を表示), `Last Modified`, `Actions`。
+    (Collectionの場合は集計数を表示), `Last Modified` (Batch APIによる取得),
+    `Actions`。
   - **Actions**:
     - **Settings**: `cog` アイコン。クリックで設定編集画面
       (`?settings=:content`) へ遷移。
@@ -88,6 +89,8 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
 
 - **Card View**:
   - ファイルをカードとして表示。画像ファイルの場合はサムネイルプレビューを表示。
+  - **Last Updated**: 各カードに最終更新日（Git Commit
+    Date）を表示する。`Batch API` を利用して一覧取得時に並列解決する。
   - **Status Tags**: `Draft`, `PR` 等のステータスを表示。
     - **Local Drafts**:
       リモートに存在しない（新規作成された）ローカルドラフトも、`localStorage`
@@ -98,7 +101,8 @@ Config API (Deno KV) から取得したコンテンツ設定の一覧を表示�
   - 標準的なファイル一覧テーブル。
   - **Columns**:
     - **Name**: ファイル名 (クリックで編集画面へ)。
-    - **Updated**: 最終更新日時 (Git Commit Date)。
+    - **Updated**: 最終更新日時 (Git Commit Date)。Batch API
+      `/api/repo/:owner/:repo/commits/batch` を利用して効率的に取得する。
     - **Status**: `Draft` / `PR Open` 等のステータスバッジ。
     - **Actions**: なし（削除は編集画面で実行）。
 

@@ -30,6 +30,8 @@ Header）の詳細仕様を定義します。 StaticMS v2
   - 階層構造を表示（例: `Owner/Repo > Collection > Article`）。
   - 各階層はリンクとして機能。
   - 現在地（末尾）はアクティブスタイル（太字など）で表示。
+  - **Branch Label**: Breadcrumb
+    内のリポジトリ名部分にブランチ名を表示する（デフォルトブランチと異なる場合のみ）。
 - **Actions (右側)**:
   - 画面固有の操作ボタン群（後述）。
 
@@ -59,26 +61,20 @@ Header）の詳細仕様を定義します。 StaticMS v2
 
 `AppHeader` または `Layout` コンポーネントの一部として実装します。
 
+`HeaderProvider` と `useSetHeader` フックを使用してヘッダーの状態を管理します。
+
 ```typescript
 export interface BreadcrumbItem {
-  label: string;
-  to?: string; // リンク先がない場合は現在のページ（テキストのみ）
-  active?: boolean;
+  label: ReactNode;
+  to?: string;
+  onClick?: () => void;
+  // deno-lint-ignore no-explicit-any
+  state?: any;
+  key?: string; // 更新検知用のユニークキー
 }
 
-export interface HeaderProps {
-  // ナビゲーション
-  breadcrumbs: BreadcrumbItem[];
-
-  // 右側のアクションエリア (React Node)
-  actions?: React.ReactNode;
-
-  // ユーザー情報 (Contextから取得する場合はProp不要)
-  user?: UserProfile;
-
-  // ローディング状態
-  loading?: boolean;
-}
+// ページコンポーネント内での使用
+useSetHeader(breadcrumbs, titleNode, rightContent, disableRootLink);
 ```
 
 ## デザインガイドライン (Visual Style)

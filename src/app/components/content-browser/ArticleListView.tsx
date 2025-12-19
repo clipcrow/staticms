@@ -89,6 +89,13 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
 
   useSetHeader(breadcrumbs, titleNode);
 
+  const { dates: commitDates, loading: _datesLoading } = useCommitDates(
+    owner,
+    repo,
+    files.map((f) => f.path || "").filter(Boolean),
+    branch,
+  );
+
   if (error) {
     return (
       <div className="ui container staticms-article-list-status-container">
@@ -108,13 +115,6 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
       </div>
     );
   }
-
-  const { dates: commitDates, loading: _datesLoading } = useCommitDates(
-    owner,
-    repo,
-    files.map((f) => f.path || "").filter(Boolean),
-    branch,
-  );
 
   return (
     <>
