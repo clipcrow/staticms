@@ -115,8 +115,6 @@
 .staticms-header-breadcrumb {
   margin: 0 !important;
   font-size: 0.95rem !important;
-  align-self: flex-end;
-  margin-bottom: 0.2rem !important;
   color: var(--color-fg-muted) !important; // Use muted text
 
   .divider {
@@ -155,7 +153,7 @@
   vertical-align: middle;
 }
 
-.staticms-header-breadcrumb-container {
+.ui.breadcrumb.staticms-header-breadcrumb-container {
   display: flex;
   align-items: center;
 }

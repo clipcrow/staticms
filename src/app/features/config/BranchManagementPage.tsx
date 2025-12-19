@@ -16,10 +16,7 @@ export function BranchManagementPage(
   const { config, loading, error } = useContentConfig(owner, repo);
 
   useLoading(loading);
-  useSetHeader(
-    [{ label: "Branch Management" }],
-    "Branch Management",
-  );
+  useSetHeader([], undefined);
 
   if (!owner || !repo) {
     // Should not happen if called correctly
