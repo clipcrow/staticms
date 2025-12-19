@@ -5,6 +5,7 @@ import { RepoBreadcrumbLabel } from "@/app/components/common/RepoBreadcrumb.tsx"
 import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
+import { useCommitDates } from "@/app/hooks/useCommitDates.ts";
 
 // UI Props Definition
 export interface CollectionListProps {
@@ -79,6 +80,15 @@ export const CollectionList: React.FC<CollectionListProps> = ({
     c.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const { dates: commitDates } = useCommitDates(
+    owner,
+    repo,
+    filteredCollections.map((c) => c.path || c.folder || c.file || "").filter(
+      Boolean,
+    ),
+    branch,
+  );
+
   return (
     <>
       <div className="ui container staticms-collection-list-search-container">
@@ -131,6 +141,12 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                     !isSingleton,
                   );
 
+                  const path = c.path || c.folder || c.file;
+                  const commitInfo = path ? commitDates[path] : null;
+                  const dateStr = commitInfo?.date
+                    ? new Date(commitInfo.date).toLocaleDateString()
+                    : "";
+
                   return (
                     <div
                       className="card link"
@@ -151,6 +167,17 @@ export const CollectionList: React.FC<CollectionListProps> = ({
                       <div className="content">
                         <div className="meta staticms-collection-card-meta">
                           {c.name}
+                          {dateStr && (
+                            <span
+                              style={{
+                                marginLeft: "0.5em",
+                                fontSize: "0.9em",
+                                color: "#888",
+                              }}
+                            >
+                              • {dateStr}
+                            </span>
+                          )}
                         </div>
                         <div className="description staticms-collection-card-desc">
                           {isSingleton

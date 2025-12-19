@@ -6,6 +6,7 @@ import { getContentStatus } from "@/app/components/editor/utils.ts";
 import { StatusBadge } from "@/app/components/common/StatusBadge.tsx";
 import { FileItem } from "@/shared/types.ts";
 import type { Collection } from "@/app/hooks/useContentConfig.ts";
+import { useCommitDates } from "@/app/hooks/useCommitDates.ts";
 
 export interface ArticleListViewProps {
   owner: string;
@@ -108,6 +109,13 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
     );
   }
 
+  const { dates: commitDates, loading: _datesLoading } = useCommitDates(
+    owner,
+    repo,
+    files.map((f) => f.path || "").filter(Boolean),
+    branch,
+  );
+
   return (
     <>
       <div className="ui container staticms-article-list-container staticms-search-create-bar">
@@ -197,60 +205,75 @@ export const ArticleListView: React.FC<ArticleListViewProps> = ({
           )
           : (
             <>
-              <>
-                <div className="ui three stackable cards">
-                  {files.map((file) => {
-                    // Construct status check key that matches ContentEditor's save format (collectionName/fileName)
-                    // If collectionName is missing, fall back to file.path (though shouldn't happen in this view)
-                    const statusCheckKey = collectionName
-                      ? `${collectionName}/${file.name}`
-                      : (file.path || "");
+              <div className="ui three stackable cards">
+                {files.map((file) => {
+                  // Construct status check key that matches ContentEditor's save format (collectionName/fileName)
+                  // If collectionName is missing, fall back to file.path (though shouldn't happen in this view)
+                  const statusCheckKey = collectionName
+                    ? `${collectionName}/${file.name}`
+                    : (file.path || "");
 
-                    const status = getContentStatus(
-                      owner || "",
-                      repo || "",
-                      branch,
-                      statusCheckKey,
-                      false,
-                    );
-                    return (
-                      <div
-                        className="card link"
-                        key={file.path}
-                        onClick={() => onSelect(file.path || "")}
-                      >
-                        <div className="content">
-                          <div className="header staticms-article-card-header">
-                            {file.name}
-                          </div>
-                          <div className="meta">
-                            Config: {collectionDef.label}
-                          </div>
+                  const status = getContentStatus(
+                    owner || "",
+                    repo || "",
+                    branch,
+                    statusCheckKey,
+                    false,
+                  );
+
+                  const commitInfo = file.path ? commitDates[file.path] : null;
+                  const dateStr = commitInfo?.date
+                    ? new Date(commitInfo.date).toLocaleDateString()
+                    : "";
+
+                  return (
+                    <div
+                      className="card link"
+                      key={file.path}
+                      onClick={() => onSelect(file.path || "")}
+                    >
+                      <div className="content">
+                        <div className="header staticms-article-card-header">
+                          {file.name}
                         </div>
-                        <div className="extra content">
-                          <span className="right floated">
-                            {status.hasDraft
-                              ? (
-                                <StatusBadge
-                                  status="draft"
-                                  count={status.draftCount}
-                                />
-                              )
-                              : status.hasPr
-                              ? (
-                                <StatusBadge
-                                  status="pr_open"
-                                  prNumber={status.prNumber}
-                                />
-                              )
-                              : null}
-                          </span>
+                        <div className="meta">
+                          Config: {collectionDef.label}
+                          {dateStr && (
+                            <span
+                              style={{
+                                marginLeft: "0.5em",
+                                fontSize: "0.9em",
+                                color: "#888",
+                              }}
+                            >
+                              • {dateStr}
+                            </span>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
-                </div>
-              </>
+                      <div className="extra content">
+                        <span className="right floated">
+                          {status.hasDraft
+                            ? (
+                              <StatusBadge
+                                status="draft"
+                                count={status.draftCount}
+                              />
+                            )
+                            : status.hasPr
+                            ? (
+                              <StatusBadge
+                                status="pr_open"
+                                prNumber={status.prNumber}
+                              />
+                            )
+                            : null}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
 
               {totalPages > 1 && (
                 <div className="staticms-pagination-wrapper">

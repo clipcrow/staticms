@@ -41,6 +41,14 @@ Deno.test({
         if (url.includes("/contents")) {
           return Promise.resolve(new Response(JSON.stringify([]))); // Empty list
         }
+        if (url.includes("/api/user")) {
+          return Promise.resolve(
+            new Response(JSON.stringify({ login: "testuser" })),
+          );
+        }
+        if (url.includes("/commits/batch")) {
+          return Promise.resolve(new Response(JSON.stringify({})));
+        }
         return Promise.resolve(new Response(null, { status: 404 }));
       },
     );
@@ -104,6 +112,9 @@ Deno.test({
             new Response(JSON.stringify({ login: "testuser" })),
           );
         }
+        if (url.includes("/commits/batch")) {
+          return Promise.resolve(new Response(JSON.stringify({})));
+        }
         return Promise.resolve(new Response(null, { status: 404 }));
       },
     );
@@ -151,9 +162,16 @@ Deno.test({
     const fetchStub = stub(
       globalThis,
       "fetch",
-      (_input: string | URL | Request) => {
+      (input: string | URL | Request) => {
+        const url = input.toString();
         // Return config, but we will request bad-collection
-        return Promise.resolve(new Response(MOCK_CONFIG));
+        if (url.endsWith("/config")) {
+          return Promise.resolve(new Response(MOCK_CONFIG));
+        }
+        if (url.includes("/commits/batch")) {
+          return Promise.resolve(new Response(JSON.stringify({})));
+        }
+        return Promise.resolve(new Response(null, { status: 404 }));
       },
     );
 

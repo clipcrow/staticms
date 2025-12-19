@@ -167,6 +167,26 @@ export class GitHubUserClient {
     );
   }
 
+  async getCommits(
+    owner: string,
+    repo: string,
+    path?: string,
+    sha?: string,
+    perPage = 30,
+    page = 1,
+  ) {
+    let url = `https://api.github.com/repos/${owner}/${repo}/commits`;
+    const params = new URLSearchParams();
+    if (path) params.append("path", path);
+    if (sha) params.append("sha", sha);
+    params.append("per_page", perPage.toString());
+    params.append("page", page.toString());
+
+    url += `?${params.toString()}`;
+
+    return await githubRequest(url, { token: this.token });
+  }
+
   // Git Data API for Batch Commits
   async createBlob(
     owner: string,

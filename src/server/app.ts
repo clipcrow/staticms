@@ -11,6 +11,7 @@ import { webhookHandler } from "@/server/api/webhooks.ts";
 import { addClient } from "@/server/sse.ts";
 import { authRouter } from "@/server/auth.ts";
 import { batchCommitHandler } from "@/server/api/commits.ts";
+import { batchCommitDateHandler } from "@/server/api/commit_dates.ts";
 import { createBranch, getBranch } from "@/server/api/branches.ts";
 import { dumpKvKeys } from "@/server/api/debug.ts";
 import { compareRouter } from "@/server/api/compare.ts";
@@ -72,6 +73,7 @@ router.get("/api/repo/:owner/:repo/contents", getContent);
 router.get("/api/repo/:owner/:repo/contents/(.*)", getContent);
 router.delete("/api/repo/:owner/:repo/contents/(.*)", deleteContent);
 router.post("/api/repo/:owner/:repo/batch-commit", batchCommitHandler);
+router.post("/api/repo/:owner/:repo/commits/batch", batchCommitDateHandler);
 // router.post("/api/repo/:owner/:repo/pr", createPrHandler); // Deprecated
 router.get("/api/repo/:owner/:repo/pr/:number/status", getPrStatusHandler);
 router.post("/_debug/pr/:number/status", debugUpdatePrStatusHandler);
