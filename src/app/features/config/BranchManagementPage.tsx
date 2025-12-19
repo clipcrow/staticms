@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useContentConfig } from "@/app/hooks/useContentConfig.ts";
 import { BranchManagement } from "./BranchManagement.tsx";
-import { Header } from "@/app/components/common/Header.tsx";
+import { useLoading, useSetHeader } from "@/app/contexts/HeaderContext.tsx";
 
 interface BranchManagementPageProps {
   owner?: string;
@@ -15,6 +15,12 @@ export function BranchManagementPage(
   // Ensure owner/repo are present before calling hook, or hook should handle skip
   const { config, loading, error } = useContentConfig(owner, repo);
 
+  useLoading(loading);
+  useSetHeader(
+    [{ label: "Branch Management" }],
+    "Branch Management",
+  );
+
   if (!owner || !repo) {
     // Should not happen if called correctly
     return null;
@@ -27,11 +33,6 @@ export function BranchManagementPage(
   if (loading) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
-        <Header
-          breadcrumbs={[
-            { label: "Branch Management" },
-          ]}
-        />
         <div className="ui placeholder segment">
           <div className="ui active inverted dimmer">
             <div className="ui loader"></div>
@@ -44,10 +45,6 @@ export function BranchManagementPage(
   if (error || !config) {
     return (
       <div className="ui container" style={{ marginTop: "2rem" }}>
-        <Header
-          breadcrumbs={[]}
-          title="Branch Management"
-        />
         <div className="ui negative message">
           Error loading configuration: {error?.message || "Unknown error"}
           <div style={{ marginTop: "1rem" }}>
